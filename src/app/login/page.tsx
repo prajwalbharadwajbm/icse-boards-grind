@@ -11,6 +11,7 @@ import { FirebaseError } from "firebase/app";
 export default function LoginPage() {
   const { user, login, loginWithGoogle, register } = useAuth();
   const onboarded = useStore((s) => s.onboarded);
+  const setField = useStore((s) => s.setField);
   const router = useRouter();
 
   const [tab, setTab] = useState<"login" | "register">("login");
@@ -22,9 +23,8 @@ export default function LoginPage() {
 
   // Force dark theme on login page
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
-    document.documentElement.classList.add("dark");
-  }, []);
+    setField("theme", "dark");
+  }, [setField]);
 
   useEffect(() => {
     if (user) {

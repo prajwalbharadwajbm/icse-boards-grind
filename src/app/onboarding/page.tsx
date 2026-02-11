@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/providers/auth-provider";
@@ -15,6 +15,11 @@ export default function OnboardingPage() {
   const router = useRouter();
   const setField = useStore((s) => s.setField);
   const update = useStore((s) => s.update);
+
+  // Force dark theme on onboarding page
+  useEffect(() => {
+    setField("theme", "dark");
+  }, [setField]);
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
