@@ -25,6 +25,7 @@ type NavItem = {
   href: string;
   label: string;
   iconEl: (active: boolean) => React.ReactNode;
+  children?: NavItem[];
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -51,16 +52,18 @@ const NAV_ITEMS: NavItem[] = [
         <line x1="8" y1="11" x2="13" y2="11" />
       </svg>
     ),
-  },
-  {
-    href: "/dashboard/english",
-    label: "English",
-    iconEl: (active) => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
-      </svg>
-    ),
+    children: [
+      {
+        href: "/dashboard/english",
+        label: "English",
+        iconEl: (active) => (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
     href: "/dashboard/papers",
@@ -158,6 +161,21 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
   const initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "U";
   const onlineCount = useOnlineCount();
 
+  // Auto-open subsections with fewer than 3 children
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    NAV_ITEMS.forEach((item) => {
+      if (item.children) {
+        initial[item.href] = item.children.length < 3 || false;
+      }
+    });
+    return initial;
+  });
+
+  const toggleSection = (href: string) => {
+    setOpenSections((prev) => ({ ...prev, [href]: !prev[href] }));
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -212,7 +230,88 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
         {/* Nav */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isActive = pathname === item.href;
+            const isChildActive = item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"));
+            const isSectionActive = isActive || isChildActive || (item.href !== "/dashboard" && !item.children && pathname.startsWith(item.href));
+            const isOpen = openSections[item.href];
+
+            if (item.children) {
+              return (
+                <div key={item.href}>
+                  <div className="flex items-center mb-0.5">
+                    <Link
+                      href={item.href}
+                      onClick={onCloseMobile}
+                      className={`
+                        flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all flex-1
+                        ${collapsed ? "justify-center" : ""}
+                      `}
+                      style={{
+                        background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                        color: isSectionActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
+                      }}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <span className="shrink-0">{item.iconEl(isActive)}</span>
+                      {!collapsed && (
+                        <span className="text-sm font-medium flex-1">{item.label}</span>
+                      )}
+                    </Link>
+                    {!collapsed && (
+                      <button
+                        onClick={() => toggleSection(item.href)}
+                        className="p-1.5 rounded-md transition-colors mr-1"
+                        style={{ color: "var(--sidebar-text, #d2d2d6)" }}
+                      >
+                        <motion.svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          animate={{ rotate: isOpen ? 90 : 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <polyline points="9 18 15 12 9 6" />
+                        </motion.svg>
+                      </button>
+                    )}
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {isOpen && !collapsed && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="overflow-hidden"
+                      >
+                        {item.children.map((child) => {
+                          const childActive = pathname === child.href || pathname.startsWith(child.href + "/");
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              onClick={onCloseMobile}
+                              className="flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-lg mb-0.5 transition-all"
+                              style={{
+                                background: childActive ? "rgba(255,255,255,0.1)" : "transparent",
+                                color: childActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
+                              }}
+                            >
+                              <span className="shrink-0">{child.iconEl(childActive)}</span>
+                              <span className="text-sm">{child.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
@@ -223,12 +322,12 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                   ${collapsed ? "justify-center" : ""}
                 `}
                 style={{
-                  background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
-                  color: isActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
+                  background: isSectionActive ? "rgba(255,255,255,0.1)" : "transparent",
+                  color: isSectionActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
                 }}
                 title={collapsed ? item.label : undefined}
               >
-                <span className="shrink-0">{item.iconEl(isActive)}</span>
+                <span className="shrink-0">{item.iconEl(isSectionActive)}</span>
                 {!collapsed && (
                   <span className="text-sm font-medium">{item.label}</span>
                 )}
