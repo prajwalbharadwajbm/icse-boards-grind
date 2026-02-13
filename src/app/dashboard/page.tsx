@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { StatChip } from "@/components/ui/stat-chip";
@@ -85,6 +86,42 @@ export default function DashboardPage() {
       >
         <p className="text-sm" style={{ color: "var(--text)" }}>{quote}</p>
       </motion.div>
+
+      {/* AI Coach Promo Banner */}
+      <Link href="/dashboard/coach">
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.01]"
+          style={{
+            background: "linear-gradient(135deg, #7b61ff, #1a73e8)",
+            border: "none",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.2)" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-bold text-white">AI Study Coach</p>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(255,255,255,0.25)", color: "#fff" }}>
+                  FREE NOW
+                </span>
+              </div>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }}>
+                Get personalized study advice, daily briefings &amp; smart plan changes. We&apos;re improving this feature over the next few days — try it free!
+              </p>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" className="shrink-0">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </motion.div>
+      </Link>
 
       {/* Exam Countdown */}
       {nextExam && (

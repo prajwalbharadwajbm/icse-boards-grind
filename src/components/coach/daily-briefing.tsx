@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { sendChatCompletionSync } from "@/lib/ai-service";
 import { buildDailyBriefingPrompt } from "@/lib/coach-prompts";
-import { today } from "@/lib/utils";
+import { today, getEffectiveAIKey } from "@/lib/utils";
 
 export function DailyBriefing() {
   const data = useStore();
@@ -17,12 +17,12 @@ export function DailyBriefing() {
   const [error, setError] = useState("");
 
   const fetchBriefing = async () => {
-    if (!data.grokApiKey) return;
+    const apiKey = getEffectiveAIKey(data.grokApiKey);
     setLoading(true);
     setError("");
     try {
       const prompt = buildDailyBriefingPrompt(data);
-      const result = await sendChatCompletionSync(data.grokApiKey, [
+      const result = await sendChatCompletionSync(apiKey, [
         { role: "system", content: prompt },
         { role: "user", content: "Give me my daily briefing." },
       ]);
@@ -41,7 +41,7 @@ export function DailyBriefing() {
   };
 
   useEffect(() => {
-    if (!content && data.grokApiKey) {
+    if (!content) {
       fetchBriefing();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

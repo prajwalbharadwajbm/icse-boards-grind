@@ -81,6 +81,19 @@ export function sendNotification(title: string, body: string, tag: string): void
   }
 }
 
+/** Pick a random free API key from the env-configured pool */
+export function getFreeAIKey(): string {
+  const raw = process.env.NEXT_PUBLIC_FREE_AI_KEYS || "";
+  const keys = raw.split(",").map((k) => k.trim()).filter(Boolean);
+  if (keys.length === 0) return "";
+  return keys[Math.floor(Math.random() * keys.length)];
+}
+
+/** Get the effective API key — user's own key or a free one */
+export function getEffectiveAIKey(userKey?: string): string {
+  return userKey || getFreeAIKey();
+}
+
 export function getAIConfig(apiKey: string) {
   if (apiKey.startsWith("gsk_")) {
     return { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama-3.3-70b-versatile" };

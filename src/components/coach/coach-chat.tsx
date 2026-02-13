@@ -11,7 +11,7 @@ import { sendChatCompletion, type ChatMessage } from "@/lib/ai-service";
 import { buildSystemPrompt } from "@/lib/coach-prompts";
 import { parsePlanChanges, stripPlanChangeTags, applyPlanChanges } from "@/lib/plan-change-parser";
 import { getDayPlan } from "@/lib/algorithms";
-import { today } from "@/lib/utils";
+import { today, getEffectiveAIKey } from "@/lib/utils";
 
 const QUICK_PROMPTS = [
   "What should I focus on?",
@@ -53,7 +53,8 @@ export function CoachChat() {
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || !data.grokApiKey || streaming) return;
+    const apiKey = getEffectiveAIKey(data.grokApiKey);
+    if (!text.trim() || streaming) return;
 
     const userMsg: CoachMessage = {
       role: "user",
@@ -76,7 +77,7 @@ export function CoachChat() {
     let fullResponse = "";
 
     await sendChatCompletion(
-      data.grokApiKey,
+      apiKey,
       chatHistory,
       (token) => {
         fullResponse += token;
