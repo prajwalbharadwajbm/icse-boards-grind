@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { StatChip } from "@/components/ui/stat-chip";
@@ -89,7 +89,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* AI Coach Promo Banner */}
-      <Link href="/dashboard/coach" onClick={() => posthog.capture("coach_banner_clicked")}>
+      <Link href="/dashboard/coach" onClick={() => capture("coach_banner_clicked")}>
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}

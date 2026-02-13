@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { Card } from "@/components/ui/card";
@@ -91,7 +91,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
             "timer-work-done"
           );
           logStudyTime();
-          posthog.capture("timer_completed", {
+          capture("timer_completed", {
             subject: subject || "general",
             chapter: chapter || "",
             duration_minutes: timerWorkMinutes,
@@ -170,7 +170,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
   }, [customWork, customBreak, stopTimer]);
 
   const handleStart = () => {
-    posthog.capture("timer_started", {
+    capture("timer_started", {
       subject: subject || "general",
       chapter: chapter || "",
       duration_minutes: timerWorkMinutes,

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import type { CoachMessage } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
@@ -62,7 +62,7 @@ export function CoachChat() {
       timestamp: Date.now(),
     };
     addMessage(userMsg);
-    posthog.capture("coach_message_sent", {
+    capture("coach_message_sent", {
       source,
       message_length: text.trim().length,
       is_quick_prompt: source === "quick_prompt",

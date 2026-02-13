@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { DailyBriefing } from "@/components/coach/daily-briefing";
 import { CoachChat } from "@/components/coach/coach-chat";
 
 export default function CoachPage() {
   useEffect(() => {
-    posthog.capture("coach_page_viewed");
+    capture("coach_page_viewed");
   }, []);
 
   return (

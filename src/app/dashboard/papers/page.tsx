@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { StatChip } from "@/components/ui/stat-chip";
@@ -96,7 +96,7 @@ export default function PapersPage() {
       }
       return { solvedPapers: [...current, paperId] };
     });
-    posthog.capture(wasSolved ? "paper_unsolved" : "paper_solved", {
+    capture(wasSolved ? "paper_unsolved" : "paper_solved", {
       paper_id: paperId,
       subject: paper?.subject,
       year: paper?.year,
