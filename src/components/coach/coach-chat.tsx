@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import type { CoachMessage } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { sendChatCompletion, type ChatMessage } from "@/lib/ai-service";
 import { buildSystemPrompt } from "@/lib/coach-prompts";
 import { parsePlanChanges, stripPlanChangeTags, applyPlanChanges } from "@/lib/plan-change-parser";
 import { getDayPlan } from "@/lib/algorithms";
-import { today } from "@/lib/utils";
+import { today, getEffectiveAIKey } from "@/lib/utils";
 
 const QUICK_PROMPTS = [
   "What should I focus on?",
@@ -52,8 +52,9 @@ export function CoachChat() {
     });
   };
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || !data.grokApiKey || streaming) return;
+  const sendMessage = async (text: string, source: "typed" | "quick_prompt" = "typed") => {
+    const apiKey = getEffectiveAIKey(data.grokApiKey);
+    if (!text.trim() || streaming) return;
 
     const userMsg: CoachMessage = {
       role: "user",
@@ -61,7 +62,12 @@ export function CoachChat() {
       timestamp: Date.now(),
     };
     addMessage(userMsg);
-    posthog.capture("coach_message_sent");
+    capture("coach_message_sent", {
+      source,
+      message_content: text.trim(),
+      message_length: text.trim().length,
+      is_quick_prompt: source === "quick_prompt",
+    });
     setInput("");
     setStreaming(true);
     setStreamText("");
@@ -76,7 +82,7 @@ export function CoachChat() {
     let fullResponse = "";
 
     await sendChatCompletion(
-      data.grokApiKey,
+      apiKey,
       chatHistory,
       (token) => {
         fullResponse += token;
@@ -217,7 +223,7 @@ export function CoachChat() {
         {QUICK_PROMPTS.map((prompt) => (
           <button
             key={prompt}
-            onClick={() => sendMessage(prompt)}
+            onClick={() => sendMessage(prompt, "quick_prompt")}
             disabled={streaming}
             className="px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-[1.02]"
             style={{

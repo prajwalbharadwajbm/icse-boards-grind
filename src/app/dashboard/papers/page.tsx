@@ -118,7 +118,7 @@ export default function PapersPage() {
       }
       return { solvedPapers: [...current, paperId] };
     });
-    posthog.capture(wasSolved ? "paper_unsolved" : "paper_solved", {
+    capture(wasSolved ? "paper_unsolved" : "paper_solved", {
       paper_id: paperId,
       subject: paper?.subject,
       year: paper?.year,
