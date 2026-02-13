@@ -2,22 +2,22 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { usePostHog } from "posthog-js/react";
+import posthog from "posthog-js";
 
 export function PostHogPageview() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const posthog = usePostHog();
 
   useEffect(() => {
-    if (pathname && posthog) {
+    if (pathname) {
       let url = window.origin + pathname;
-      if (searchParams.toString()) {
-        url += "?" + searchParams.toString();
+      const params = searchParams.toString();
+      if (params) {
+        url += "?" + params;
       }
       posthog.capture("$pageview", { $current_url: url });
     }
-  }, [pathname, searchParams, posthog]);
+  }, [pathname, searchParams]);
 
   return null;
 }
