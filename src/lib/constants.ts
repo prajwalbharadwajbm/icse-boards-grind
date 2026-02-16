@@ -299,4 +299,5 @@ export const SECTION_TITLES: Record<string, string> = {
   settings: "Settings",
   notes: "Revision Notes",
   leaderboard: "Leaderboard",
+  "parent-report": "Parent Report",
 };
