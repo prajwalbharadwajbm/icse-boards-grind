@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { capture } from "@/lib/analytics";
-import { useStore } from "@/store/use-store";
+import { useTimerStore } from "@/store/use-timer-store";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { today, playBeep, sendNotification } from "@/lib/utils";
-import { getTimerWorkDoneMessage, getTimerBreakDoneMessage } from "@/lib/notification-messages";
-
-type TimerPhase = "work" | "break";
-type Preset = "pomodoro" | "deep" | "custom";
 
 interface TimerDisplayProps {
   subject: string;
@@ -20,219 +15,51 @@ interface TimerDisplayProps {
 }
 
 export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
-  const [timerWorkMinutes, setTimerWorkMinutes] = useState(25);
-  const [timerBreakMinutes, setTimerBreakMinutes] = useState(5);
-  const [timerSeconds, setTimerSeconds] = useState(25 * 60);
-  const [timerTotalSeconds, setTimerTotalSeconds] = useState(25 * 60);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timerPhase, setTimerPhase] = useState<TimerPhase>("work");
-  const [preset, setPreset] = useState<Preset>("pomodoro");
-  const [customWork, setCustomWork] = useState(30);
-  const [customBreak, setCustomBreak] = useState(10);
+  const preset = useTimerStore((s) => s.preset);
+  const seconds = useTimerStore((s) => s.seconds);
+  const totalSeconds = useTimerStore((s) => s.totalSeconds);
+  const running = useTimerStore((s) => s.running);
+  const phase = useTimerStore((s) => s.phase);
+  const customWork = useTimerStore((s) => s.customWork);
+  const customBreak = useTimerStore((s) => s.customBreak);
+  const workMinutes = useTimerStore((s) => s.workMinutes);
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const setPreset = useTimerStore((s) => s.setPreset);
+  const setCustomWork = useTimerStore((s) => s.setCustomWork);
+  const setCustomBreak = useTimerStore((s) => s.setCustomBreak);
+  const applyCustom = useTimerStore((s) => s.applyCustom);
+  const start = useTimerStore((s) => s.start);
+  const pause = useTimerStore((s) => s.pause);
+  const reset = useTimerStore((s) => s.reset);
 
-  const logStudyTime = useCallback(() => {
-    const td = today();
-    useStore.getState().update((s) => {
-      const studyLog = { ...s.studyLog };
-      const existing = studyLog[td] || { hours: 0, sessions: 0 };
-      const newHours = existing.hours + timerWorkMinutes / 60;
-      studyLog[td] = {
-        hours: newHours,
-        sessions: existing.sessions + 1,
-      };
-
-      // Update streak
-      let streak = s.streak;
-      let streakRecoveryAvailable = s.streakRecoveryAvailable;
-      let streakBeforeReset = s.streakBeforeReset;
-      const lastDate = s.lastStudyDate;
-
-      if (lastDate !== td) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = yesterday.toISOString().split("T")[0];
-
-        const twoDaysAgo = new Date();
-        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-        const twoDaysAgoStr = twoDaysAgo.toISOString().split("T")[0];
-
-        if (lastDate === yStr) {
-          // Studied yesterday — continue streak
-          streak = streak + 1;
-        } else if (lastDate === twoDaysAgoStr && streak > 1) {
-          // Missed exactly one day — offer recovery
-          streakRecoveryAvailable = true;
-          streakBeforeReset = streak;
-          streak = 1;
-        } else {
-          // Missed more than one day — reset
-          streak = 1;
-          streakRecoveryAvailable = false;
-          streakBeforeReset = 0;
-        }
-      }
-
-      // F1: Check streak recovery condition (studied 2x target today)
-      const studyTarget = s.studyHours || 8;
-      if (streakRecoveryAvailable && newHours >= studyTarget * 2) {
-        streak = streakBeforeReset + 1;
-        streakRecoveryAvailable = false;
-        streakBeforeReset = 0;
-        capture("streak_recovered", { restored_streak: streak });
-      }
-
-      // Push timer session
-      const timerSessions = [
-        ...s.timerSessions,
-        {
-          date: td,
-          subject: subject || "general",
-          chapter: chapter || "",
-          minutes: timerWorkMinutes,
-        },
-      ];
-
-      return {
-        studyLog,
-        streak,
-        lastStudyDate: td,
-        timerSessions,
-        streakRecoveryAvailable,
-        streakBeforeReset,
-      };
-    });
-  }, [timerWorkMinutes, subject, chapter]);
-
-  const stopTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setTimerRunning(false);
-  }, []);
-
-  const tick = useCallback(() => {
-    setTimerSeconds((prev) => {
-      if (prev <= 1) {
-        // Timer reached zero
-        playBeep();
-        if (timerPhase === "work") {
-          const workMsg = getTimerWorkDoneMessage(timerWorkMinutes);
-          sendNotification(
-            workMsg.title,
-            workMsg.body,
-            "timer-work-done"
-          );
-          logStudyTime();
-          capture("timer_completed", {
-            subject: subject || "general",
-            chapter: chapter || "",
-            duration_minutes: timerWorkMinutes,
-          });
-          // Switch to break phase
-          const breakSecs = timerBreakMinutes * 60;
-          setTimerPhase("break");
-          setTimerTotalSeconds(breakSecs);
-          return breakSecs;
-        } else {
-          // Break finished
-          const breakMsg = getTimerBreakDoneMessage();
-          sendNotification(
-            breakMsg.title,
-            breakMsg.body,
-            "timer-break-done"
-          );
-          // Switch to work phase but stop timer
-          const workSecs = timerWorkMinutes * 60;
-          setTimerPhase("work");
-          setTimerTotalSeconds(workSecs);
-          stopTimer();
-          return workSecs;
-        }
-      }
-      return prev - 1;
-    });
-  }, [timerPhase, timerWorkMinutes, timerBreakMinutes, logStudyTime, stopTimer]);
-
-  // Timer interval
+  // Sync subject/chapter to global store
   useEffect(() => {
-    if (timerRunning) {
-      intervalRef.current = setInterval(tick, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [timerRunning, tick]);
+    useTimerStore.getState().setSubject(subject);
+  }, [subject]);
 
-  const applyPreset = useCallback(
-    (p: Preset) => {
-      setPreset(p);
-      stopTimer();
-      setTimerPhase("work");
-      let work: number, brk: number;
-      if (p === "pomodoro") {
-        work = 25;
-        brk = 5;
-      } else if (p === "deep") {
-        work = 50;
-        brk = 10;
-      } else {
-        work = customWork;
-        brk = customBreak;
-      }
-      setTimerWorkMinutes(work);
-      setTimerBreakMinutes(brk);
-      setTimerSeconds(work * 60);
-      setTimerTotalSeconds(work * 60);
-    },
-    [customWork, customBreak, stopTimer]
-  );
-
-  const applyCustom = useCallback(() => {
-    stopTimer();
-    setTimerPhase("work");
-    setTimerWorkMinutes(customWork);
-    setTimerBreakMinutes(customBreak);
-    setTimerSeconds(customWork * 60);
-    setTimerTotalSeconds(customWork * 60);
-  }, [customWork, customBreak, stopTimer]);
+  useEffect(() => {
+    useTimerStore.getState().setChapter(chapter);
+  }, [chapter]);
 
   const handleStart = () => {
     capture("timer_started", {
       subject: subject || "general",
       chapter: chapter || "",
-      duration_minutes: timerWorkMinutes,
+      duration_minutes: workMinutes,
       preset,
     });
-    setTimerRunning(true);
+    start();
   };
-  const handlePause = () => setTimerRunning(false);
-  const handleReset = () => {
-    stopTimer();
-    setTimerPhase("work");
-    const secs = timerWorkMinutes * 60;
-    setTimerSeconds(secs);
-    setTimerTotalSeconds(secs);
-  };
+
+  const handleReset = () => reset();
 
   // Format time
-  const minutes = Math.floor(timerSeconds / 60);
-  const seconds = timerSeconds % 60;
-  const timeDisplay = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const timeDisplay = `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
-  // Progress calculation
-  const progress = timerTotalSeconds > 0 ? timerSeconds / timerTotalSeconds : 0;
-
-  // Ring color
-  const ringColor = timerPhase === "work" ? "var(--primary)" : "#16a34a";
+  const progress = totalSeconds > 0 ? seconds / totalSeconds : 0;
+  const ringColor = phase === "work" ? "var(--primary)" : "#16a34a";
 
   return (
     <Card>
@@ -247,7 +74,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
         ).map((p) => (
           <button
             key={p.key}
-            onClick={() => applyPreset(p.key)}
+            onClick={() => setPreset(p.key)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
               background: preset === p.key ? "var(--primary)" : "var(--bg)",
@@ -298,7 +125,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
 
       {/* Timer ring */}
       <div className="flex flex-col items-center">
-        <div className={timerRunning ? "timer-active" : ""}>
+        <div className={running ? "timer-active" : ""}>
           <ProgressRing
             radius={90}
             stroke={8}
@@ -315,10 +142,10 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
               <span
                 className="text-sm font-medium mt-1"
                 style={{
-                  color: timerPhase === "work" ? "var(--primary)" : "#16a34a",
+                  color: phase === "work" ? "var(--primary)" : "#16a34a",
                 }}
               >
-                {timerPhase === "work" ? "Work" : "Break"}
+                {phase === "work" ? "Work" : "Break"}
               </span>
             </div>
           </ProgressRing>
@@ -326,29 +153,19 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
 
         {/* Controls */}
         <div className="flex gap-3 mt-6">
-          {!timerRunning ? (
+          {!running ? (
             <Button onClick={handleStart} size="lg">
               <span className="flex items-center gap-2">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 Start
               </span>
             </Button>
           ) : (
-            <Button onClick={handlePause} variant="secondary" size="lg">
+            <Button onClick={pause} variant="secondary" size="lg">
               <span className="flex items-center gap-2">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="4" width="4" height="16" />
                   <rect x="14" y="4" width="4" height="16" />
                 </svg>
@@ -358,14 +175,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
           )}
           <Button onClick={handleReset} variant="ghost" size="lg">
             <span className="flex items-center gap-2">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
               </svg>

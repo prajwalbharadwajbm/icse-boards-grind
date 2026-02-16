@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/store/use-store";
 import { getExams } from "@/lib/constants";
 import { today, daysBetween } from "@/lib/utils";
+import { MiniTimer } from "@/components/timer/mini-timer";
 
 function useOnlineCount(min = 112, max = 252) {
   const [count, setCount] = useState(() => Math.floor(Math.random() * (max - min + 1)) + min);
@@ -261,14 +262,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 h-16 shrink-0">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "var(--primary)" }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="0.5">
-              <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" />
-            </svg>
-          </div>
+          <img src="/icon1.png" alt="BG" width={36} height={36} className="rounded-xl shrink-0" />
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0 }}
@@ -388,6 +382,9 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
             );
           })}
         </nav>
+
+        {/* Mini Timer (visible when timer is active) */}
+        <MiniTimer collapsed={collapsed} />
 
         {/* Grinding counter */}
         <div className={`px-3 py-2 ${collapsed ? "text-center" : ""}`}>

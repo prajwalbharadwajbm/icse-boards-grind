@@ -11,19 +11,43 @@ import { Suspense } from "react";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "ICSE Boards Grind",
-  description: "Your personal ICSE 2026 board exam study dashboard — plan, track, and grind smarter.",
+  title: {
+    default: "ICSE Boards Grind — Your 2026 Board Exam Study Dashboard",
+    template: "%s | ICSE Boards Grind",
+  },
+  description: "Free ICSE 2026 board exam study planner with AI coach, study timer, progress tracking, revision scheduler, and smart timetable. Plan, track, and grind smarter.",
+  keywords: [
+    "ICSE board exam 2026",
+    "ICSE study planner",
+    "board exam preparation",
+    "study timer",
+    "ICSE revision tracker",
+    "exam countdown",
+    "study dashboard",
+    "ICSE class 10",
+    "board exam timetable",
+    "study streak tracker",
+  ],
   metadataBase: new URL("https://icse-boards-grind.vercel.app"),
   openGraph: {
-    title: "ICSE Boards Grind",
-    description: "Your personal ICSE 2026 board exam study dashboard — plan, track, and grind smarter.",
+    title: "ICSE Boards Grind — Your 2026 Board Exam Study Dashboard",
+    description: "Free ICSE 2026 board exam study planner with AI coach, study timer, progress tracking, and smart timetable.",
     siteName: "ICSE Boards Grind",
     type: "website",
+    images: [
+      {
+        url: "/icon0.svg",
+        width: 512,
+        height: 512,
+        alt: "ICSE Boards Grind Logo",
+      },
+    ],
   },
   twitter: {
     card: "summary",
-    title: "ICSE Boards Grind",
-    description: "Your personal ICSE 2026 board exam study dashboard — plan, track, and grind smarter.",
+    title: "ICSE Boards Grind — Study Dashboard for ICSE 2026",
+    description: "Free ICSE 2026 board exam study planner with AI coach, study timer, and progress tracking.",
+    images: ["/icon1.png"],
   },
   icons: {
     icon: [
@@ -31,6 +55,13 @@ export const metadata: Metadata = {
       { url: "/icon0.svg", type: "image/svg+xml" },
     ],
     apple: "/apple-icon.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://icse-boards-grind.vercel.app",
   },
 };
 

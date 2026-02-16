@@ -43,12 +43,7 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style={{ background: "var(--primary)" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-          </div>
+          <img src="/icon1.png" alt="ICSE Boards Grind" width={56} height={56} className="rounded-2xl mb-4 mx-auto" />
           <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>ICSE Boards Grind</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>Your personal study dashboard</p>
         </div>

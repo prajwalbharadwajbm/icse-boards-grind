@@ -14,6 +14,7 @@ import { WhatsNewModal } from "@/components/whats-new-modal";
 import { StudyProgressBar } from "@/components/layout/study-progress-bar";
 import { useMilestoneDetector } from "@/hooks/use-milestone-detector";
 import { useDailyGoalDetector } from "@/hooks/use-daily-goal-detector";
+import { useTimerEngine } from "@/hooks/use-timer-engine";
 import { getLatestWhatsNewVersion, getUnseenUpdates } from "@/lib/whats-new";
 import type { WhatsNewEntry } from "@/lib/whats-new";
 
@@ -37,6 +38,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Daily goal detector
   useDailyGoalDetector();
+
+  // Global timer engine (persists across page navigation)
+  useTimerEngine();
 
   // What's New modal
   const lastSeenVersion = useStore((s) => s.lastSeenWhatsNewVersion);
