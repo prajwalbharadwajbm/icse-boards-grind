@@ -9,6 +9,9 @@ import { capture } from "@/lib/analytics";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { WhatsNewModal } from "@/components/whats-new-modal";
+import { getLatestWhatsNewVersion, getUnseenUpdates } from "@/lib/whats-new";
+import type { WhatsNewEntry } from "@/lib/whats-new";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,6 +24,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Initialize push notifications
   usePushNotifications();
+
+  // What's New modal
+  const lastSeenVersion = useStore((s) => s.lastSeenWhatsNewVersion);
+  const setField = useStore((s) => s.setField);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const [whatsNewUpdates, setWhatsNewUpdates] = useState<WhatsNewEntry[]>([]);
+
+  useEffect(() => {
+    if (!hydrated || !onboarded) return;
+    const unseen = getUnseenUpdates(lastSeenVersion);
+    if (unseen.length === 0) return;
+    setWhatsNewUpdates(unseen);
+    const timer = setTimeout(() => setWhatsNewOpen(true), 1200);
+    return () => clearTimeout(timer);
+  }, [hydrated, onboarded, lastSeenVersion]);
 
   const showCoachBanner = pathname !== "/dashboard/coach" && pathname !== "/dashboard/settings";
 
@@ -68,6 +86,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <WhatsNewModal
+        open={whatsNewOpen}
+        updates={whatsNewUpdates}
+        onClose={() => {
+          setWhatsNewOpen(false);
+          setField("lastSeenWhatsNewVersion", getLatestWhatsNewVersion());
+          capture("whats_new_dismissed", { updates_shown: whatsNewUpdates.length });
+        }}
+      />
     </div>
   );
 }

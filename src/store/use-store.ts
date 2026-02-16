@@ -76,6 +76,7 @@ export interface StoreState {
   grammarDrillStats: Record<string, { attempted: number; correct: number }>;
   jcFlashcardsReviewed: string[];
   jcQuizScores: { score: number; total: number; timestamp: number }[];
+  lastSeenWhatsNewVersion: string | null;
   _hydrated: boolean;
 }
 
@@ -122,6 +123,7 @@ const defaultState: StoreState = {
   grammarDrillStats: {},
   jcFlashcardsReviewed: [],
   jcQuizScores: [],
+  lastSeenWhatsNewVersion: null,
   _hydrated: false,
 };
 
