@@ -179,7 +179,7 @@ function scheduleEveningNudge() {
         new Notification(msg.title, {
           body: msg.body,
           tag: `evening-nudge-${td}`,
-          icon: "/icons/icon-192x192.png",
+          icon: "/icon1.png",
         });
       } catch {
         /* silent */
@@ -214,7 +214,7 @@ function scheduleStreakRisk() {
         new Notification(msg.title, {
           body: msg.body,
           tag: `streak-risk-${td}`,
-          icon: "/icons/icon-192x192.png",
+          icon: "/icon1.png",
         });
       } catch {
         /* silent */

@@ -80,8 +80,8 @@ export async function showNotification(
   if (Notification.permission !== "granted") return false;
 
   const notifOptions: NotificationOptions = {
-    icon: "/icons/icon-192x192.png",
-    badge: "/icons/icon-192x192.png",
+    icon: "/icon1.png",
+    badge: "/icon1.png",
     ...options,
   };
 

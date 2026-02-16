@@ -25,7 +25,13 @@ export const metadata: Metadata = {
     title: "ICSE Boards Grind",
     description: "Your personal ICSE 2026 board exam study dashboard — plan, track, and grind smarter.",
   },
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon0.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Boards Grind" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>

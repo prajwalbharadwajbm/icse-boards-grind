@@ -103,7 +103,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       if ("Notification" in window && Notification.permission === "granted") {
         const n = new Notification("Test Notification", {
           body: "This is how your study reminders will look!",
-          icon: "/icons/icon-192x192.png",
+          icon: "/icon1.png",
         });
         n.onshow = () => setTestStatus("Sent! Check your notifications.");
         n.onerror = () => setTestStatus("Failed - check macOS notification settings for your browser");
