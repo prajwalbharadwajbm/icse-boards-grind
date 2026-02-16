@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/firebase";
+import { getDbInstance } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const snap = await getDocs(collection(db, "users"));
+      const snap = await getDocs(collection(getDbInstance(), "users"));
       const list: AdminUser[] = snap.docs.map((d) => ({
         uid: d.id,
         ...d.data(),
