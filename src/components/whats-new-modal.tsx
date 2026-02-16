@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Modal } from "@/components/ui/modal";
 import type { WhatsNewEntry } from "@/lib/whats-new";
@@ -11,6 +12,15 @@ interface WhatsNewModalProps {
 }
 
 export function WhatsNewModal({ open, onClose, updates }: WhatsNewModalProps) {
+  const router = useRouter();
+
+  const handleClick = (entry: WhatsNewEntry) => {
+    if (entry.link) {
+      onClose();
+      router.push(entry.link);
+    }
+  };
+
   return (
     <Modal open={open} onClose={onClose} title="What's New">
       <div className="max-h-80 overflow-y-auto space-y-3 pr-1 -mr-1">
@@ -20,12 +30,15 @@ export function WhatsNewModal({ open, onClose, updates }: WhatsNewModalProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.3 }}
-            className="rounded-lg p-3"
+            className={`rounded-lg p-3${entry.link ? " cursor-pointer transition-colors" : ""}`}
             style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+            onClick={() => handleClick(entry)}
+            onHoverStart={entry.link ? undefined : undefined}
+            whileHover={entry.link ? { scale: 1.01 } : undefined}
           >
             <div className="flex items-start gap-3">
               <span className="text-xl leading-none mt-0.5">{entry.emoji}</span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <h4 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
                     {entry.title}
@@ -38,6 +51,11 @@ export function WhatsNewModal({ open, onClose, updates }: WhatsNewModalProps) {
                   {entry.description}
                 </p>
               </div>
+              {entry.link && (
+                <svg className="w-4 h-4 mt-1 shrink-0" style={{ color: "var(--text-secondary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              )}
             </div>
           </motion.div>
         ))}

@@ -134,13 +134,13 @@ export default function LeaderboardPage() {
                     }}
                   >
                     <td className="px-4 py-3 text-sm font-bold" style={{ color: i < 3 ? "var(--primary)" : "var(--text-secondary)" }}>
-                      {i === 0 ? "\uD83E\uDD47" : i === 1 ? "\uD83E\uDD48" : i === 2 ? "\uD83E\uDD49" : i + 1}
+                      {i + 1}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--text)" }}>
                       {entry.name} {isMe && <span className="text-xs" style={{ color: "var(--primary)" }}>(you)</span>}
                     </td>
                     <td className="px-4 py-3 text-center text-sm" style={{ color: "var(--warning)" }}>
-                      {entry.streak > 0 && "\uD83D\uDD25"}{entry.streak}
+                      {entry.streak}
                     </td>
                     <td className="px-4 py-3 text-center text-sm font-medium" style={{ color: "var(--text)" }}>
                       {entry.totalHours.toFixed(1)}h
