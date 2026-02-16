@@ -14,7 +14,7 @@ export const GRAMMAR_CATEGORIES: GrammarCategory[] = [
   { id: "transformation", label: "Sentence Transformation", description: "Rewrite sentences as directed" },
 ];
 
-export function getGrammarPrompt(categoryId: string): string {
+export function getGrammarPrompt(categoryId: string, recentQuestions?: string[]): string {
   const prompts: Record<string, string> = {
     tenses: `You are an ICSE English grammar teacher preparing students for the ICSE Class X Board Exam (English Paper 1 - Language). Generate ONE multiple-choice question testing knowledge of English tenses (simple, continuous, perfect, perfect continuous — past, present, or future).
 
@@ -119,7 +119,13 @@ CORRECT: [A, B, C, or D]
 EXPLANATION: [Brief explanation]`,
   };
 
-  return prompts[categoryId] || prompts.tenses;
+  let prompt = prompts[categoryId] || prompts.tenses;
+
+  if (recentQuestions && recentQuestions.length > 0) {
+    prompt += `\n\nIMPORTANT: Do NOT repeat or rephrase any of these recently asked questions. Generate a completely different question testing a different aspect of the topic:\n${recentQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+  }
+
+  return prompt;
 }
 
 export interface ParsedGrammarQuestion {
