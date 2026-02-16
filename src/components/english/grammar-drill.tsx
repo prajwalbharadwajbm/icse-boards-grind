@@ -25,7 +25,7 @@ export function GrammarDrill() {
   const [question, setQuestion] = useState<ParsedGrammarQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [recentQuestions, setRecentQuestions] = useState<Record<string, string[]>>({});
+  const recentGrammarQuestions = useStore((s) => s.recentGrammarQuestions);
 
   const generateQuestion = useCallback(
     async (categoryId: string) => {
@@ -36,7 +36,7 @@ export function GrammarDrill() {
       setSubmitted(false);
 
       try {
-        const recent = recentQuestions[categoryId] || [];
+        const recent = recentGrammarQuestions[categoryId] || [];
         const prompt = getGrammarPrompt(categoryId, recent);
         const effectiveKey = getEffectiveAIKey(grokApiKey);
         const response = await sendChatCompletionSync(effectiveKey, [
@@ -48,11 +48,11 @@ export function GrammarDrill() {
           return;
         }
         setQuestion(parsed);
-        setRecentQuestions((prev) => {
+        update((state) => {
+          const prev = { ...state.recentGrammarQuestions };
           const list = prev[categoryId] || [];
-          // Keep last 10 questions to avoid prompt getting too long
-          const updated = [...list, parsed.question].slice(-10);
-          return { ...prev, [categoryId]: updated };
+          prev[categoryId] = [...list, parsed.question].slice(-10);
+          return { recentGrammarQuestions: prev };
         });
         posthog.capture("grammar_question_generated", { category: categoryId });
       } catch (err) {
@@ -62,7 +62,7 @@ export function GrammarDrill() {
         setLoading(false);
       }
     },
-    [grokApiKey]  // eslint-disable-line react-hooks/exhaustive-deps
+    [grokApiKey, recentGrammarQuestions, update]
   );
 
   const handleSelectCategory = (id: string) => {

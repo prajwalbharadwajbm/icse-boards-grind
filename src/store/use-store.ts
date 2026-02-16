@@ -74,6 +74,7 @@ export interface StoreState {
   dailyBriefingCache: Record<string, { content: string; timestamp: number }>;
   solvedPapers: string[];
   grammarDrillStats: Record<string, { attempted: number; correct: number }>;
+  recentGrammarQuestions: Record<string, string[]>;
   jcFlashcardsReviewed: string[];
   jcQuizScores: { score: number; total: number; timestamp: number }[];
   lastSeenWhatsNewVersion: string | null;
@@ -121,6 +122,7 @@ const defaultState: StoreState = {
   dailyBriefingCache: {},
   solvedPapers: [],
   grammarDrillStats: {},
+  recentGrammarQuestions: {},
   jcFlashcardsReviewed: [],
   jcQuizScores: [],
   lastSeenWhatsNewVersion: null,
