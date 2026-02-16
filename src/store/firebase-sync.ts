@@ -75,12 +75,41 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
         cloudData.leaderboardOptIn = true;
       }
       useStore.getState().setAll(cloudData);
+      // Ensure leaderboard data is pushed on load
+      pushLeaderboardData();
       return true;
     }
   } catch (e) {
     console.error("Cloud load failed:", e);
   }
   return false;
+}
+
+/** Push current user's leaderboard entry to Firestore immediately */
+export async function pushLeaderboardData() {
+  if (!currentUid) return;
+  const state = useStore.getState();
+  if (!state.leaderboardOptIn) return;
+
+  try {
+    let totalHours = 0;
+    Object.values(state.studyLog || {}).forEach((log) => { totalHours += log.hours; });
+    let chapsDone = 0;
+    Object.values(state.subjects || {}).forEach((chs) => {
+      chs.forEach((ch) => { if (ch.status === "completed") chapsDone++; });
+    });
+
+    await setDoc(doc(getDbInstance(), "leaderboard", currentUid), {
+      name: anonymizeName(state.name),
+      streak: state.streak || 0,
+      totalHours,
+      chaptersDone: chapsDone,
+      weekStart: getCurrentWeekStart(),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("Leaderboard push failed:", e);
+  }
 }
 
 export async function deleteCloudData(uid: string) {

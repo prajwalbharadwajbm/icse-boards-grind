@@ -6,6 +6,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
+import { pushLeaderboardData } from "@/store/firebase-sync";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCurrentWeekStart } from "@/lib/leaderboard";
@@ -29,7 +30,8 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     posthog.capture("leaderboard_viewed");
-    loadLeaderboard();
+    // Ensure current user's data is in Firestore before loading
+    pushLeaderboardData().then(() => loadLeaderboard());
   }, []);
 
   async function loadLeaderboard() {
@@ -57,6 +59,8 @@ export default function LeaderboardPage() {
   const handleOptIn = () => {
     setField("leaderboardOptIn", true);
     posthog.capture("leaderboard_opted_in");
+    // Push data immediately after opting in
+    setTimeout(() => pushLeaderboardData().then(() => loadLeaderboard()), 500);
   };
 
   return (
@@ -109,7 +113,9 @@ export default function LeaderboardPage() {
           </div>
         ) : sorted.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>No participants yet. Be the first to join!</p>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              {tab === "week" ? "No study data this week yet. Start a session to appear here!" : "No data yet. Study data will appear here automatically."}
+            </p>
           </div>
         ) : (
           <table className="w-full">
