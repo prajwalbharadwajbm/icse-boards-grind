@@ -1,5 +1,5 @@
 // Service Worker for ICSE Boards Grind PWA
-const CACHE_NAME = "icse-grind-v1";
+const CACHE_NAME = "icse-grind-v2";
 const OFFLINE_URL = "/offline.html";
 
 // Install event - cache essential files
@@ -9,7 +9,7 @@ self.addEventListener("install", (event) => {
       return cache.addAll([
         "/",
         "/manifest.json",
-        "/icons/icon-192x192.svg",
+        "/icons/icon-192x192.png",
       ]);
     })
   );
@@ -55,8 +55,8 @@ self.addEventListener("push", (event) => {
   let data = {
     title: "ICSE Boards Grind",
     body: "Time to study!",
-    icon: "/icons/icon-192x192.svg",
-    badge: "/icons/icon-192x192.svg",
+    icon: "/icons/icon-192x192.png",
+    badge: "/icons/icon-192x192.png",
     tag: "study-reminder",
     data: { url: "/dashboard" },
   };

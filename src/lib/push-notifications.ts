@@ -81,23 +81,29 @@ export async function showNotification(
   const permission = await requestNotificationPermission();
   if (permission !== "granted") return false;
 
+  const notifOptions: NotificationOptions = {
+    icon: "/icons/icon-192x192.png",
+    badge: "/icons/icon-192x192.png",
+    ...options,
+  };
+
   try {
+    // Try service worker notification first (works in background)
     const registration = await getServiceWorkerRegistration();
-    if (registration) {
-      await registration.showNotification(title, {
-        icon: "/icons/icon-192x192.svg",
-        badge: "/icons/icon-192x192.svg",
-        tag: "icse-grind",
-        ...options,
-      });
+    if (registration?.active) {
+      await registration.showNotification(title, notifOptions);
       return true;
     }
-    
-    // Fallback to regular Notification
-    new Notification(title, options);
+  } catch (error) {
+    console.error("SW notification failed, trying fallback:", error);
+  }
+
+  // Fallback to regular Notification API
+  try {
+    new Notification(title, notifOptions);
     return true;
   } catch (error) {
-    console.error("Error showing notification:", error);
+    console.error("Fallback notification also failed:", error);
     return false;
   }
 }
