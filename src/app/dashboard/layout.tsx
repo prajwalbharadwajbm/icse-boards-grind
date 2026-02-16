@@ -10,6 +10,8 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { WhatsNewModal } from "@/components/whats-new-modal";
+import { StudyProgressBar } from "@/components/layout/study-progress-bar";
+import { useMilestoneDetector } from "@/hooks/use-milestone-detector";
 import { getLatestWhatsNewVersion, getUnseenUpdates } from "@/lib/whats-new";
 import type { WhatsNewEntry } from "@/lib/whats-new";
 
@@ -24,6 +26,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Initialize push notifications
   usePushNotifications();
+
+  // Milestone confetti detector
+  useMilestoneDetector();
 
   // What's New modal
   const lastSeenVersion = useStore((s) => s.lastSeenWhatsNewVersion);
@@ -66,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar onMenuClick={() => setMobileOpen(true)} />
+        <StudyProgressBar />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {showCoachBanner && (
             <Link href="/dashboard/coach" onClick={() => capture("coach_banner_clicked", { page: pathname })}>

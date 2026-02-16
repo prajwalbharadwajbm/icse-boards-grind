@@ -297,4 +297,6 @@ export const SECTION_TITLES: Record<string, string> = {
   progress: "Progress",
   papers: "Practice Papers",
   settings: "Settings",
+  notes: "Revision Notes",
+  leaderboard: "Leaderboard",
 };

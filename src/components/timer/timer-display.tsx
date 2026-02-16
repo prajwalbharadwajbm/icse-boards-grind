@@ -36,19 +36,50 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
     useStore.getState().update((s) => {
       const studyLog = { ...s.studyLog };
       const existing = studyLog[td] || { hours: 0, sessions: 0 };
+      const newHours = existing.hours + timerWorkMinutes / 60;
       studyLog[td] = {
-        hours: existing.hours + timerWorkMinutes / 60,
+        hours: newHours,
         sessions: existing.sessions + 1,
       };
 
       // Update streak
       let streak = s.streak;
+      let streakRecoveryAvailable = s.streakRecoveryAvailable;
+      let streakBeforeReset = s.streakBeforeReset;
       const lastDate = s.lastStudyDate;
+
       if (lastDate !== td) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yStr = yesterday.toISOString().split("T")[0];
-        streak = lastDate === yStr ? streak + 1 : 1;
+
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        const twoDaysAgoStr = twoDaysAgo.toISOString().split("T")[0];
+
+        if (lastDate === yStr) {
+          // Studied yesterday — continue streak
+          streak = streak + 1;
+        } else if (lastDate === twoDaysAgoStr && streak > 1) {
+          // Missed exactly one day — offer recovery
+          streakRecoveryAvailable = true;
+          streakBeforeReset = streak;
+          streak = 1;
+        } else {
+          // Missed more than one day — reset
+          streak = 1;
+          streakRecoveryAvailable = false;
+          streakBeforeReset = 0;
+        }
+      }
+
+      // F1: Check streak recovery condition (studied 2x target today)
+      const studyTarget = s.studyHours || 8;
+      if (streakRecoveryAvailable && newHours >= studyTarget * 2) {
+        streak = streakBeforeReset + 1;
+        streakRecoveryAvailable = false;
+        streakBeforeReset = 0;
+        capture("streak_recovered", { restored_streak: streak });
       }
 
       // Push timer session
@@ -67,6 +98,8 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
         streak,
         lastStudyDate: td,
         timerSessions,
+        streakRecoveryAvailable,
+        streakBeforeReset,
       };
     });
   }, [timerWorkMinutes, subject, chapter]);

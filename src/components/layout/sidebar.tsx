@@ -2,9 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/store/use-store";
+import { getExams } from "@/lib/constants";
+import { today, daysBetween } from "@/lib/utils";
 
 function useOnlineCount(min = 112, max = 252) {
   const [count, setCount] = useState(() => Math.floor(Math.random() * (max - min + 1)) + min);
@@ -64,6 +66,19 @@ const NAV_ITEMS: NavItem[] = [
         ),
       },
     ],
+  },
+  {
+    href: "/dashboard/notes",
+    label: "Notes",
+    iconEl: (active) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <line x1="10" y1="9" x2="8" y2="9" />
+      </svg>
+    ),
   },
   {
     href: "/dashboard/papers",
@@ -137,6 +152,20 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/dashboard/leaderboard",
+    label: "Leaderboard",
+    iconEl: (active) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 010-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 000-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+        <path d="M18 2H6v7a6 6 0 0012 0V2z" />
+      </svg>
+    ),
+  },
+  {
     href: "/dashboard/settings",
     label: "Settings",
     iconEl: (active) => (
@@ -158,8 +187,20 @@ interface SidebarProps {
 export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
   const name = useStore((s) => s.name) || "Student";
+  const lang = useStore((s) => s.selectedLanguage) || "kannada";
+  const elective = useStore((s) => s.selectedElective) || "computer";
   const initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "U";
   const onlineCount = useOnlineCount();
+
+  // F5: Compact exam countdown for sidebar
+  const nextExamInfo = useMemo(() => {
+    const td = today();
+    const exams = getExams(lang, elective);
+    const next = exams.find((e) => e.date >= td);
+    if (!next) return null;
+    const days = daysBetween(td, next.date);
+    return { days, subject: next.subject.split(" ")[0] }; // First word of subject name
+  }, [lang, elective]);
 
   // Auto-open subsections with fewer than 3 children
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
@@ -350,6 +391,25 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
             )}
           </div>
         </div>
+
+        {/* F5: Compact exam countdown */}
+        {nextExamInfo && (
+          <div className={`px-3 py-1.5 ${collapsed ? "text-center" : ""}`}>
+            <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="shrink-0">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              {!collapsed ? (
+                <span className="text-xs text-amber-400 font-semibold">
+                  {nextExamInfo.days}d to {nextExamInfo.subject}
+                </span>
+              ) : (
+                <span className="text-xs text-amber-400 font-bold">{nextExamInfo.days}d</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="px-3 py-3 border-t border-white/10">

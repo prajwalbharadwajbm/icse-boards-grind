@@ -3,6 +3,7 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useStore, type StoreState } from "./use-store";
+import { anonymizeName, getCurrentWeekStart } from "@/lib/leaderboard";
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let currentUid: string | null = null;
@@ -34,6 +35,30 @@ async function pushToCloud() {
   try {
     const data = getDataToSync();
     await setDoc(doc(getDbInstance(), "users", currentUid), data);
+
+    // F9: Push leaderboard data if opted in
+    const state = useStore.getState();
+    if (state.leaderboardOptIn) {
+      try {
+        let totalHours = 0;
+        Object.values(state.studyLog || {}).forEach((log) => { totalHours += log.hours; });
+        let chapsDone = 0;
+        Object.values(state.subjects || {}).forEach((chs) => {
+          chs.forEach((ch) => { if (ch.status === "completed") chapsDone++; });
+        });
+
+        await setDoc(doc(getDbInstance(), "leaderboard", currentUid), {
+          name: anonymizeName(state.name),
+          streak: state.streak || 0,
+          totalHours,
+          chaptersDone: chapsDone,
+          weekStart: getCurrentWeekStart(),
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.error("Leaderboard sync failed:", e);
+      }
+    }
   } catch (e) {
     console.error("Cloud sync failed:", e);
   }

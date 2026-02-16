@@ -11,6 +11,7 @@ import { getSubjectLabels, getSubjectColors, SECOND_LANGUAGES, ELECTIVES } from 
 import { today } from "@/lib/utils";
 import { deleteCloudData } from "@/store/firebase-sync";
 import { NotificationSettings } from "@/components/notifications/notification-settings";
+import { anonymizeName } from "@/lib/leaderboard";
 
 export default function SettingsPage() {
   const data = useStore();
@@ -288,6 +289,89 @@ export default function SettingsPage() {
         <p className="text-xs mt-2" style={{ color: "var(--text-secondary)" }}>
           Supports xAI Grok (grok-3-mini) and Groq (llama-3.3-70b). Keys starting with &quot;gsk_&quot; use Groq.
         </p>
+      </Card>
+
+      {/* F9: Leaderboard */}
+      <Card>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Leaderboard</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm" style={{ color: "var(--text)" }}>
+              {data.leaderboardOptIn ? "You're on the leaderboard" : "Join the leaderboard"}
+            </p>
+            {data.leaderboardOptIn && (
+              <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                Shown as: {anonymizeName(name || data.name)}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setField("leaderboardOptIn", !data.leaderboardOptIn);
+              posthog.capture("leaderboard_toggle", { enabled: !data.leaderboardOptIn });
+            }}
+            className="w-11 h-6 rounded-full transition-all relative"
+            style={{ background: data.leaderboardOptIn ? "var(--primary)" : "var(--border)" }}
+          >
+            <div
+              className="w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all"
+              style={{ left: data.leaderboardOptIn ? 22 : 2 }}
+            />
+          </button>
+        </div>
+      </Card>
+
+      {/* F10: Parent Report */}
+      <Card>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Parent Report</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm" style={{ color: "var(--text)" }}>
+                {data.shareReportEnabled ? "Report sharing is on" : "Share progress with parents"}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                Parents can view a read-only progress report.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setField("shareReportEnabled", !data.shareReportEnabled);
+                posthog.capture("parent_report_toggle", { enabled: !data.shareReportEnabled });
+              }}
+              className="w-11 h-6 rounded-full transition-all relative"
+              style={{ background: data.shareReportEnabled ? "var(--primary)" : "var(--border)" }}
+            >
+              <div
+                className="w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all"
+                style={{ left: data.shareReportEnabled ? 22 : 2 }}
+              />
+            </button>
+          </div>
+          {data.shareReportEnabled && user && (
+            <div>
+              <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-secondary)" }}>Report URL</label>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/report?uid=${user.uid}`}
+                  className="flex-1 px-3 py-2 rounded-lg text-xs"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/report?uid=${user.uid}`);
+                    showToast("Link copied!");
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Save */}

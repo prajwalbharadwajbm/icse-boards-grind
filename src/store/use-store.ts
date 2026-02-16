@@ -78,6 +78,15 @@ export interface StoreState {
   jcFlashcardsReviewed: string[];
   jcQuizScores: { score: number; total: number; timestamp: number }[];
   lastSeenWhatsNewVersion: string | null;
+  // F1: Streak Recovery
+  streakRecoveryAvailable: boolean;
+  streakBeforeReset: number;
+  // F6: Revision Notes
+  revisionNotes: Record<string, Record<string, string>>;
+  // F9: Leaderboard
+  leaderboardOptIn: boolean;
+  // F10: Parent Report
+  shareReportEnabled: boolean;
   _hydrated: boolean;
 }
 
@@ -126,6 +135,11 @@ const defaultState: StoreState = {
   jcFlashcardsReviewed: [],
   jcQuizScores: [],
   lastSeenWhatsNewVersion: null,
+  streakRecoveryAvailable: false,
+  streakBeforeReset: 0,
+  revisionNotes: {},
+  leaderboardOptIn: false,
+  shareReportEnabled: false,
   _hydrated: false,
 };
 
