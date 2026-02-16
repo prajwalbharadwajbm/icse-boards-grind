@@ -90,11 +90,29 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     setIsLoading(false);
   };
 
+  const [testStatus, setTestStatus] = useState<string | null>(null);
+
   const handleTestNotification = async () => {
-    await showNotification("Test Notification 📚", {
-      body: "This is how your study reminders will look!",
-      tag: "test",
-    });
+    setTestStatus("Sending...");
+    try {
+      // Direct Notification API call for maximum reliability
+      if ("Notification" in window && Notification.permission === "granted") {
+        const n = new Notification("Test Notification", {
+          body: "This is how your study reminders will look!",
+          icon: "/icons/icon-192x192.png",
+        });
+        n.onshow = () => setTestStatus("Sent! Check your notifications.");
+        n.onerror = () => setTestStatus("Failed - check macOS notification settings for your browser");
+        // Clear status after 3s
+        setTimeout(() => setTestStatus(null), 3000);
+      } else {
+        setTestStatus(`Permission: ${Notification.permission}`);
+        setTimeout(() => setTestStatus(null), 3000);
+      }
+    } catch (err) {
+      setTestStatus(`Error: ${err}`);
+      setTimeout(() => setTestStatus(null), 5000);
+    }
   };
 
   const handleSavePrefs = () => {
@@ -171,6 +189,11 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           </Button>
         )}
       </div>
+
+      {/* Test status feedback */}
+      {testStatus && (
+        <p className="text-xs px-4" style={{ color: "var(--text-secondary)" }}>{testStatus}</p>
+      )}
 
       {/* Notification Preferences */}
       <AnimatePresence>
