@@ -62,9 +62,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 // Get service worker registration
 export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
-  
+
   try {
-    return await navigator.serviceWorker.ready;
+    return (await navigator.serviceWorker.getRegistration()) || null;
   } catch (error) {
     console.error("Error getting service worker:", error);
     return null;
@@ -76,10 +76,8 @@ export async function showNotification(
   title: string,
   options?: NotificationOptions
 ): Promise<boolean> {
-  if (!isPushSupported()) return false;
-
-  const permission = await requestNotificationPermission();
-  if (permission !== "granted") return false;
+  if (typeof window === "undefined" || !("Notification" in window)) return false;
+  if (Notification.permission !== "granted") return false;
 
   const notifOptions: NotificationOptions = {
     icon: "/icons/icon-192x192.png",
@@ -88,22 +86,19 @@ export async function showNotification(
   };
 
   try {
-    // Try service worker notification first (works in background)
-    const registration = await getServiceWorkerRegistration();
-    if (registration?.active) {
-      await registration.showNotification(title, notifOptions);
-      return true;
-    }
-  } catch (error) {
-    console.error("SW notification failed, trying fallback:", error);
-  }
-
-  // Fallback to regular Notification API
-  try {
     new Notification(title, notifOptions);
     return true;
-  } catch (error) {
-    console.error("Fallback notification also failed:", error);
+  } catch {
+    // Mobile browsers don't support new Notification(), try SW
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      if (reg?.active) {
+        await reg.showNotification(title, notifOptions);
+        return true;
+      }
+    } catch (e) {
+      console.error("Notification failed:", e);
+    }
     return false;
   }
 }
