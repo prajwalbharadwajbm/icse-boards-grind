@@ -138,7 +138,7 @@ const defaultState: StoreState = {
   streakRecoveryAvailable: false,
   streakBeforeReset: 0,
   revisionNotes: {},
-  leaderboardOptIn: false,
+  leaderboardOptIn: true,
   shareReportEnabled: false,
   _hydrated: false,
 };
@@ -164,6 +164,15 @@ export const useStore = create<StoreState & StoreActions>()(
     }),
     {
       name: "icse_grind",
+      version: 1,
+      migrate: (persisted, version) => {
+        const state = persisted as Record<string, unknown>;
+        if (version === 0) {
+          // Auto-opt-in existing users to leaderboard
+          state.leaderboardOptIn = true;
+        }
+        return state as unknown as StoreState & StoreActions;
+      },
       partialize: (state) => {
         const { _hydrated, setField, update, setAll, resetStore, markHydrated, ...rest } = state;
         return rest;

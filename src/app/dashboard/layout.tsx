@@ -9,6 +9,7 @@ import { capture } from "@/lib/analytics";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { useGenerateNotifications } from "@/hooks/use-generate-notifications";
 import { WhatsNewModal } from "@/components/whats-new-modal";
 import { StudyProgressBar } from "@/components/layout/study-progress-bar";
 import { useMilestoneDetector } from "@/hooks/use-milestone-detector";
@@ -26,6 +27,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Initialize push notifications
   usePushNotifications();
+
+  // Generate in-app notifications on mount
+  useGenerateNotifications();
 
   // Milestone confetti detector
   useMilestoneDetector();

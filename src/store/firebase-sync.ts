@@ -69,8 +69,12 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
   try {
     const docSnap = await getDoc(doc(getDbInstance(), "users", uid));
     if (docSnap.exists()) {
-      const cloudData = docSnap.data();
-      useStore.getState().setAll(cloudData as Partial<StoreState>);
+      const cloudData = docSnap.data() as Partial<StoreState>;
+      // Auto-opt-in existing users who were never explicitly on the leaderboard
+      if (cloudData.leaderboardOptIn === false || cloudData.leaderboardOptIn === undefined) {
+        cloudData.leaderboardOptIn = true;
+      }
+      useStore.getState().setAll(cloudData);
       return true;
     }
   } catch (e) {

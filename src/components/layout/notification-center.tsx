@@ -1,60 +1,13 @@
 "use client";
 
 import { useNotifications } from "@/store/use-notifications";
-import { useStore } from "@/store/use-store";
-import { getExams, getSubjectLabels } from "@/lib/constants";
-import { today, daysBetween } from "@/lib/utils";
-import { useEffect } from "react";
 
 interface Props {
   onClose: () => void;
 }
 
 export function NotificationCenter({ onClose }: Props) {
-  const { notifications, markAllRead, addNotification } = useNotifications();
-  const subjects = useStore((s) => s.subjects);
-  const selectedLanguage = useStore((s) => s.selectedLanguage) || "kannada";
-  const selectedElective = useStore((s) => s.selectedElective) || "computer";
-
-  // Generate revision-due notifications on mount
-  useEffect(() => {
-    const td = today();
-    const SUBJECT_LABELS = getSubjectLabels(selectedLanguage, selectedElective);
-    const exams = getExams(selectedLanguage, selectedElective);
-
-    Object.keys(subjects).forEach((subjectKey) => {
-      (subjects[subjectKey] || []).forEach((ch) => {
-        if (ch.status === "needs_revision" && ch.revisionDate && ch.revisionIntervals) {
-          const completed = ch.revisionsCompleted || 0;
-          if (completed < ch.revisionIntervals.length) {
-            const interval = ch.revisionIntervals[completed];
-            const dueDate = new Date(new Date(ch.revisionDate + "T00:00:00").getTime() + interval * 86400000);
-            const dueDateStr = dueDate.toISOString().split("T")[0];
-            if (dueDateStr === td) {
-              addNotification({
-                title: "Revision Due",
-                message: `${SUBJECT_LABELS[subjectKey] || subjectKey} - ${ch.name} is due for revision today`,
-                type: "warning",
-              });
-            }
-          }
-        }
-      });
-    });
-
-    // Upcoming exam alerts
-    exams.forEach((exam) => {
-      const days = daysBetween(td, exam.date);
-      if (days >= 0 && days <= 2) {
-        addNotification({
-          title: days === 0 ? "Exam Today!" : `Exam in ${days} day${days > 1 ? "s" : ""}`,
-          message: exam.subject,
-          type: days === 0 ? "error" : "warning",
-        });
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { notifications, markAllRead } = useNotifications();
 
   return (
     <div

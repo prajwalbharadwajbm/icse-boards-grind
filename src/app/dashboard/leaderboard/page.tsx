@@ -68,16 +68,16 @@ export default function LeaderboardPage() {
         </p>
       </div>
 
-      {/* Opt-in banner */}
+      {/* Opt-out notice */}
       {!leaderboardOptIn && (
-        <Card style={{ background: "linear-gradient(135deg, #7b61ff, #1a73e8)" }}>
+        <Card style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
           <div className="text-center py-4">
-            <p className="text-white font-semibold mb-2">Join the Leaderboard</p>
-            <p className="text-white/80 text-sm mb-4">
-              Your name will appear anonymized (e.g. &quot;Aadhithya B.&quot;). Opt in from Settings anytime.
+            <p className="font-semibold mb-2" style={{ color: "var(--text)" }}>You&apos;ve left the leaderboard</p>
+            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+              Your name appears anonymized (e.g. &quot;Aadhithya B.&quot;). Re-join anytime.
             </p>
-            <Button onClick={handleOptIn} style={{ background: "#fff", color: "#7b61ff" }}>
-              Join Leaderboard
+            <Button onClick={handleOptIn} style={{ background: "var(--primary)", color: "#fff" }}>
+              Re-join Leaderboard
             </Button>
           </div>
         </Card>
