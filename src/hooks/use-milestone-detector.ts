@@ -2,8 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { useStore, type StoreState } from "@/store/use-store";
+import { useNotifications } from "@/store/use-notifications";
 import { useConfetti } from "./use-confetti";
 import { capture } from "@/lib/analytics";
+import { showNotification } from "@/lib/push-notifications";
+import { getStreakMessage, getChapterCompleteMessage, getGrammarPerfectMessage } from "@/lib/notification-messages";
+import { throttle } from "@/lib/notification-throttle";
+import { getSubjectLabels } from "@/lib/constants";
 
 const STREAK_MILESTONES = [7, 14, 30, 60, 100];
 
@@ -23,6 +28,7 @@ function markCelebrated(key: string) {
 
 export function useMilestoneDetector() {
   const { fire } = useConfetti();
+  const addNotification = useNotifications((s) => s.addNotification);
   const prevRef = useRef<Partial<StoreState> | null>(null);
 
   useEffect(() => {
@@ -31,6 +37,15 @@ export function useMilestoneDetector() {
       prevRef.current = { streak: state.streak, subjects: state.subjects, grammarDrillStats: state.grammarDrillStats, solvedPapers: state.solvedPapers };
 
       if (!prev) return; // First render, just capture state
+
+      const lang = state.selectedLanguage || "kannada";
+      const elective = state.selectedElective || "computer";
+      const SUBJECT_LABELS = getSubjectLabels(lang, elective);
+
+      // Check notification prefs
+      const savedPrefs = typeof localStorage !== "undefined" ? localStorage.getItem("notification-prefs") : null;
+      const prefs = savedPrefs ? JSON.parse(savedPrefs) : {};
+      const milestonesEnabled = prefs.milestones !== false; // default true
 
       // Detect chapter completion
       if (state.subjects && prev.subjects) {
@@ -47,6 +62,13 @@ export function useMilestoneDetector() {
                 markCelebrated(mKey);
                 fire();
                 capture("milestone_celebrated", { type: "chapter_completed", subject: key, chapter: newChapters[i].name });
+
+                if (milestonesEnabled && throttle("chapter_complete")) {
+                  const subjectLabel = SUBJECT_LABELS[key] || key;
+                  const msg = getChapterCompleteMessage(subjectLabel, newChapters[i].name);
+                  addNotification({ title: msg.title, message: msg.body, type: "success" });
+                  showNotification(msg.title, { body: msg.body, tag: `chapter-${key}-${i}` });
+                }
               }
             }
           }
@@ -62,6 +84,12 @@ export function useMilestoneDetector() {
               markCelebrated(mKey);
               fire();
               capture("milestone_celebrated", { type: "streak", value: m });
+
+              if (milestonesEnabled && throttle("streak_milestone")) {
+                const msg = getStreakMessage(m);
+                addNotification({ title: msg.title, message: msg.body, type: "success" });
+                showNotification(msg.title, { body: msg.body, tag: `streak-${m}` });
+              }
             }
           }
         }
@@ -78,6 +106,12 @@ export function useMilestoneDetector() {
                 markCelebrated(mKey);
                 fire();
                 capture("milestone_celebrated", { type: "grammar_perfect", category: cat });
+
+                if (milestonesEnabled) {
+                  const msg = getGrammarPerfectMessage(cat);
+                  addNotification({ title: msg.title, message: msg.body, type: "success" });
+                  showNotification(msg.title, { body: msg.body, tag: `grammar-${cat}` });
+                }
               }
             }
           }
@@ -86,5 +120,5 @@ export function useMilestoneDetector() {
     });
 
     return unsub;
-  }, [fire]);
+  }, [fire, addNotification]);
 }

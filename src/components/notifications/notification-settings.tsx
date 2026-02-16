@@ -17,6 +17,8 @@ interface NotificationPrefs {
   examAlerts: boolean;
   revisionDue: boolean;
   breakReminders: boolean;
+  milestones: boolean;
+  dailyGoalAlerts: boolean;
   reminderMinutes: number;
 }
 
@@ -43,6 +45,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       examAlerts: true,
       revisionDue: true,
       breakReminders: true,
+      milestones: true,
+      dailyGoalAlerts: true,
       reminderMinutes: 5,
     };
     if (typeof localStorage === "undefined") {
@@ -213,6 +217,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               { key: "examAlerts", label: "Exam Alerts", emoji: "📝" },
               { key: "revisionDue", label: "Revision Due", emoji: "🔄" },
               { key: "breakReminders", label: "Break Reminders", emoji: "☕" },
+              { key: "milestones", label: "Milestone Celebrations", emoji: "🏆" },
+              { key: "dailyGoalAlerts", label: "Daily Goal & Streak Alerts", emoji: "🎯" },
             ].map(({ key, label, emoji }) => (
               <label
                 key={key}

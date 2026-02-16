@@ -226,7 +226,7 @@ export function scheduleStudyNotifications(
 ): string[] {
   const ids: string[] = [];
   const today = new Date().toISOString().split("T")[0];
-  
+
   // Only schedule for today
   if (dateStr !== today) return ids;
 
@@ -234,19 +234,20 @@ export function scheduleStudyNotifications(
     const [hours, minutes] = block.start.split(":").map(Number);
     const scheduledTime = new Date();
     scheduledTime.setHours(hours, minutes, 0, 0);
-    
+
     // Skip if time has passed
     if (scheduledTime.getTime() <= Date.now()) return;
 
     const id = `study-${dateStr}-${index}`;
-    
+    const label = block.label || block.subject;
+
     // Schedule notification 5 minutes before
     const reminderTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000);
     if (reminderTime.getTime() > Date.now()) {
       const reminderId = scheduleNotification({
         id: `${id}-reminder`,
-        title: "📚 Study Session Starting Soon",
-        body: `${block.label || block.subject} starts in 5 minutes`,
+        title: "Session Starting Soon",
+        body: `${label} starts in 5 minutes.`,
         scheduledTime: reminderTime.getTime(),
         type: "study_reminder",
         data: { subject: block.subject, url: "/dashboard/timer" },
@@ -257,8 +258,8 @@ export function scheduleStudyNotifications(
     // Schedule notification at start time
     const startId = scheduleNotification({
       id,
-      title: "🎯 Time to Study!",
-      body: `Start your ${block.label || block.subject} session now`,
+      title: "Time to Study",
+      body: `Start your ${label} session now.`,
       scheduledTime: scheduledTime.getTime(),
       type: "study_start",
       data: { subject: block.subject, url: "/dashboard/timer" },
@@ -285,12 +286,18 @@ export function scheduleExamNotifications(
       if (daysUntil === daysBefore) {
         const notificationTime = new Date();
         notificationTime.setHours(8, 0, 0, 0); // 8 AM notification
-        
+
         if (notificationTime.getTime() > Date.now()) {
+          const title = daysBefore === 0
+            ? "Exam Today"
+            : `Exam in ${daysBefore} day${daysBefore > 1 ? "s" : ""}`;
+          const body = daysBefore === 0
+            ? `${exam.subject} is today. Trust your preparation.`
+            : `${exam.subject} exam is coming up. Keep studying.`;
           const id = scheduleNotification({
             id: `exam-${exam.date}-${exam.subject}-${daysBefore}`,
-            title: daysBefore === 0 ? "📝 Exam Today!" : `📅 Exam in ${daysBefore} day${daysBefore > 1 ? "s" : ""}`,
-            body: `${exam.subject} ${daysBefore === 0 ? "is today. Good luck!" : `exam is coming up. Keep studying!`}`,
+            title,
+            body,
             scheduledTime: notificationTime.getTime(),
             type: "exam_alert",
             data: { subject: exam.subject, date: exam.date, url: "/dashboard/calendar" },
@@ -314,8 +321,8 @@ export function scheduleRevisionNotification(
   
   return scheduleNotification({
     id: `revision-${subject}-${chapter}-${revisionDate}`,
-    title: "🔄 Revision Due",
-    body: `Time to revise ${chapter} (${subject})`,
+    title: "Revision Due",
+    body: `Time to revise ${chapter} (${subject}).`,
     scheduledTime: notificationTime.getTime(),
     type: "revision_due",
     data: { subject, chapter, url: "/dashboard/subjects" },

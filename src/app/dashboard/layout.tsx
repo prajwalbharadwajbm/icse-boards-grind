@@ -13,6 +13,7 @@ import { useGenerateNotifications } from "@/hooks/use-generate-notifications";
 import { WhatsNewModal } from "@/components/whats-new-modal";
 import { StudyProgressBar } from "@/components/layout/study-progress-bar";
 import { useMilestoneDetector } from "@/hooks/use-milestone-detector";
+import { useDailyGoalDetector } from "@/hooks/use-daily-goal-detector";
 import { getLatestWhatsNewVersion, getUnseenUpdates } from "@/lib/whats-new";
 import type { WhatsNewEntry } from "@/lib/whats-new";
 
@@ -33,6 +34,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Milestone confetti detector
   useMilestoneDetector();
+
+  // Daily goal detector
+  useDailyGoalDetector();
 
   // What's New modal
   const lastSeenVersion = useStore((s) => s.lastSeenWhatsNewVersion);

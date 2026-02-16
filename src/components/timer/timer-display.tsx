@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { today, playBeep, sendNotification } from "@/lib/utils";
+import { getTimerWorkDoneMessage, getTimerBreakDoneMessage } from "@/lib/notification-messages";
 
 type TimerPhase = "work" | "break";
 type Preset = "pomodoro" | "deep" | "custom";
@@ -118,9 +119,10 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
         // Timer reached zero
         playBeep();
         if (timerPhase === "work") {
+          const workMsg = getTimerWorkDoneMessage(timerWorkMinutes);
           sendNotification(
-            "Work Session Complete!",
-            `Great job! ${timerWorkMinutes} min session done. Time for a break.`,
+            workMsg.title,
+            workMsg.body,
             "timer-work-done"
           );
           logStudyTime();
@@ -136,9 +138,10 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
           return breakSecs;
         } else {
           // Break finished
+          const breakMsg = getTimerBreakDoneMessage();
           sendNotification(
-            "Break Over!",
-            "Ready to get back to work?",
+            breakMsg.title,
+            breakMsg.body,
             "timer-break-done"
           );
           // Switch to work phase but stop timer

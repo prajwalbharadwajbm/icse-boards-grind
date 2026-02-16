@@ -5,9 +5,12 @@ import { useStore } from "@/store/use-store";
 import { useNotifications } from "@/store/use-notifications";
 import { getExams, getSubjectLabels } from "@/lib/constants";
 import { today, daysBetween } from "@/lib/utils";
+import { getExamCountdownMessage } from "@/lib/notification-messages";
+import { showNotification } from "@/lib/push-notifications";
+import { throttle } from "@/lib/notification-throttle";
 
 /**
- * Generates in-app notifications on mount (revision due, upcoming exams).
+ * Generates in-app notifications on mount (revision due, upcoming exams, exam countdown).
  * Call this in the dashboard layout so notifications exist before the bell is opened.
  */
 export function useGenerateNotifications() {
@@ -48,15 +51,28 @@ export function useGenerateNotifications() {
       });
     });
 
-    // Upcoming exam alerts
+    // Exam countdown notifications with motivational messages
     exams.forEach((exam) => {
       const days = daysBetween(td, exam.date);
-      if (days >= 0 && days <= 2) {
+
+      // In-app: show for exams within 7 days
+      if (days >= 0 && days <= 7) {
+        const msg = getExamCountdownMessage(exam.subject, days);
+        const notifType = days <= 1 ? "error" as const : days <= 3 ? "warning" as const : "info" as const;
+
         addNotification({
-          title: days === 0 ? "Exam Today!" : `Exam in ${days} day${days > 1 ? "s" : ""}`,
-          message: exam.subject,
-          type: days === 0 ? "error" : "warning",
+          title: msg.title,
+          message: msg.body,
+          type: notifType,
         });
+
+        // Push notification for exams within 3 days (throttled)
+        if (days <= 3 && throttle("exam_countdown")) {
+          showNotification(msg.title, {
+            body: msg.body,
+            tag: `exam-countdown-${exam.date}-${exam.subject}`,
+          });
+        }
       }
     });
   }, [subjects, selectedLanguage, selectedElective, addNotification]);
