@@ -87,6 +87,7 @@ export interface StoreState {
   leaderboardOptIn: boolean;
   // F10: Parent Report
   shareReportEnabled: boolean;
+  credits: number;
   _hydrated: boolean;
 }
 
@@ -140,6 +141,7 @@ const defaultState: StoreState = {
   revisionNotes: {},
   leaderboardOptIn: true,
   shareReportEnabled: false,
+  credits: 500,
   _hydrated: false,
 };
 
@@ -164,12 +166,16 @@ export const useStore = create<StoreState & StoreActions>()(
     }),
     {
       name: "icse_grind",
-      version: 1,
+      version: 2,
       migrate: (persisted, version) => {
         const state = persisted as Record<string, unknown>;
         if (version === 0) {
           // Auto-opt-in existing users to leaderboard
           state.leaderboardOptIn = true;
+        }
+        if (version < 2) {
+          // Initialize credits for existing users
+          state.credits = 500;
         }
         return state as unknown as StoreState & StoreActions;
       },

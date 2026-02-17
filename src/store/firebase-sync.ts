@@ -1,8 +1,9 @@
 "use client";
 
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useStore, type StoreState } from "./use-store";
+import { DEFAULT_CREDITS } from "@/lib/credits";
 import { anonymizeName, getCurrentWeekStart } from "@/lib/leaderboard";
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -10,11 +11,15 @@ let currentUid: string | null = null;
 
 const actionKeys = ["setField", "update", "setAll", "resetStore", "markHydrated"];
 
+// Keys that are server-managed and must NOT be synced from the client
+const serverManagedKeys = ["credits"];
+
 function getDataToSync(): Partial<StoreState> {
   const state = useStore.getState();
   const data: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(state)) {
     if (key === "_hydrated" || actionKeys.includes(key) || typeof value === "function") continue;
+    if (serverManagedKeys.includes(key)) continue;
     data[key] = value;
   }
   return data as Partial<StoreState>;
@@ -34,7 +39,7 @@ async function pushToCloud() {
   if (!currentUid) return;
   try {
     const data = getDataToSync();
-    await setDoc(doc(getDbInstance(), "users", currentUid), data);
+    await setDoc(doc(getDbInstance(), "users", currentUid), data, { merge: true });
 
     // F9: Push leaderboard data if opted in
     const state = useStore.getState();
@@ -73,6 +78,13 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
       // Auto-opt-in existing users who were never explicitly on the leaderboard
       if (cloudData.leaderboardOptIn === false || cloudData.leaderboardOptIn === undefined) {
         cloudData.leaderboardOptIn = true;
+      }
+      // Initialize credits for existing cloud users — persist to Firestore
+      if (cloudData.credits == null) {
+        cloudData.credits = DEFAULT_CREDITS;
+        updateDoc(doc(getDbInstance(), "users", uid), { credits: DEFAULT_CREDITS }).catch((e) =>
+          console.error("Credit init failed:", e)
+        );
       }
       useStore.getState().setAll(cloudData);
       // Ensure leaderboard data is pushed on load

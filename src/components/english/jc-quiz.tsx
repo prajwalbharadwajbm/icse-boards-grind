@@ -6,6 +6,8 @@ import posthog from "posthog-js";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { JC_MCQ_QUESTIONS } from "@/lib/julius-caesar-data";
+import { CREDIT_COSTS } from "@/lib/credits";
+import { useCredits } from "@/hooks/use-credits";
 
 const QUIZ_SIZE = 10;
 
@@ -21,6 +23,8 @@ function pickRandom<T>(arr: T[], count: number): T[] {
 export function JCQuiz() {
   const jcQuizScores = useStore((s) => s.jcQuizScores);
   const update = useStore((s) => s.update);
+  const { credits, canAfford, deduct } = useCredits();
+  const outOfCredits = !canAfford("mcq");
 
   const [questions, setQuestions] = useState(() =>
     pickRandom(JC_MCQ_QUESTIONS, QUIZ_SIZE)
@@ -32,6 +36,7 @@ export function JCQuiz() {
     Array(QUIZ_SIZE).fill(null)
   );
   const [finished, setFinished] = useState(false);
+  const [deducting, setDeducting] = useState(false);
 
   const q = questions[currentQ];
 
@@ -43,8 +48,14 @@ export function JCQuiz() {
     return s;
   }, [answers, questions]);
 
-  const handleSubmit = () => {
-    if (selectedOption === null) return;
+  const handleSubmit = async () => {
+    if (selectedOption === null || deducting) return;
+    setDeducting(true);
+
+    const ok = await deduct("mcq");
+    setDeducting(false);
+    if (!ok) return;
+
     setSubmitted(true);
     const isCorrect = selectedOption === q.correctIndex;
     posthog.capture("jc_quiz_question_answered", {
@@ -207,12 +218,18 @@ export function JCQuiz() {
 
       {/* Question */}
       <Card>
-        <p
-          className="font-medium text-sm mb-4 leading-relaxed"
-          style={{ color: "var(--text)" }}
-        >
-          {q.question}
-        </p>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <p className="font-medium text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+            {q.question}
+          </p>
+          <span
+            className="shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+          >
+            {CREDIT_COSTS.mcq}
+            <img src="/coin.svg" alt="credits" width={12} height={12} />
+          </span>
+        </div>
 
         <div className="space-y-2 mb-4">
           {q.options.map((opt, i) => {
@@ -276,14 +293,23 @@ export function JCQuiz() {
           </motion.div>
         )}
 
+        {outOfCredits && !submitted && (
+          <div
+            className="rounded-lg px-4 py-3 text-sm mb-3"
+            style={{ background: "rgba(234,67,53,0.08)", color: "#ea4335" }}
+          >
+            Not enough credits — you need {CREDIT_COSTS.mcq} credits to submit an answer.
+          </div>
+        )}
+
         {!submitted ? (
           <button
             onClick={handleSubmit}
-            disabled={selectedOption === null}
+            disabled={selectedOption === null || outOfCredits || deducting}
             className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: "var(--primary)", color: "#fff" }}
           >
-            Submit
+            {deducting ? "Submitting..." : "Submit"}
           </button>
         ) : (
           <button

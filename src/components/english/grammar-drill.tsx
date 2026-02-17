@@ -13,11 +13,15 @@ import {
   type ParsedGrammarQuestion,
 } from "@/lib/grammar-prompts";
 import { getEffectiveAIKey } from "@/lib/utils";
+import { CREDIT_COSTS } from "@/lib/credits";
+import { useCredits } from "@/hooks/use-credits";
 
 export function GrammarDrill() {
   const grokApiKey = useStore((s) => s.grokApiKey);
   const grammarDrillStats = useStore((s) => s.grammarDrillStats);
   const update = useStore((s) => s.update);
+  const { credits, canAfford, deduct } = useCredits();
+  const outOfCredits = !canAfford("mcq");
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +29,7 @@ export function GrammarDrill() {
   const [question, setQuestion] = useState<ParsedGrammarQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [deducting, setDeducting] = useState(false);
   const recentGrammarQuestions = useStore((s) => s.recentGrammarQuestions);
 
   const generateQuestion = useCallback(
@@ -71,8 +76,14 @@ export function GrammarDrill() {
     generateQuestion(id);
   };
 
-  const handleSubmit = () => {
-    if (selectedOption === null || !question || !selectedCategory) return;
+  const handleSubmit = async () => {
+    if (selectedOption === null || !question || !selectedCategory || deducting) return;
+    setDeducting(true);
+
+    const ok = await deduct("mcq");
+    setDeducting(false);
+    if (!ok) return;
+
     setSubmitted(true);
 
     const isCorrect = selectedOption === question.correctIndex;
@@ -80,7 +91,7 @@ export function GrammarDrill() {
       category: selectedCategory,
       correct: isCorrect,
     });
-    
+
     update((state) => {
       const stats = { ...state.grammarDrillStats };
       const prev = stats[selectedCategory] || { attempted: 0, correct: 0 };
@@ -244,12 +255,18 @@ export function GrammarDrill() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 <Card>
-                  <p
-                    className="font-medium text-sm mb-4"
-                    style={{ color: "var(--text)" }}
-                  >
-                    {question.question}
-                  </p>
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                      {question.question}
+                    </p>
+                    <span
+                      className="shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+                    >
+                      {CREDIT_COSTS.mcq}
+                      <img src="/coin.svg" alt="credits" width={12} height={12} />
+                    </span>
+                  </div>
 
                   <div className="space-y-2 mb-4">
                     {question.options.map((opt, i) => {
@@ -292,14 +309,23 @@ export function GrammarDrill() {
                     })}
                   </div>
 
+                  {outOfCredits && !submitted && (
+                    <div
+                      className="rounded-lg px-4 py-3 text-sm mb-3"
+                      style={{ background: "rgba(234,67,53,0.08)", color: "#ea4335" }}
+                    >
+                      Not enough credits — you need {CREDIT_COSTS.mcq} credits to submit an answer.
+                    </div>
+                  )}
+
                   {!submitted ? (
                     <button
                       onClick={handleSubmit}
-                      disabled={selectedOption === null}
+                      disabled={selectedOption === null || outOfCredits || deducting}
                       className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ background: "var(--primary)", color: "#fff" }}
                     >
-                      Submit
+                      {deducting ? "Submitting..." : "Submit"}
                     </button>
                   ) : (
                     <div className="space-y-3">
