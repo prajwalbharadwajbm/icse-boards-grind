@@ -195,9 +195,26 @@ interface SidebarProps {
   mobileOpen: boolean;
   onToggleCollapse: () => void;
   onCloseMobile: () => void;
+  /** If set, replaces "/dashboard" prefix in nav links (e.g. "/preview") */
+  linkPrefix?: string;
+  /** Appended to every nav link (e.g. "?uid=xxx") */
+  linkSuffix?: string;
 }
 
-export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile }: SidebarProps) {
+export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile, linkPrefix, linkSuffix }: SidebarProps) {
+  /** Transform a /dashboard/... href to the target prefix (for Link navigation) */
+  const transformHref = (href: string) => {
+    let h = href;
+    if (linkPrefix) h = h.replace(/^\/dashboard/, linkPrefix);
+    if (linkSuffix) h = h + linkSuffix;
+    return h;
+  };
+
+  /** Transform href for active-state matching (no query suffix — pathname never includes it) */
+  const matchHref = (href: string) => {
+    if (linkPrefix) return href.replace(/^\/dashboard/, linkPrefix);
+    return href;
+  };
   const pathname = usePathname();
   const name = useStore((s) => s.name) || "Student";
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
@@ -277,9 +294,10 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
         {/* Nav */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            const isChildActive = item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"));
-            const isSectionActive = isActive || isChildActive || (item.href !== "/dashboard" && !item.children && pathname.startsWith(item.href));
+            const mHref = matchHref(item.href);
+            const isActive = pathname === mHref;
+            const isChildActive = item.children?.some((c) => { const ch = matchHref(c.href); return pathname === ch || pathname.startsWith(ch + "/"); });
+            const isSectionActive = isActive || isChildActive || (mHref !== matchHref("/dashboard") && !item.children && pathname.startsWith(mHref));
             const isOpen = openSections[item.href];
 
             if (item.children) {
@@ -287,7 +305,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                 <div key={item.href}>
                   <div className="flex items-center mb-0.5">
                     <Link
-                      href={item.href}
+                      href={transformHref(item.href)}
                       onClick={onCloseMobile}
                       className={`
                         flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all flex-1
@@ -335,11 +353,12 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                         className="overflow-hidden"
                       >
                         {item.children.map((child) => {
-                          const childActive = pathname === child.href || pathname.startsWith(child.href + "/");
+                          const ch = matchHref(child.href);
+                          const childActive = pathname === ch || pathname.startsWith(ch + "/");
                           return (
                             <Link
                               key={child.href}
-                              href={child.href}
+                              href={transformHref(child.href)}
                               onClick={onCloseMobile}
                               className="flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-lg mb-0.5 transition-all"
                               style={{
@@ -362,7 +381,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={transformHref(item.href)}
                 onClick={onCloseMobile}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all
