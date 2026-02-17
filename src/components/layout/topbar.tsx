@@ -6,6 +6,7 @@ import { SECTION_TITLES } from "@/lib/constants";
 import { ProfileDropdown } from "./profile-dropdown";
 import { NotificationCenter } from "./notification-center";
 import { useNotifications } from "@/store/use-notifications";
+import { useStore } from "@/store/use-store";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -18,6 +19,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const unreadCount = useNotifications((s) => s.unreadCount());
+  const credits = useStore((s) => s.credits);
 
   const section = pathname.split("/").pop() || "dashboard";
   const title = SECTION_TITLES[section] || "Dashboard";
@@ -54,6 +56,15 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
       {/* Right */}
       <div className="flex items-center gap-2">
+        {/* Credits */}
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+          style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+        >
+          <img src="/coin.svg" alt="credits" width={16} height={16} />
+          {credits}
+        </div>
+
         {/* Notifications */}
         <div ref={notifRef} className="relative">
           <button
