@@ -1,16 +1,37 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import posthog from "posthog-js";
 import { useStore } from "@/store/use-store";
 import { StatChip } from "@/components/ui/stat-chip";
+import { JCScenes } from "@/components/english/jc-scenes";
+import { JCFlashcards } from "@/components/english/jc-flashcards";
+import { JCQuiz } from "@/components/english/jc-quiz";
+import { JCCharacters } from "@/components/english/jc-characters";
+import { JCQuoteIdentifier } from "@/components/english/jc-quote-identifier";
 import { GrammarDrill } from "@/components/english/grammar-drill";
 
-export default function EnglishLanguagePage() {
+type MainTab = "grammar" | "julius-caesar";
+type JCSubTab = "flashcards" | "quotes" | "scenes" | "characters" | "quiz";
+
+const JC_SUB_TABS: { id: JCSubTab; label: string }[] = [
+  { id: "flashcards", label: "Flashcards" },
+  { id: "quotes", label: "Quote Identifier" },
+  { id: "scenes", label: "Scenes" },
+  { id: "characters", label: "Characters" },
+  { id: "quiz", label: "MCQ Quiz" },
+];
+
+export default function EnglishPage() {
   const grammarDrillStats = useStore((s) => s.grammarDrillStats);
+  const jcFlashcardsReviewed = useStore((s) => s.jcFlashcardsReviewed);
+  const jcQuizScores = useStore((s) => s.jcQuizScores);
+
+  const [mainTab, setMainTab] = useState<MainTab>("grammar");
+  const [jcSubTab, setJcSubTab] = useState<JCSubTab>("flashcards");
 
   useEffect(() => {
-    posthog.capture("english_language_page_viewed");
+    posthog.capture("english_page_viewed");
   }, []);
 
   // Stats
@@ -22,46 +43,31 @@ export default function EnglishLanguagePage() {
     return { total, correct, accuracy };
   }, [grammarDrillStats]);
 
+  const bestQuizScore = useMemo(() => {
+    if (jcQuizScores.length === 0) return null;
+    return Math.max(
+      ...jcQuizScores.map((s) => Math.round((s.score / s.total) * 100))
+    );
+  }, [jcQuizScores]);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>
-          English Language
+          English Practice
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Grammar drills and practice for Paper 1
+          Grammar drills (Paper 1) and Julius Caesar revision (Paper 2)
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatChip
-          label="Questions Attempted"
-          value={grammarStats.total}
-          color="#7b61ff"
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          }
-        />
-        <StatChip
-          label="Correct Answers"
-          value={grammarStats.correct}
-          color="#34a853"
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          }
-        />
-        <StatChip
-          label="Accuracy"
+          label="Grammar Accuracy"
           value={grammarStats.total > 0 ? `${grammarStats.accuracy}%` : "--"}
-          color="#1a73e8"
+          color="#7b61ff"
           icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 20h9" />
@@ -69,10 +75,91 @@ export default function EnglishLanguagePage() {
             </svg>
           }
         />
+        <StatChip
+          label="Flashcards Reviewed"
+          value={jcFlashcardsReviewed.length}
+          color="#1a73e8"
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M12 4v16" />
+            </svg>
+          }
+        />
+        <StatChip
+          label="Best Quiz Score"
+          value={bestQuizScore !== null ? `${bestQuizScore}%` : "--"}
+          color="#34a853"
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="7" />
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+            </svg>
+          }
+        />
+      </div>
+
+      {/* Main Tabs */}
+      <div className="flex gap-2">
+        {(["grammar", "julius-caesar"] as MainTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setMainTab(tab)}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer"
+            style={{
+              background:
+                mainTab === tab ? "var(--primary)" : "var(--bg-card)",
+              color: mainTab === tab ? "#fff" : "var(--text-secondary)",
+              border: `1px solid ${
+                mainTab === tab ? "transparent" : "var(--border)"
+              }`,
+            }}
+          >
+            {tab === "grammar" ? "Grammar Drills" : "Julius Caesar"}
+          </button>
+        ))}
       </div>
 
       {/* Grammar Drills */}
-      <GrammarDrill />
+      {mainTab === "grammar" && <GrammarDrill />}
+
+      {/* Julius Caesar */}
+      {mainTab === "julius-caesar" && (
+        <div className="space-y-4">
+          {/* Sub-tabs */}
+          <div className="flex flex-wrap gap-2">
+            {JC_SUB_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setJcSubTab(tab.id)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+                style={{
+                  background:
+                    jcSubTab === tab.id
+                      ? "rgba(123,97,255,0.15)"
+                      : "var(--bg-card)",
+                  color:
+                    jcSubTab === tab.id ? "#7b61ff" : "var(--text-secondary)",
+                  border: `1px solid ${
+                    jcSubTab === tab.id
+                      ? "rgba(123,97,255,0.3)"
+                      : "var(--border)"
+                  }`,
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          {jcSubTab === "flashcards" && <JCFlashcards />}
+          {jcSubTab === "quotes" && <JCQuoteIdentifier />}
+          {jcSubTab === "scenes" && <JCScenes />}
+          {jcSubTab === "characters" && <JCCharacters />}
+          {jcSubTab === "quiz" && <JCQuiz />}
+        </div>
+      )}
     </div>
   );
 }
