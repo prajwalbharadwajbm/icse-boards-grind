@@ -1,14 +1,46 @@
 "use client";
 
-import { Suspense, useEffect, useState, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState, useRef, type ComponentType } from "react";
+import { useSearchParams, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useStore } from "@/store/use-store";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { StudyProgressBar } from "@/components/layout/study-progress-bar";
-import DashboardPage from "@/app/dashboard/page";
 import { getDefaultChapters } from "@/lib/constants";
 import type { StoreState } from "@/store/use-store";
+
+// Import all dashboard page components
+import DashboardPage from "@/app/dashboard/page";
+import SubjectsPage from "@/app/dashboard/subjects/page";
+import NotesPage from "@/app/dashboard/notes/page";
+import PapersPage from "@/app/dashboard/papers/page";
+import PlannerPage from "@/app/dashboard/planner/page";
+import CoachPage from "@/app/dashboard/coach/page";
+import TimerPage from "@/app/dashboard/timer/page";
+import CalendarPage from "@/app/dashboard/calendar/page";
+import ProgressPage from "@/app/dashboard/progress/page";
+import LeaderboardPage from "@/app/dashboard/leaderboard/page";
+import ParentReportPage from "@/app/dashboard/parent-report/page";
+import SettingsPage from "@/app/dashboard/settings/page";
+import EnglishPage from "@/app/dashboard/english/page";
+
+/** Map slug to page component */
+const PAGE_MAP: Record<string, ComponentType> = {
+  "": DashboardPage,
+  subjects: SubjectsPage,
+  notes: NotesPage,
+  papers: PapersPage,
+  planner: PlannerPage,
+  coach: CoachPage,
+  timer: TimerPage,
+  calendar: CalendarPage,
+  progress: ProgressPage,
+  leaderboard: LeaderboardPage,
+  "parent-report": ParentReportPage,
+  settings: SettingsPage,
+  english: EnglishPage,
+};
 
 /** Build realistic demo data for the preview */
 function buildDemoData(): Partial<StoreState> {
@@ -16,7 +48,6 @@ function buildDemoData(): Partial<StoreState> {
   const elective = "computer";
   const subjects = getDefaultChapters(lang, elective);
 
-  // Mark some chapters as completed / in_progress for realism
   const markChapters = (key: string, completedCount: number, inProgressCount: number) => {
     const chs = subjects[key];
     if (!chs) return;
@@ -37,18 +68,16 @@ function buildDemoData(): Partial<StoreState> {
   markChapters(elective, 3, 1);
   markChapters("history", 5, 2);
 
-  // Study log for the last 7 days
   const studyLog: Record<string, { hours: number; sessions: number }> = {};
   const todayDate = new Date();
   for (let i = 0; i < 7; i++) {
     const d = new Date(todayDate);
     d.setDate(d.getDate() - i);
     const key = d.toISOString().split("T")[0];
-    const hours = +(3 + Math.random() * 3).toFixed(1); // 3–6 hours
+    const hours = +(3 + Math.random() * 3).toFixed(1);
     studyLog[key] = { hours, sessions: Math.floor(hours / 1.2) };
   }
 
-  // Make today's study time visible in the progress bar
   const todayKey = todayDate.toISOString().split("T")[0];
   studyLog[todayKey] = { hours: 3.5, sessions: 3 };
 
@@ -107,6 +136,7 @@ function buildDemoData(): Partial<StoreState> {
 
 function PreviewContent() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const uid = searchParams.get("uid");
   const [ready, setReady] = useState(false);
   const cleanupRef = useRef(false);
@@ -114,13 +144,11 @@ function PreviewContent() {
   useEffect(() => {
     if (!uid) return;
 
-    // Populate store with demo data
     const store = useStore.getState();
     store.setAll(buildDemoData());
     store.markHydrated();
     setReady(true);
 
-    // Cleanup on unmount — reset store so demo data doesn't persist
     return () => {
       if (!cleanupRef.current) {
         cleanupRef.current = true;
@@ -129,7 +157,6 @@ function PreviewContent() {
     };
   }, [uid]);
 
-  // Apply dark theme CSS vars
   useEffect(() => {
     if (!ready) return;
     document.documentElement.setAttribute("data-theme", "dark");
@@ -165,39 +192,54 @@ function PreviewContent() {
     );
   }
 
+  // Resolve which page to render: /preview → "", /preview/subjects → "subjects"
+  const slug = pathname.replace(/^\/preview\/?/, "").split("/")[0] || "";
+  const PageComponent = PAGE_MAP[slug] || DashboardPage;
+
   return (
-    <PreviewShell>
-      <DashboardPage />
+    <PreviewShell currentSlug={slug} uid={uid}>
+      <PageComponent />
     </PreviewShell>
   );
 }
 
 /** Dashboard layout shell — mirrors dashboard/layout.tsx without auth hooks */
-function PreviewShell({ children }: { children: React.ReactNode }) {
+function PreviewShell({ children, currentSlug, uid }: { children: React.ReactNode; currentSlug: string; uid: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const showCoachBanner = currentSlug !== "coach" && currentSlug !== "settings";
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--bg)" }}>
-      {/* Preview banner */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[100] text-center py-1.5 text-xs font-semibold tracking-wide"
-        style={{ background: "linear-gradient(90deg, #7b61ff, #1a73e8)", color: "#fff" }}
-      >
-        Preview Mode &mdash; For Razorpay verification
-      </div>
-
       <div className="flex w-full h-full pt-7">
         <Sidebar
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onToggleCollapse={() => setCollapsed(!collapsed)}
           onCloseMobile={() => setMobileOpen(false)}
+          linkPrefix="/preview"
+          linkSuffix={`?uid=${uid}`}
         />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <Topbar onMenuClick={() => setMobileOpen(true)} />
           <StudyProgressBar />
           <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+            {showCoachBanner && (
+              <Link href={`/preview/coach?uid=${uid}`}>
+                <div
+                  className="mb-4 rounded-lg px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #7b61ff, #1a73e8)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" className="shrink-0">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span className="text-xs font-semibold text-white">AI Study Coach — Get personalized help free!</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" className="shrink-0 ml-auto">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              </Link>
+            )}
             {children}
           </main>
         </div>
@@ -206,8 +248,7 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Top-level page wrapped in Suspense (required for useSearchParams in static export) */
-export default function PreviewPage() {
+export function PreviewClient() {
   return (
     <Suspense
       fallback={
