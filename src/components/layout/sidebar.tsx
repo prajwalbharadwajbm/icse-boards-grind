@@ -55,16 +55,59 @@ const NAV_ITEMS: NavItem[] = [
         <line x1="8" y1="11" x2="13" y2="11" />
       </svg>
     ),
+  },
+  {
+    href: "/dashboard/practice",
+    label: "Practice",
+    iconEl: (active) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+        <path d="M12 6v6l4 2" />
+      </svg>
+    ),
     children: [
       {
         href: "/dashboard/english",
-        label: "English",
+        label: "English Language",
+        iconEl: (active) => (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7V4h16v3" />
+            <path d="M9 20h6" />
+            <path d="M12 4v16" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/english-literature",
+        label: "English Literature",
         iconEl: (active) => (
           <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
             <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
           </svg>
         ),
+        children: [
+          {
+            href: "/dashboard/julius-caesar",
+            label: "Julius Caesar",
+            iconEl: (active) => (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="5" />
+                <path d="M3 21v-2a7 7 0 017-7h4a7 7 0 017 7v2" />
+              </svg>
+            ),
+          },
+          {
+            href: "/dashboard/treasure-trove",
+            label: "Treasure Trove",
+            iconEl: (active) => (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+              </svg>
+            ),
+          },
+        ],
       },
     ],
   },
@@ -221,6 +264,12 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
     NAV_ITEMS.forEach((item) => {
       if (item.children) {
         initial[item.href] = item.children.length < 3 || false;
+        // Also initialize nested children sections
+        item.children.forEach((child) => {
+          if (child.children) {
+            initial[child.href] = child.children.length < 4 || false;
+          }
+        });
       }
     });
     return initial;
@@ -278,7 +327,11 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
         <nav className="flex-1 px-2 py-2 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
-            const isChildActive = item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"));
+            const isChildActive = item.children?.some((c) => 
+              pathname === c.href || 
+              pathname.startsWith(c.href + "/") ||
+              c.children?.some((gc) => pathname === gc.href || pathname.startsWith(gc.href + "/"))
+            );
             const isSectionActive = isActive || isChildActive || (item.href !== "/dashboard" && !item.children && pathname.startsWith(item.href));
             const isOpen = openSections[item.href];
 
@@ -286,30 +339,23 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
               return (
                 <div key={item.href}>
                   <div className="flex items-center mb-0.5">
-                    <Link
-                      href={item.href}
-                      onClick={onCloseMobile}
+                    <button
+                      onClick={() => toggleSection(item.href)}
                       className={`
-                        flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all flex-1
+                        flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all flex-1 cursor-pointer
                         ${collapsed ? "justify-center" : ""}
                       `}
                       style={{
-                        background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                        background: isChildActive ? "rgba(255,255,255,0.05)" : "transparent",
                         color: isSectionActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
                       }}
                       title={collapsed ? item.label : undefined}
                     >
-                      <span className="shrink-0">{item.iconEl(isActive)}</span>
+                      <span className="shrink-0">{item.iconEl(isChildActive)}</span>
                       {!collapsed && (
-                        <span className="text-sm font-medium flex-1">{item.label}</span>
+                        <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
                       )}
-                    </Link>
-                    {!collapsed && (
-                      <button
-                        onClick={() => toggleSection(item.href)}
-                        className="p-1.5 rounded-md transition-colors mr-1"
-                        style={{ color: "var(--sidebar-text, #d2d2d6)" }}
-                      >
+                      {!collapsed && (
                         <motion.svg
                           width="14"
                           height="14"
@@ -319,11 +365,12 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                           strokeWidth="2"
                           animate={{ rotate: isOpen ? 90 : 0 }}
                           transition={{ duration: 0.15 }}
+                          className="shrink-0"
                         >
                           <polyline points="9 18 15 12 9 6" />
                         </motion.svg>
-                      </button>
-                    )}
+                      )}
+                    </button>
                   </div>
                   <AnimatePresence initial={false}>
                     {isOpen && !collapsed && (
@@ -334,14 +381,82 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                         transition={{ duration: 0.15 }}
                         className="overflow-hidden"
                       >
+                        <div className="relative ml-5 pl-3 border-l-2 border-white/20">
                         {item.children.map((child) => {
                           const childActive = pathname === child.href || pathname.startsWith(child.href + "/");
+                          const hasGrandchildren = child.children && child.children.length > 0;
+                          const isGrandchildActive = hasGrandchildren && child.children.some((gc) => pathname === gc.href || pathname.startsWith(gc.href + "/"));
+                          const isChildOpen = openSections[child.href];
+
+                          if (hasGrandchildren) {
+                            return (
+                              <div key={child.href}>
+                                <button
+                                  onClick={() => toggleSection(child.href)}
+                                  className="flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg mb-0.5 transition-all relative before:content-[''] before:absolute before:left-[-3px] before:top-1/2 before:w-2 before:h-0.5 before:bg-white/20 w-full text-left cursor-pointer"
+                                  style={{
+                                    background: isGrandchildActive ? "rgba(255,255,255,0.1)" : "transparent",
+                                    color: isGrandchildActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
+                                  }}
+                                >
+                                  <span className="shrink-0">{child.iconEl(isGrandchildActive)}</span>
+                                  <span className="text-sm flex-1">{child.label}</span>
+                                  <motion.svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    animate={{ rotate: isChildOpen ? 90 : 0 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="shrink-0"
+                                  >
+                                    <polyline points="9 18 15 12 9 6" />
+                                  </motion.svg>
+                                </button>
+                                <AnimatePresence initial={false}>
+                                  {isChildOpen && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="relative ml-4 pl-3 border-l-2 border-white/10">
+                                        {child.children.map((grandchild) => {
+                                          const gcActive = pathname === grandchild.href || pathname.startsWith(grandchild.href + "/");
+                                          return (
+                                            <Link
+                                              key={grandchild.href}
+                                              href={grandchild.href}
+                                              onClick={onCloseMobile}
+                                              className="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-lg mb-0.5 transition-all relative before:content-[''] before:absolute before:left-[-3px] before:top-1/2 before:w-2 before:h-0.5 before:bg-white/10"
+                                              style={{
+                                                background: gcActive ? "rgba(255,255,255,0.1)" : "transparent",
+                                                color: gcActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
+                                              }}
+                                            >
+                                              <span className="shrink-0">{grandchild.iconEl(gcActive)}</span>
+                                              <span className="text-xs">{grandchild.label}</span>
+                                            </Link>
+                                          );
+                                        })}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          }
+
                           return (
                             <Link
                               key={child.href}
                               href={child.href}
                               onClick={onCloseMobile}
-                              className="flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-lg mb-0.5 transition-all"
+                              className="flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg mb-0.5 transition-all relative before:content-[''] before:absolute before:left-[-3px] before:top-1/2 before:w-2 before:h-0.5 before:bg-white/20"
                               style={{
                                 background: childActive ? "rgba(255,255,255,0.1)" : "transparent",
                                 color: childActive ? "#fff" : "var(--sidebar-text, #d2d2d6)",
@@ -352,6 +467,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
                             </Link>
                           );
                         })}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
