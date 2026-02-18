@@ -142,6 +142,15 @@ export const whatsNewEntries: WhatsNewEntry[] = [
       "Share a read-only progress report with your parents. Enable it in Settings, copy the link, and they can view your progress anytime — even print it!",
     link: "/dashboard/settings",
   },
+  {
+    version: "2026-02-18-english-prose",
+    date: "Feb 18, 2026",
+    emoji: "\u{1F4D6}",
+    title: "English Literature: Prose Section",
+    description:
+      "Study 5 ICSE prose pieces — The Elevator, The Girl Who Can, The Last Lesson, The Pedestrian & With the Photographer. Each story has summaries, passage flashcards, word meanings, literary devices, Q&A, and MCQ quizzes.",
+    link: "/dashboard/english",
+  },
 ];
 
 export function getLatestWhatsNewVersion(): string {

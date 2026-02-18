@@ -61,6 +61,14 @@ export interface AnalyticsEventMap {
   poem_mcq_answered: { poem_id: string; question_id: string; correct: boolean };
   poem_mcq_completed: { poem_id: string; score: number; total: number; percentage: number };
 
+  // ── Prose ───────────────────────────────────────────────────────────────
+  prose_selected: { prose_id: string; title: string };
+  prose_study_mode_changed: { prose_id: string; mode: string };
+  prose_passage_status_changed: { prose_id: string; passage_index: number; status: string };
+  prose_qa_revealed: { prose_id: string; question_index: number };
+  prose_mcq_answered: { prose_id: string; question_id: string; correct: boolean };
+  prose_mcq_completed: { prose_id: string; score: number; total: number; percentage: number };
+
   // ── Settings ──────────────────────────────────────────────────────────
   settings_page_viewed: Record<string, never>;
   settings_saved: { study_hours: number; target_percent: number; has_grok_key: boolean };
