@@ -6,8 +6,10 @@ import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useCredits } from "@/hooks/use-credits";
 import { POEMS_DATA, type PoemData } from "@/lib/poems-data";
+import { CREDIT_COSTS } from "@/lib/credits";
+import { Card } from "@/components/ui/card";
 
-type StudyMode = "summary" | "line-by-line" | "word-meanings" | "literary-devices" | "qa";
+type StudyMode = "summary" | "line-by-line" | "word-meanings" | "literary-devices" | "qa" | "mcq-quiz";
 type ReviewStatus = "needs_review" | "confident";
 
 const STUDY_MODES: { id: StudyMode; label: string }[] = [
@@ -15,7 +17,8 @@ const STUDY_MODES: { id: StudyMode; label: string }[] = [
   { id: "line-by-line", label: "Line-by-Line" },
   { id: "word-meanings", label: "Word Meanings" },
   { id: "literary-devices", label: "Literary Devices" },
-  { id: "qa", label: "Q&A" },
+  { id: "qa", label: "Subjective Questions" },
+  { id: "mcq-quiz", label: "MCQ Quiz" },
 ];
 
 function stanzaKey(poemId: string, idx: number) {
@@ -180,6 +183,7 @@ export function Poems() {
           canAffordQA={canAfford("poem_qa")}
         />
       )}
+      {studyMode === "mcq-quiz" && <PoemMCQQuiz poem={poem} />}
     </div>
   );
 }
@@ -663,6 +667,305 @@ function QAView({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ─── Poem MCQ Quiz ───────────────────────────────────────────────────────── */
+
+function PoemMCQQuiz({ poem }: { poem: PoemData }) {
+  const { canAfford, deduct } = useCredits();
+  const outOfCredits = !canAfford("mcq");
+
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    () => Array(poem.mcqs.length).fill(null)
+  );
+  const [finished, setFinished] = useState(false);
+  const [deducting, setDeducting] = useState(false);
+
+  const total = poem.mcqs.length;
+  const q = poem.mcqs[currentQ];
+
+  if (!q || total === 0) {
+    return (
+      <div
+        className="rounded-xl p-6 text-center"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+      >
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          No MCQ questions available for this poem yet.
+        </p>
+      </div>
+    );
+  }
+
+  const score = useMemo(() => {
+    let s = 0;
+    for (let i = 0; i < answers.length; i++) {
+      if (answers[i] === poem.mcqs[i]?.correctIndex) s++;
+    }
+    return s;
+  }, [answers, poem.mcqs]);
+
+  const handleSubmit = async () => {
+    if (selectedOption === null || deducting) return;
+    setDeducting(true);
+    const ok = await deduct("mcq");
+    setDeducting(false);
+    if (!ok) return;
+
+    setSubmitted(true);
+    const isCorrect = selectedOption === q.correctIndex;
+    capture("poem_mcq_answered", {
+      poem_id: poem.id,
+      question_id: q.id,
+      correct: isCorrect,
+    });
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[currentQ] = selectedOption;
+      return next;
+    });
+  };
+
+  const handleNext = () => {
+    if (currentQ === total - 1) {
+      const finalAnswers = [...answers];
+      finalAnswers[currentQ] = selectedOption;
+      let finalScore = 0;
+      for (let i = 0; i < finalAnswers.length; i++) {
+        if (finalAnswers[i] === poem.mcqs[i]?.correctIndex) finalScore++;
+      }
+      capture("poem_mcq_completed", {
+        poem_id: poem.id,
+        score: finalScore,
+        total,
+        percentage: Math.round((finalScore / total) * 100),
+      });
+      setFinished(true);
+    } else {
+      setCurrentQ((i) => i + 1);
+      setSelectedOption(null);
+      setSubmitted(false);
+    }
+  };
+
+  const handleRetake = () => {
+    setCurrentQ(0);
+    setSelectedOption(null);
+    setSubmitted(false);
+    setAnswers(Array(total).fill(null));
+    setFinished(false);
+  };
+
+  if (finished) {
+    let finalScore = 0;
+    for (let i = 0; i < answers.length; i++) {
+      if (answers[i] === poem.mcqs[i]?.correctIndex) finalScore++;
+    }
+    const pct = Math.round((finalScore / total) * 100);
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <Card>
+          <div className="text-center py-6">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold"
+              style={{
+                background:
+                  pct >= 70
+                    ? "rgba(52,168,83,0.12)"
+                    : pct >= 40
+                    ? "rgba(249,171,0,0.12)"
+                    : "rgba(234,67,53,0.12)",
+                color:
+                  pct >= 70 ? "#34a853" : pct >= 40 ? "#f9ab00" : "#ea4335",
+              }}
+            >
+              {pct}%
+            </div>
+            <h3
+              className="text-lg font-bold mb-1"
+              style={{ color: "var(--text)" }}
+            >
+              Quiz Complete!
+            </h3>
+            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+              You scored {finalScore} out of {total} — {poem.title}
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-1.5 mb-6">
+              {poem.mcqs.map((_, i) => (
+                <div
+                  key={i}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium"
+                  style={{
+                    background:
+                      answers[i] === poem.mcqs[i]?.correctIndex
+                        ? "rgba(52,168,83,0.12)"
+                        : "rgba(234,67,53,0.12)",
+                    color:
+                      answers[i] === poem.mcqs[i]?.correctIndex
+                        ? "#34a853"
+                        : "#ea4335",
+                  }}
+                >
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleRetake}
+              className="px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer"
+              style={{ background: "var(--primary)", color: "#fff" }}
+            >
+              Retake Quiz
+            </button>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Progress bar */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Question {currentQ + 1} of {total}
+          </span>
+          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            {Math.round(((currentQ + 1) / total) * 100)}%
+          </span>
+        </div>
+        <div
+          className="h-1.5 rounded-full overflow-hidden"
+          style={{ background: "var(--border)" }}
+        >
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: "var(--primary)" }}
+            animate={{ width: `${((currentQ + 1) / total) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </div>
+
+      {/* Question */}
+      <Card>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <p
+            className="font-medium text-sm leading-relaxed whitespace-pre-line"
+            style={{ color: "var(--text)" }}
+          >
+            {q.question}
+          </p>
+          <span
+            className="shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+          >
+            {CREDIT_COSTS.mcq}
+            <img src="/coin.svg" alt="credits" width={12} height={12} />
+          </span>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          {q.options.map((opt, i) => {
+            const isCorrect = i === q.correctIndex;
+            const isSelected = selectedOption === i;
+            let bg = "transparent";
+            let border = "var(--border)";
+            let color = "var(--text)";
+
+            if (submitted) {
+              if (isCorrect) {
+                bg = "rgba(52,168,83,0.1)";
+                border = "#34a853";
+                color = "#34a853";
+              } else if (isSelected && !isCorrect) {
+                bg = "rgba(234,67,53,0.1)";
+                border = "#ea4335";
+                color = "#ea4335";
+              }
+            } else if (isSelected) {
+              bg = "rgba(123,97,255,0.1)";
+              border = "var(--primary)";
+              color = "var(--primary)";
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => !submitted && setSelectedOption(i)}
+                disabled={submitted}
+                className="w-full text-left px-4 py-3 rounded-lg text-sm transition-all cursor-pointer disabled:cursor-default"
+                style={{ background: bg, border: `1px solid ${border}`, color }}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+
+        {submitted && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-lg p-3 text-sm mb-4"
+            style={{
+              background:
+                selectedOption === q.correctIndex
+                  ? "rgba(52,168,83,0.08)"
+                  : "rgba(234,67,53,0.08)",
+            }}
+          >
+            <span
+              style={{
+                color:
+                  selectedOption === q.correctIndex ? "#34a853" : "#ea4335",
+              }}
+            >
+              {selectedOption === q.correctIndex ? "Correct!" : "Incorrect."}
+            </span>{" "}
+            <span style={{ color: "var(--text)" }}>{q.explanation}</span>
+          </motion.div>
+        )}
+
+        {outOfCredits && !submitted && (
+          <div
+            className="rounded-lg px-4 py-3 text-sm mb-3"
+            style={{ background: "rgba(234,67,53,0.08)", color: "#ea4335" }}
+          >
+            Not enough credits — you need {CREDIT_COSTS.mcq} credits to submit an answer.
+          </div>
+        )}
+
+        {!submitted ? (
+          <button
+            onClick={handleSubmit}
+            disabled={selectedOption === null || outOfCredits || deducting}
+            className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: "var(--primary)", color: "#fff" }}
+          >
+            {deducting ? "Submitting..." : "Submit"}
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer"
+            style={{ background: "var(--primary)", color: "#fff" }}
+          >
+            {currentQ === total - 1 ? "Finish Quiz" : "Next Question"}
+          </button>
+        )}
+      </Card>
     </div>
   );
 }

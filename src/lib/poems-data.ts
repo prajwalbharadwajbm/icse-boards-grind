@@ -19,6 +19,14 @@ export interface LiteraryDevice {
   explanation: string;
 }
 
+export interface PoemMCQ {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 export interface PoemData {
   id: string;
   title: string;
@@ -29,6 +37,7 @@ export interface PoemData {
   wordMeanings: WordMeaning[];
   literaryDevices: LiteraryDevice[];
   questions: PoemQA[];
+  mcqs: PoemMCQ[];
 }
 
 export const POEMS_DATA: PoemData[] = [
@@ -190,6 +199,46 @@ export const POEMS_DATA: PoemData[] = [
       {
         question: "What atmosphere or mood does the poem create?",
         answer: "Despite the title suggesting something eerie, the poem creates a peaceful and reflective atmosphere. The ghosts are described as 'harmless,' 'quiet,' and 'inoffensive.' The overall mood is contemplative and gentle, exploring how memories and past influences enrich our lives rather than frighten us.",
+      },
+    ],
+    mcqs: [
+      {
+        id: "poem-mcq-1",
+        question: "What does the phrase \"dark abyss\" in the poem Haunted Houses symbolise?",
+        options: [
+          "Life experiences",
+          "Challenges in life",
+          "A deep pit",
+          "Despair and depression",
+        ],
+        correctIndex: 3,
+        explanation: "The 'dark abyss' symbolises despair and depression — the depth of human experience and emotional darkness that haunts the living.",
+      },
+      {
+        id: "poem-mcq-2",
+        question: "The atmosphere created in the poem Haunted Houses is:",
+        options: ["melancholic", "eerie", "peaceful", "unsettling"],
+        correctIndex: 2,
+        explanation: "Despite the title, the poem creates a peaceful atmosphere. The phantoms are described as harmless, quiet, and going about their errands silently.",
+      },
+      {
+        id: "poem-mcq-3",
+        question: "The ghosts/phantoms in H.W. Longfellow's Haunted Houses are described as:",
+        options: ["harmless", "mischievous", "malevolent", "vengeful"],
+        correctIndex: 0,
+        explanation: "The poem describes the phantoms as 'harmless' — they glide silently on their errands and leave only 'impalpable impressions' in the air.",
+      },
+      {
+        id: "poem-mcq-4",
+        question: "Which of the following options contains the same literary device as the given verse from the poem?\n\"As silent as the pictures on the wall\"",
+        options: [
+          "Because I could not stop for death. He kindly stopped for me.",
+          "Where the mind is without fear, and the head is held high.",
+          "Soon, the sun's warmth makes them shed crystal shells, shattering and avalanching on the snow crust.",
+          "Some are like fields of sunlit corn.",
+        ],
+        correctIndex: 3,
+        explanation: "The original line uses a simile ('As silent as...'). 'Some are like fields of sunlit corn' also uses a simile (using 'like').",
       },
     ],
   },
@@ -361,6 +410,51 @@ export const POEMS_DATA: PoemData[] = [
         answer: "The tone is light-hearted and good-natured, despite the dramatic events. The poet Leigh Hunt uses playful language and a narrative style that makes it entertaining rather than deeply serious. The poem is meant to be enjoyed for its poetic beauty and gentle humour, with a subtle moral about vanity and love.",
       },
     ],
+    mcqs: [
+      {
+        id: "poem-mcq-5",
+        question: "Which of the following lines reflects Count de Lorge's valour?",
+        options: [
+          "Then threw the glove, but not with love.",
+          "And 'mongst them sat Count de Lorge, with one for whom he sighed.",
+          "He bowed, and in a moment leaped among the lions wild.",
+          "I'll drop my glove, to prove his love.",
+        ],
+        correctIndex: 2,
+        explanation: "Leaping among wild lions to retrieve the glove is the direct act of valour — it shows his bravery and courage in the face of mortal danger.",
+      },
+      {
+        id: "poem-mcq-6",
+        question: "\"The lions roared with horrid laughing jaws.\" Which of the following uses the same literary device (auditory imagery)?",
+        options: [
+          "The snowflakes glittered like diamonds.",
+          "The caged bird sings with a fearful trill.",
+          "My hands were icicles because of the cold weather.",
+          "The smell of freshly brewed coffee woke me up.",
+        ],
+        correctIndex: 1,
+        explanation: "Both the original line and 'the caged bird sings with a fearful trill' use auditory imagery — sounds that the reader can almost hear.",
+      },
+      {
+        id: "poem-mcq-7",
+        question: "Which of the following is NOT a theme of the poem The Glove and the Lions?",
+        options: ["Vanity", "Chivalry", "Pride", "Cruelty"],
+        correctIndex: 3,
+        explanation: "The poem's themes include vanity (the lady's motive), chivalry (De Lorge's leap), and pride (the lady's arrogance). Cruelty is not a central theme.",
+      },
+      {
+        id: "poem-mcq-8",
+        question: "Choose the option that lists the sequence of events in the correct order.\n(i) Retrieving the glove, the angry Count flung it in her face.\n(ii) The count's beloved threw her glove into the arena.\n(iii) The Count realised it was her vanity.\n(iv) The king was enjoying the fight of the royal beasts.",
+        options: [
+          "(i), (ii), (iii), (iv)",
+          "(iv), (ii), (iii), (i)",
+          "(ii), (iii), (iv), (i)",
+          "(iv), (iii), (i), (ii)",
+        ],
+        correctIndex: 1,
+        explanation: "First the king watches (iv), then the lady drops the glove (ii), the Count realises her vanity (iii), and finally throws the glove back (i).",
+      },
+    ],
   },
 
   // ─── 3. The Power of Music ─────────────────────────────────────────────────
@@ -519,6 +613,51 @@ export const POEMS_DATA: PoemData[] = [
       {
         question: "What is the irony in the title 'The Power of Music'?",
         answer: "The title is ironic because 'the power of music' usually suggests something positive and beautiful. However, in this poem, the 'power' of Bhisma's music is entirely destructive and negative — it causes chaos, suffering, and destruction. The title uses irony to set up the humorous contrast between expected beauty and actual disaster.",
+      },
+    ],
+    mcqs: [
+      {
+        id: "poem-mcq-17",
+        question: "\"The people, dazed, retire amazed, although they know it's well meant.\" This line tells us that Bhisma Lochan's singing was ______.",
+        options: ["melodious", "discordant", "soothing", "unbelievable"],
+        correctIndex: 1,
+        explanation: "People are 'dazed' and 'amazed' (in a negative sense) — they know he means well, but his singing is discordant (harsh and unpleasant).",
+      },
+      {
+        id: "poem-mcq-18",
+        question: "\"And in the sky the feathered fly turn turtle while they're winging.\" What does the phrase 'turn turtle' mean?",
+        options: [
+          "Act like a turtle",
+          "Jump like a turtle",
+          "Turn upside down",
+          "Become a turtle",
+        ],
+        correctIndex: 2,
+        explanation: "'Turn turtle' is an idiom meaning to turn upside down — the birds flip over mid-flight because of the terrible singing.",
+      },
+      {
+        id: "poem-mcq-19",
+        question: "What does the phrase \"panic rout\" imply in the poem The Power of Music?",
+        options: [
+          "Solemn parade",
+          "Celebration",
+          "Unhappy occasion",
+          "Chaotic situation",
+        ],
+        correctIndex: 3,
+        explanation: "'Panic rout' describes a chaotic, disorderly retreat — everyone fleeing in terror from Bhisma's terrible singing.",
+      },
+      {
+        id: "poem-mcq-20",
+        question: "Which are the geographical locations mentioned in the poem The Power of Music?\n(i) Delhi (ii) Kolkata (iii) Burma (iv) Bangalore",
+        options: [
+          "(i) and (ii)",
+          "(i) and (iii)",
+          "(ii) and (iv)",
+          "(iii) and (iv)",
+        ],
+        correctIndex: 1,
+        explanation: "The poem mentions Delhi and Burma — 'on plains from Delhi to Burma' — as the range over which Bhisma's voice could be heard.",
       },
     ],
   },
@@ -683,6 +822,56 @@ export const POEMS_DATA: PoemData[] = [
       {
         question: "What is the central theme of the poem?",
         answer: "The central theme is the importance and value of individual mind, intelligence, and creativity. The poet uses the encounter with a tiny mite to argue that any display of mind — no matter how small — deserves recognition and respect. He contrasts this with collectivist thinking that ignores individual intelligence. The poem celebrates the ability to think independently.",
+      },
+    ],
+    mcqs: [
+      {
+        id: "poem-mcq-13",
+        question: "Which of the following options contains the same literary device (visual imagery) that appears in:\n\"…On any but a paper sheet so white…\"",
+        options: [
+          "Silver and blue as the mountain mist.",
+          "He names the sky his own.",
+          "The fir trees dark and high.",
+          "Song and mother-croon of bird.",
+        ],
+        correctIndex: 2,
+        explanation: "The original line uses visual imagery (whiteness of the paper). 'The fir trees dark and high' also creates a visual image through colour and size.",
+      },
+      {
+        id: "poem-mcq-14",
+        question: "Choose the option that lists the sequence of events in the correct order.\n(i) He changes his mind when he notices something unusual.\n(ii) The poet realises the speck is a living mite.\n(iii) He intends to use his pen to erase the speck.\n(iv) The poet notices a speck on the white paper.",
+        options: [
+          "(i), (ii), (iii), (iv)",
+          "(iv), (ii), (iii), (i)",
+          "(ii), (iii), (iv), (i)",
+          "(iv), (iii), (i), (ii)",
+        ],
+        correctIndex: 3,
+        explanation: "First the poet notices the speck (iv), then considers erasing it (iii), changes his mind upon noticing movement (i), and finally realises it's a living mite (ii).",
+      },
+      {
+        id: "poem-mcq-15",
+        question: "Select the correct relationship between the two statements:\nStatement I: The poet concludes that the mite proves to be an intelligent creature.\nStatement II: The mite seems to dislike the ink as it quickly whirls around to fly away.",
+        options: [
+          "Statement II is the cause for Statement I.",
+          "Statement II is true, and Statement I is false.",
+          "Statement I and Statement II are independent of each other.",
+          "Statement I is true, and Statement II is false.",
+        ],
+        correctIndex: 0,
+        explanation: "The mite's ability to dislike ink and choose to avoid it (Statement II) is evidence of intelligence, which causes the poet to conclude it's intelligent (Statement I).",
+      },
+      {
+        id: "poem-mcq-16",
+        question: "What is the central idea in Frost's poem A Considerable Speck?",
+        options: [
+          "The poet critiques society's disregard for smaller aspects of life.",
+          "Every living being, no matter how small, has its own perspective and intelligence.",
+          "The struggle between man-made creations and the natural world.",
+          "The insignificance of individual thoughts in the grand scheme of the universe.",
+        ],
+        correctIndex: 1,
+        explanation: "The poem celebrates the idea that every living being — even one almost too small to see — possesses its own intelligence and perspective worthy of respect.",
       },
     ],
   },
@@ -862,6 +1051,46 @@ export const POEMS_DATA: PoemData[] = [
       {
         question: "What is the overall tone and message of the poem?",
         answer: "The poem moves from grief and despair to hope and inspiration. While it honestly portrays the devastating impact of losing great people — the pain, regret, and disorientation — it ultimately delivers a realistic and positive message: loss can connect us more profoundly to life. The departed's legacy inspires us to live better. The poem argues that while death fells great trees, new growth inevitably follows.",
+      },
+    ],
+    mcqs: [
+      {
+        id: "poem-mcq-9",
+        question: "Which of the following is NOT a characteristic of a 'great soul'?",
+        options: ["nurtures", "shrinks", "radiant", "informs"],
+        correctIndex: 1,
+        explanation: "'Shrinks' is what happens to our souls AFTER a great soul dies ('our souls... now shrink, wizened'). The great soul's characteristics are nurturing, radiating, and informing.",
+      },
+      {
+        id: "poem-mcq-10",
+        question: "Select the correct relationship between the two statements:\nStatement I: The falling of a great tree shocks both big and small creatures.\nStatement II: The death of a great person maddens their loved ones.",
+        options: [
+          "Statement I is true, Statement II is false.",
+          "Statement I is false, and Statement II is true.",
+          "Statement I is an analogy for Statement II.",
+          "Statement I is the reason for Statement II.",
+        ],
+        correctIndex: 0,
+        explanation: "Statement I is true — the poem describes rocks shuddering, lions crouching, etc. Statement II is false — the poem says 'We are not so much maddened as reduced to... ignorance.'",
+      },
+      {
+        id: "poem-mcq-11",
+        question: "The five stages of grief are shock, anger, bargaining, depression and acceptance. Which stage is expressed in these lines?\n\"And when great souls die, after a period peace blooms,\"",
+        options: ["shock", "anger", "depression", "acceptance"],
+        correctIndex: 3,
+        explanation: "'Peace blooms' after the period of grief represents acceptance — the final stage where one comes to terms with the loss and finds peace.",
+      },
+      {
+        id: "poem-mcq-12",
+        question: "The central idea of Angelou's poem When Great Trees Fall is that _________.",
+        options: [
+          "when a gigantic tree falls, it affects all the trees in the jungle",
+          "the death of an ancient tree disturbs all the animals in the jungle",
+          "the impact of the death of a loved one on those struggling to cope with the loss",
+          "life will never be the same after the loss of a loved one",
+        ],
+        correctIndex: 2,
+        explanation: "The poem's central idea is the profound impact of losing a great soul on those left behind — their struggle through grief, and eventual healing through the departed's legacy.",
       },
     ],
   },

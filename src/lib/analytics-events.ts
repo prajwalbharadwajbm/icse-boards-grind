@@ -58,6 +58,8 @@ export interface AnalyticsEventMap {
   poem_study_mode_changed: { poem_id: string; mode: string };
   poem_stanza_status_changed: { poem_id: string; stanza_index: number; status: string };
   poem_qa_revealed: { poem_id: string; question_index: number };
+  poem_mcq_answered: { poem_id: string; question_id: string; correct: boolean };
+  poem_mcq_completed: { poem_id: string; score: number; total: number; percentage: number };
 
   // ── Settings ──────────────────────────────────────────────────────────
   settings_page_viewed: Record<string, never>;
