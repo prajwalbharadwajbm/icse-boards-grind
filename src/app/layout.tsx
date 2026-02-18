@@ -75,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="Boards Grind" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/manifest.json" />
+        <meta name="google-adsense-account" content="ca-pub-9077222671653004" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
