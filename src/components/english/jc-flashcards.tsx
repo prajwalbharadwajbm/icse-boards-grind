@@ -46,6 +46,13 @@ export function JCFlashcards() {
     const current = jcFlashcardReviewStatus[card.id];
     const value = current === newStatus ? undefined : newStatus;
 
+    capture("jc_flashcard_review_changed", {
+      card_id: card.id,
+      act: card.act,
+      scene: card.scene,
+      status: value ?? "unmarked",
+    });
+
     update((s) => {
       const next = { ...s.jcFlashcardReviewStatus };
       if (value) {

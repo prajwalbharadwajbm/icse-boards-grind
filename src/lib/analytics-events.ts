@@ -51,6 +51,7 @@ export interface AnalyticsEventMap {
   jc_character_quotes_expanded: { character_id: string; character_name: string };
   jc_line_by_line_scene_selected: { act: number; scene: number; title: string };
   jc_line_by_line_status_changed: { act: number; scene: number; line_index: number; speaker: string; status: "needs_review" | "confident" | "unmarked" };
+  jc_flashcard_review_changed: { card_id: string; act: number; scene: number; status: "needs_review" | "confident" | "unmarked" };
 
   // ── Poems ───────────────────────────────────────────────────────────────
   poem_selected: { poem_id: string; title: string };
