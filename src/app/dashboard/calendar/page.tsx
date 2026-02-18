@@ -83,7 +83,7 @@ export default function CalendarPage() {
   const selectedDayExam = useMemo(() => {
     if (!selectedDate) return null;
     return EXAMS.find((e) => e.date === selectedDate) || null;
-  }, [selectedDate]);
+  }, [selectedDate, EXAMS]);
 
   const selectedDayStudyMin = useMemo(() => {
     if (!selectedDayPlan) return 0;
@@ -99,7 +99,7 @@ export default function CalendarPage() {
       const d = new Date(e.date + "T00:00:00");
       return d.getMonth() === calMonth && d.getFullYear() === calYear;
     });
-  }, [calMonth, calYear]);
+  }, [calMonth, calYear, EXAMS]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

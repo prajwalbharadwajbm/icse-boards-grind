@@ -147,6 +147,7 @@ function PreviewContent() {
     const store = useStore.getState();
     store.setAll(buildDemoData());
     store.markHydrated();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init after store hydration
     setReady(true);
 
     return () => {

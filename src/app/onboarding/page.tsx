@@ -41,6 +41,7 @@ export default function OnboardingPage() {
 
   // Initialize ratings when labels change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync ratings keys with subject labels
     setRatings((prev) => {
       const r: Record<string, string> = {};
       Object.keys(subjectLabels).forEach((k) => (r[k] = prev[k] || "medium"));

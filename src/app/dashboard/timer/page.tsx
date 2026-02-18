@@ -63,6 +63,7 @@ export default function TimerPage() {
     });
 
     if (currentBlock?.subjectKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init from planner
       setSelectedSubject(currentBlock.subjectKey);
       // Try to pick the first incomplete chapter for this subject
       const chapters = data.subjects[currentBlock.subjectKey] || [];
