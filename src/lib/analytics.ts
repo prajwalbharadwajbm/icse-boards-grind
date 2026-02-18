@@ -21,7 +21,7 @@ export function initPostHog() {
     api_host: host || "https://eu.i.posthog.com",
     capture_pageview: false,
     capture_pageleave: true,
-    autocapture: true,
+    autocapture: false,
     disable_session_recording: false,
     capture_exceptions: true,
     debug: process.env.NODE_ENV === "development",
@@ -49,6 +49,11 @@ export function identify(uid: string, traits?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   if (!initialized) initPostHog();
   _currentEmail = (traits?.email as string) ?? null;
+  if (isInternalUser()) {
+    posthog.opt_out_capturing();
+    return;
+  }
+  posthog.opt_in_capturing();
   posthog.identify(uid, traits);
 }
 
