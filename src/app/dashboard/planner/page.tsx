@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getSubjectLabels, getSubjectColors, type Block } from "@/lib/constants";
 import { today, dateStr, formatDate, formatTime24, timeToMin, minToTime } from "@/lib/utils";
@@ -29,7 +29,7 @@ export default function PlannerPage() {
 
   // Auto-refresh every minute
   useEffect(() => {
-    posthog.capture("planner_page_viewed");
+    capture("planner_page_viewed");
     const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
@@ -79,7 +79,7 @@ export default function PlannerPage() {
 
   // Open edit modal
   const handleBlockClick = useCallback((block: Block, index: number) => {
-    posthog.capture("planner_block_clicked", { block_type: block.type });
+    capture("planner_block_clicked", { block_type: block.type });
     setEditIndex(index);
     setEditType(block.type);
     setEditSubject(block.subjectKey || "");
@@ -91,7 +91,7 @@ export default function PlannerPage() {
 
   // Add new block
   const handleAddBlock = () => {
-    posthog.capture("planner_add_block_clicked");
+    capture("planner_add_block_clicked");
     setEditIndex(null);
     setEditType("study");
     setEditSubject(Object.keys(SUBJECT_LABELS)[0]);
@@ -129,7 +129,7 @@ export default function PlannerPage() {
       return { customPlans: s.customPlans };
     });
 
-    posthog.capture(isEdit ? "planner_block_edited" : "planner_block_added", {
+    capture(isEdit ? "planner_block_edited" : "planner_block_added", {
       block_type: editType,
       duration_minutes: timeToMin(editEnd) - timeToMin(editStart),
     });
@@ -150,14 +150,14 @@ export default function PlannerPage() {
       return { customPlans: s.customPlans };
     });
 
-    posthog.capture("planner_block_deleted", { block_type: deletedBlock.type });
+    capture("planner_block_deleted", { block_type: deletedBlock.type });
 
     setEditModalOpen(false);
   };
 
   // Reset plan
   const handleResetPlan = () => {
-    posthog.capture("planner_plan_reset", { date: planDate });
+    capture("planner_plan_reset", { date: planDate });
     useStore.getState().update((s) => {
       if (s.customPlans) {
         delete s.customPlans[planDate];

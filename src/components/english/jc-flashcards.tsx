@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { JC_FLASHCARDS } from "@/lib/julius-caesar-data";
 
@@ -19,7 +19,7 @@ export function JCFlashcards() {
   const handleFlip = () => {
     setFlipped((f) => !f);
     if (!flipped) {
-      posthog.capture("jc_flashcard_flipped", { card_id: card.id, act: card.act, scene: card.scene });
+      capture("jc_flashcard_flipped", { card_id: card.id, act: card.act, scene: card.scene });
       if (!jcFlashcardsReviewed.includes(card.id)) {
         update((state) => ({
           jcFlashcardsReviewed: [...state.jcFlashcardsReviewed, card.id],

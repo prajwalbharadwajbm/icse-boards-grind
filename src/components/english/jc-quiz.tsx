@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { JC_MCQ_QUESTIONS } from "@/lib/julius-caesar-data";
@@ -58,7 +58,7 @@ export function JCQuiz() {
 
     setSubmitted(true);
     const isCorrect = selectedOption === q.correctIndex;
-    posthog.capture("jc_quiz_question_answered", {
+    capture("jc_quiz_question_answered", {
       question_id: q.id,
       question_number: currentQ + 1,
       correct: isCorrect,
@@ -85,7 +85,7 @@ export function JCQuiz() {
           { score: finalScore, total: QUIZ_SIZE, timestamp: Date.now() },
         ],
       }));
-      posthog.capture("jc_quiz_completed", {
+      capture("jc_quiz_completed", {
         score: finalScore,
         total: QUIZ_SIZE,
         percentage: Math.round((finalScore / QUIZ_SIZE) * 100),
@@ -99,7 +99,7 @@ export function JCQuiz() {
   };
 
   const handleRetake = () => {
-    posthog.capture("jc_quiz_retake");
+    capture("jc_quiz_retake");
     setQuestions(pickRandom(JC_MCQ_QUESTIONS, QUIZ_SIZE));
     setCurrentQ(0);
     setSelectedOption(null);

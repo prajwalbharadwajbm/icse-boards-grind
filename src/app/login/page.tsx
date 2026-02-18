@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/store/use-store";
@@ -69,9 +69,9 @@ export default function LoginPage() {
               setSubmitting(true);
               try {
                 await loginWithGoogle();
-                posthog.capture("user_logged_in", { method: "google" });
+                capture("user_logged_in", { method: "google" });
               } catch (err) {
-                posthog.capture("login_failed", { method: "google", error: (err as FirebaseError).code });
+                capture("login_failed", { method: "google", error: (err as FirebaseError).code });
                 setError(friendlyAuthError((err as FirebaseError).code));
               } finally {
                 setSubmitting(false);

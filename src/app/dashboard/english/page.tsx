@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { StatChip } from "@/components/ui/stat-chip";
 import { JCScenes } from "@/components/english/jc-scenes";
@@ -31,7 +31,7 @@ export default function EnglishPage() {
   const [jcSubTab, setJcSubTab] = useState<JCSubTab>("flashcards");
 
   useEffect(() => {
-    posthog.capture("english_page_viewed");
+    capture("english_page_viewed");
   }, []);
 
   // Stats
@@ -104,7 +104,7 @@ export default function EnglishPage() {
         {(["grammar", "julius-caesar"] as MainTab[]).map((tab) => (
           <button
             key={tab}
-            onClick={() => setMainTab(tab)}
+            onClick={() => { setMainTab(tab); capture("english_tab_changed", { tab }); }}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer"
             style={{
               background:
@@ -131,7 +131,7 @@ export default function EnglishPage() {
             {JC_SUB_TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setJcSubTab(tab.id)}
+                onClick={() => { setJcSubTab(tab.id); capture("jc_sub_tab_changed", { sub_tab: tab.id }); }}
                 className="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
                 style={{
                   background:

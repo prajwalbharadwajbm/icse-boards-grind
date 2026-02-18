@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getSubjectLabels } from "@/lib/constants";
 import { SubjectCard } from "@/components/subjects/subject-card";
@@ -13,7 +13,7 @@ export default function SubjectsPage() {
   const subjectKeys = Object.keys(subjectLabels);
 
   useEffect(() => {
-    posthog.capture("subjects_page_viewed");
+    capture("subjects_page_viewed");
   }, []);
 
   return (

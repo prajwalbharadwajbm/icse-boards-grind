@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
 import { SECOND_LANGUAGES, ELECTIVES, getSubjectLabels, getSubjectColors } from "@/lib/constants";
@@ -56,7 +56,7 @@ export default function OnboardingPage() {
   const handleNext = () => {
     if (step === 1 && !name.trim()) return;
     if (step < TOTAL_STEPS) {
-      posthog.capture("onboarding_step_completed", { step });
+      capture("onboarding_step_completed", { step });
       setStep(step + 1);
     } else {
       // Save all data
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
         routine,
         onboarded: true,
       }));
-      posthog.capture("onboarding_completed", {
+      capture("onboarding_completed", {
         language: selectedLanguage,
         elective: selectedElective,
         learning_style: learningStyle,
