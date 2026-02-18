@@ -88,6 +88,8 @@ export interface StoreState {
   // F10: Parent Report
   shareReportEnabled: boolean;
   credits: number;
+  jcLineByLineStatus: Record<string, "needs_review" | "confident">;
+  poemReviewStatus: Record<string, "needs_review" | "confident">;
   _hydrated: boolean;
 }
 
@@ -142,6 +144,8 @@ const defaultState: StoreState = {
   leaderboardOptIn: true,
   shareReportEnabled: false,
   credits: 500,
+  jcLineByLineStatus: {},
+  poemReviewStatus: {},
   _hydrated: false,
 };
 

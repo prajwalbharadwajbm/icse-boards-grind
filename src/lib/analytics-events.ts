@@ -49,6 +49,14 @@ export interface AnalyticsEventMap {
   jc_quote_answered: { quote_id: string; correct: boolean; act: number; scene: number };
   jc_quote_reset: { score: number; total: number };
   jc_character_quotes_expanded: { character_id: string; character_name: string };
+  jc_line_by_line_scene_selected: { act: number; scene: number; title: string };
+  jc_line_by_line_status_changed: { act: number; scene: number; line_index: number; speaker: string; status: "needs_review" | "confident" | "unmarked" };
+
+  // ── Poems ───────────────────────────────────────────────────────────────
+  poem_selected: { poem_id: string; title: string };
+  poem_study_mode_changed: { poem_id: string; mode: string };
+  poem_stanza_status_changed: { poem_id: string; stanza_index: number; status: string };
+  poem_qa_revealed: { poem_id: string; question_index: number };
 
   // ── Settings ──────────────────────────────────────────────────────────
   settings_page_viewed: Record<string, never>;
