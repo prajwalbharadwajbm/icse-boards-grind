@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useCredits } from "@/hooks/use-credits";
@@ -240,175 +241,255 @@ function LineByLineView({
   progress: { total: number; confident: number; needsReview: number };
   onToggleStatus: (idx: number, status: ReviewStatus) => void;
 }) {
-  const [flipped, setFlipped] = useState<Set<number>>(new Set());
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
 
-  const toggleFlip = (idx: number) => {
-    setFlipped((prev) => {
-      const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+  const stanza = poem.stanzas[currentIndex];
+  const total = poem.stanzas.length;
+  const key = stanzaKey(poem.id, currentIndex);
+  const status = poemReviewStatus[key];
+
+  const handleFlip = () => setFlipped((f) => !f);
+
+  const navigate = (dir: -1 | 1) => {
+    setFlipped(false);
+    setCurrentIndex((i) => {
+      const next = i + dir;
+      if (next < 0) return total - 1;
+      if (next >= total) return 0;
       return next;
     });
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Progress */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Stanza {currentIndex + 1} of {total}
+        </span>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full"
+          style={{ background: "rgba(52,168,83,0.12)", color: "#34a853" }}
+        >
+          {progress.confident}/{total} confident
+        </span>
+      </div>
+
       {/* Progress bar */}
-      <div
-        className="rounded-xl p-3"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-            Progress
-          </span>
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            <span style={{ color: "#34a853" }}>{progress.confident} confident</span>
-            {" / "}
-            <span style={{ color: "#ea4335" }}>{progress.needsReview} needs review</span>
-            {" / "}
-            {progress.total - progress.confident - progress.needsReview} unmarked
-          </span>
-        </div>
-        <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-          <div className="h-full flex">
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${(progress.confident / progress.total) * 100}%`,
-                background: "#34a853",
-              }}
-            />
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${(progress.needsReview / progress.total) * 100}%`,
-                background: "#ea4335",
-              }}
-            />
-          </div>
+      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+        <div className="h-full flex">
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${(progress.confident / total) * 100}%`,
+              background: "#34a853",
+            }}
+          />
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${(progress.needsReview / total) * 100}%`,
+              background: "#ea4335",
+            }}
+          />
         </div>
       </div>
 
-      <p className="text-xs text-center" style={{ color: "var(--text-secondary)" }}>
-        Tap a card to flip and see the explanation
-      </p>
-
-      {/* Flashcards */}
-      {poem.stanzas.map((stanza, idx) => {
-        const key = stanzaKey(poem.id, idx);
-        const status = poemReviewStatus[key];
-        const isFlipped = flipped.has(idx);
-
-        return (
-          <div key={idx} className="space-y-0">
-            {/* Flashcard */}
-            <div
-              onClick={() => toggleFlip(idx)}
-              className="rounded-xl overflow-hidden cursor-pointer select-none"
-              style={{
-                background: "var(--bg-card)",
-                border: `1px solid ${
-                  status === "needs_review"
-                    ? "rgba(234,67,53,0.4)"
-                    : status === "confident"
-                    ? "rgba(52,168,83,0.4)"
-                    : "var(--border)"
-                }`,
-                minHeight: "120px",
-              }}
+      {/* Flashcard with 3D flip */}
+      <div
+        className="relative mx-auto w-full"
+        style={{ perspective: "1000px", maxWidth: 560 }}
+      >
+        <motion.div
+          onClick={handleFlip}
+          className="cursor-pointer w-full"
+          style={{
+            transformStyle: "preserve-3d",
+            minHeight: 280,
+          }}
+          animate={{ rotateY: flipped ? 180 : 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          {/* Front — Poem text */}
+          <div
+            className="absolute inset-0 rounded-xl p-6 flex flex-col items-center justify-center text-center"
+            style={{
+              background: "var(--bg-card)",
+              border: `1px solid ${
+                status === "needs_review"
+                  ? "rgba(234,67,53,0.4)"
+                  : status === "confident"
+                  ? "rgba(52,168,83,0.4)"
+                  : "var(--border)"
+              }`,
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {status && (
+              <span
+                className="absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                style={{
+                  background:
+                    status === "needs_review"
+                      ? "rgba(234,67,53,0.1)"
+                      : "rgba(52,168,83,0.1)",
+                  color: status === "needs_review" ? "#ea4335" : "#34a853",
+                }}
+              >
+                {status === "needs_review" ? "Needs Review" : "Confident"}
+              </span>
+            )}
+            <span
+              className="text-xs font-bold uppercase tracking-wide mb-3"
+              style={{ color: "var(--primary)" }}
             >
-              {/* Header */}
-              <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+              Stanza {currentIndex + 1}
+            </span>
+            <p
+              className="text-base font-serif italic leading-relaxed whitespace-pre-line mb-4"
+              style={{ color: "var(--text)" }}
+            >
+              {stanza.lines}
+            </p>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              Tap to reveal explanation
+            </p>
+          </div>
+
+          {/* Back — Explanation */}
+          <div
+            className="absolute inset-0 rounded-xl p-6 flex flex-col justify-center"
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--primary)",
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
+            <div className="space-y-3">
+              <div>
                 <span
-                  className="text-xs font-bold uppercase tracking-wide"
-                  style={{ color: "var(--primary)" }}
+                  className="text-xs font-semibold uppercase"
+                  style={{ color: "var(--text-secondary)" }}
                 >
-                  Stanza {idx + 1}
+                  Stanza {currentIndex + 1}
                 </span>
+              </div>
+              <div>
                 <span
-                  className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{
-                    background: isFlipped ? "rgba(123,97,255,0.1)" : "rgba(123,97,255,0.05)",
-                    color: isFlipped ? "#7b61ff" : "var(--text-secondary)",
-                  }}
+                  className="text-xs font-semibold uppercase"
+                  style={{ color: "var(--text-secondary)" }}
                 >
-                  {isFlipped ? "Explanation" : "Poem"}
+                  Poem
                 </span>
-                {status && (
-                  <span
-                    className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full"
-                    style={{
-                      background:
-                        status === "needs_review"
-                          ? "rgba(234,67,53,0.1)"
-                          : "rgba(52,168,83,0.1)",
-                      color: status === "needs_review" ? "#ea4335" : "#34a853",
-                    }}
-                  >
-                    {status === "needs_review" ? "Needs Review" : "Confident"}
-                  </span>
-                )}
+                <p
+                  className="text-sm italic leading-relaxed whitespace-pre-line"
+                  style={{ color: "var(--text)" }}
+                >
+                  {stanza.lines}
+                </p>
               </div>
-
-              {/* Card content */}
-              <div className="px-4 pb-3">
-                {!isFlipped ? (
-                  <p
-                    className="text-sm leading-relaxed whitespace-pre-line"
-                    style={{ color: "var(--text)", fontStyle: "italic" }}
-                  >
-                    {stanza.lines}
-                  </p>
-                ) : (
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>
-                    {stanza.explanation}
-                  </p>
-                )}
-              </div>
-
-              {/* Tap hint */}
-              <div className="px-4 pb-2 flex justify-end">
-                <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>
-                  {isFlipped ? "Tap to see poem" : "Tap to see explanation"}
+              <div>
+                <span
+                  className="text-xs font-semibold uppercase"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Explanation
                 </span>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+                  {stanza.explanation}
+                </p>
               </div>
-            </div>
-
-            {/* Status buttons (always visible below card) */}
-            <div className="flex gap-2 mt-2 mb-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); onToggleStatus(idx, "needs_review"); }}
-                className="px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
-                style={{
-                  background:
-                    status === "needs_review" ? "rgba(234,67,53,0.15)" : "transparent",
-                  color: status === "needs_review" ? "#ea4335" : "var(--text-secondary)",
-                  border: `1px solid ${
-                    status === "needs_review" ? "rgba(234,67,53,0.3)" : "var(--border)"
-                  }`,
-                }}
-              >
-                Needs Review
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onToggleStatus(idx, "confident"); }}
-                className="px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
-                style={{
-                  background:
-                    status === "confident" ? "rgba(52,168,83,0.15)" : "transparent",
-                  color: status === "confident" ? "#34a853" : "var(--text-secondary)",
-                  border: `1px solid ${
-                    status === "confident" ? "rgba(52,168,83,0.3)" : "var(--border)"
-                  }`,
-                }}
-              >
-                Confident
-              </button>
             </div>
           </div>
-        );
-      })}
+        </motion.div>
+      </div>
+
+      {/* Review buttons */}
+      <div className="flex justify-center gap-3">
+        <button
+          onClick={() => onToggleStatus(currentIndex, "needs_review")}
+          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+          style={{
+            background:
+              status === "needs_review" ? "rgba(234,67,53,0.15)" : "transparent",
+            color: status === "needs_review" ? "#ea4335" : "var(--text-secondary)",
+            border: `1px solid ${
+              status === "needs_review" ? "rgba(234,67,53,0.3)" : "var(--border)"
+            }`,
+          }}
+        >
+          Needs Review
+        </button>
+        <button
+          onClick={() => onToggleStatus(currentIndex, "confident")}
+          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+          style={{
+            background:
+              status === "confident" ? "rgba(52,168,83,0.15)" : "transparent",
+            color: status === "confident" ? "#34a853" : "var(--text-secondary)",
+            border: `1px solid ${
+              status === "confident" ? "rgba(52,168,83,0.3)" : "var(--border)"
+            }`,
+          }}
+        >
+          Confident
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-center gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <div className="flex gap-1">
+          {poem.stanzas.map((_, i) => {
+            const dotKey = stanzaKey(poem.id, i);
+            const dotStatus = poemReviewStatus[dotKey];
+            return (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full transition-all"
+                style={{
+                  background:
+                    i === currentIndex
+                      ? "var(--primary)"
+                      : dotStatus === "confident"
+                      ? "#34a853"
+                      : dotStatus === "needs_review"
+                      ? "#ea4335"
+                      : "var(--border)",
+                  transform: i === currentIndex ? "scale(1.4)" : "scale(1)",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => navigate(1)}
+          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
