@@ -11,8 +11,9 @@ import { JCCharacters } from "@/components/english/jc-characters";
 import { JCQuoteIdentifier } from "@/components/english/jc-quote-identifier";
 import { JCLineByLine } from "@/components/english/jc-line-by-line";
 import { Poems } from "@/components/english/poems";
+import { Prose } from "@/components/english/prose";
 
-type MainTab = "julius-caesar" | "poems";
+type MainTab = "julius-caesar" | "poems" | "prose";
 type JCSubTab = "flashcards" | "quotes" | "scenes" | "characters" | "quiz" | "line-by-line";
 
 const JC_SUB_TABS: { id: JCSubTab; label: string }[] = [
@@ -50,7 +51,7 @@ export default function EnglishPage() {
           English Literature
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Julius Caesar &amp; Poems revision (Paper 2)
+          Julius Caesar, Poems &amp; Prose revision (Paper 2)
         </p>
       </div>
 
@@ -82,7 +83,7 @@ export default function EnglishPage() {
 
       {/* Main Tabs */}
       <div className="flex gap-2">
-        {(["julius-caesar", "poems"] as MainTab[]).map((tab) => (
+        {(["julius-caesar", "poems", "prose"] as MainTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => { setMainTab(tab); capture("english_tab_changed", { tab }); }}
@@ -96,13 +97,16 @@ export default function EnglishPage() {
               }`,
             }}
           >
-            {tab === "julius-caesar" ? "Julius Caesar" : "Poems"}
+            {tab === "julius-caesar" ? "Julius Caesar" : tab === "poems" ? "Poems" : "Prose"}
           </button>
         ))}
       </div>
 
       {/* Poems */}
       {mainTab === "poems" && <Poems />}
+
+      {/* Prose */}
+      {mainTab === "prose" && <Prose />}
 
       {/* Julius Caesar */}
       {mainTab === "julius-caesar" && (
