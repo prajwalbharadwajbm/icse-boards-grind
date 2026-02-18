@@ -689,27 +689,6 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
   const total = poem.mcqs.length;
   const q = poem.mcqs[currentQ];
 
-  if (!q || total === 0) {
-    return (
-      <div
-        className="rounded-xl p-6 text-center"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-      >
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          No MCQ questions available for this poem yet.
-        </p>
-      </div>
-    );
-  }
-
-  const score = useMemo(() => {
-    let s = 0;
-    for (let i = 0; i < answers.length; i++) {
-      if (answers[i] === poem.mcqs[i]?.correctIndex) s++;
-    }
-    return s;
-  }, [answers, poem.mcqs]);
-
   const handleSubmit = async () => {
     if (selectedOption === null || deducting) return;
     setDeducting(true);
@@ -760,6 +739,19 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
     setAnswers(Array(total).fill(null));
     setFinished(false);
   };
+
+  if (!q || total === 0) {
+    return (
+      <div
+        className="rounded-xl p-6 text-center"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+      >
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          No MCQ questions available for this poem yet.
+        </p>
+      </div>
+    );
+  }
 
   if (finished) {
     let finalScore = 0;
