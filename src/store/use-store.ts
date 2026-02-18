@@ -90,6 +90,7 @@ export interface StoreState {
   credits: number;
   jcLineByLineStatus: Record<string, "needs_review" | "confident">;
   poemReviewStatus: Record<string, "needs_review" | "confident">;
+  proseReviewStatus: Record<string, "needs_review" | "confident">;
   jcFlashcardReviewStatus: Record<string, "needs_review" | "confident">;
   _hydrated: boolean;
 }
@@ -147,6 +148,7 @@ const defaultState: StoreState = {
   credits: 500,
   jcLineByLineStatus: {},
   poemReviewStatus: {},
+  proseReviewStatus: {},
   jcFlashcardReviewStatus: {},
   _hydrated: false,
 };
