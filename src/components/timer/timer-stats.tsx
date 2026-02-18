@@ -42,7 +42,7 @@ export function TimerStats() {
         minutes: mins,
       }))
       .sort((a, b) => b.minutes - a.minutes);
-  }, [data.timerSessions, td]);
+  }, [data.timerSessions, td, SUBJECT_LABELS, SUBJECT_COLORS]);
 
   const totalMinutesToday = subjectBreakdown.reduce((sum, s) => sum + s.minutes, 0);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
@@ -16,7 +16,6 @@ import { useMilestoneDetector } from "@/hooks/use-milestone-detector";
 import { useDailyGoalDetector } from "@/hooks/use-daily-goal-detector";
 import { useTimerEngine } from "@/hooks/use-timer-engine";
 import { getLatestWhatsNewVersion, getUnseenUpdates } from "@/lib/whats-new";
-import type { WhatsNewEntry } from "@/lib/whats-new";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -46,16 +45,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const lastSeenVersion = useStore((s) => s.lastSeenWhatsNewVersion);
   const setField = useStore((s) => s.setField);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  const [whatsNewUpdates, setWhatsNewUpdates] = useState<WhatsNewEntry[]>([]);
+
+  const whatsNewUpdates = useMemo(() => {
+    if (!hydrated || !onboarded) return [];
+    return getUnseenUpdates(lastSeenVersion);
+  }, [hydrated, onboarded, lastSeenVersion]);
 
   useEffect(() => {
-    if (!hydrated || !onboarded) return;
-    const unseen = getUnseenUpdates(lastSeenVersion);
-    if (unseen.length === 0) return;
-    setWhatsNewUpdates(unseen);
+    if (whatsNewUpdates.length === 0) return;
     const timer = setTimeout(() => setWhatsNewOpen(true), 1200);
     return () => clearTimeout(timer);
-  }, [hydrated, onboarded, lastSeenVersion]);
+  }, [whatsNewUpdates]);
 
   const showCoachBanner = pathname !== "/dashboard/coach" && pathname !== "/dashboard/settings";
 

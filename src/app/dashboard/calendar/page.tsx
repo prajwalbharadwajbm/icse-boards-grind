@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getExams, getSubjectColors, getSubjectLabels, type Block } from "@/lib/constants";
 import { today, formatDate, formatTime24, timeToMin, daysBetween } from "@/lib/utils";
@@ -34,7 +34,7 @@ export default function CalendarPage() {
 
   // Auto-refresh every minute
   useEffect(() => {
-    posthog.capture("calendar_page_viewed");
+    capture("calendar_page_viewed");
     const interval = setInterval(() => setCurrentNow(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
@@ -83,7 +83,7 @@ export default function CalendarPage() {
   const selectedDayExam = useMemo(() => {
     if (!selectedDate) return null;
     return EXAMS.find((e) => e.date === selectedDate) || null;
-  }, [selectedDate]);
+  }, [selectedDate, EXAMS]);
 
   const selectedDayStudyMin = useMemo(() => {
     if (!selectedDayPlan) return 0;
@@ -99,7 +99,7 @@ export default function CalendarPage() {
       const d = new Date(e.date + "T00:00:00");
       return d.getMonth() === calMonth && d.getFullYear() === calYear;
     });
-  }, [calMonth, calYear]);
+  }, [calMonth, calYear, EXAMS]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

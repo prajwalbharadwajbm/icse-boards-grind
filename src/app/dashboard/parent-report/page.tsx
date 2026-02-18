@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useAuth } from "@/providers/auth-provider";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,7 @@ export default function ParentReportPage() {
   const setField = useStore((s) => s.setField);
 
   useEffect(() => {
-    posthog.capture("parent_report_page_viewed");
+    capture("parent_report_page_viewed");
   }, []);
 
   const reportUrl =
@@ -32,7 +32,7 @@ export default function ParentReportPage() {
       `Here's my ICSE 2026 study progress report:\n${reportUrl}`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
-    posthog.capture("parent_report_shared", { method: "whatsapp" });
+    capture("parent_report_shared", { method: "whatsapp" });
   };
 
   const shareViaEmail = () => {
@@ -42,7 +42,7 @@ export default function ParentReportPage() {
       `Hi,\n\nHere's my latest ICSE 2026 study progress report:\n${reportUrl}\n\nYou can view my subjects, study hours, streak, and exam schedule — all in one page.`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_self");
-    posthog.capture("parent_report_shared", { method: "email" });
+    capture("parent_report_shared", { method: "email" });
   };
 
   return (
@@ -72,7 +72,7 @@ export default function ParentReportPage() {
           <button
             onClick={() => {
               setField("shareReportEnabled", !shareReportEnabled);
-              posthog.capture("parent_report_toggle", { enabled: !shareReportEnabled });
+              capture("parent_report_toggle", { enabled: !shareReportEnabled });
             }}
             className="w-11 h-6 rounded-full transition-all relative shrink-0"
             style={{ background: shareReportEnabled ? "var(--primary)" : "var(--border)" }}

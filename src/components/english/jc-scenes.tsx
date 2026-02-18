@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { JC_SCENES } from "@/lib/julius-caesar-data";
 
 export function JCScenes() {
@@ -39,7 +39,7 @@ export function JCScenes() {
                         const newState = isOpen ? null : scene.id;
                         setExpandedId(newState);
                         if (newState) {
-                          posthog.capture("jc_scene_expanded", {
+                          capture("jc_scene_expanded", {
                             scene_id: scene.id,
                             act: scene.act,
                             scene_number: scene.scene,
@@ -135,7 +135,7 @@ export function JCScenes() {
                                   className="w-full rounded-lg"
                                   style={{ maxHeight: "400px" }}
                                   onPlay={() => {
-                                    posthog.capture("jc_scene_video_played", {
+                                    capture("jc_scene_video_played", {
                                       scene_id: scene.id,
                                       act: scene.act,
                                       scene_number: scene.scene,

@@ -1,7 +1,7 @@
 "use client";
 
 import { doc, updateDoc } from "firebase/firestore";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getAuthInstance, getDbInstance } from "@/lib/firebase";
 import {
@@ -26,7 +26,7 @@ export function useCredits() {
     const state = useStore.getState();
     const cost = _getCost(activity, count);
     if (state.credits < cost) {
-      posthog.capture("out_of_credits", {
+      capture("out_of_credits", {
         activity,
         cost,
         credits_remaining: state.credits,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { JC_CHARACTERS } from "@/lib/julius-caesar-data";
 
 const TRAIT_COLORS = [
@@ -72,7 +72,7 @@ export function JCCharacters() {
                 const newState = isOpen ? null : char.id;
                 setExpandedId(newState);
                 if (newState) {
-                  posthog.capture("jc_character_quotes_expanded", {
+                  capture("jc_character_quotes_expanded", {
                     character_id: char.id,
                     character_name: char.name,
                   });

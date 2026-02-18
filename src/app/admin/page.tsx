@@ -25,12 +25,7 @@ import {
   getUserSolvedPaperCount,
 } from "@/lib/admin-utils";
 import { SECOND_LANGUAGES, ELECTIVES } from "@/lib/constants";
-
-const ADMIN_EMAILS = [
-  "prajwalbm40@gmail.com",
-  "rameshprajwal2001@gmail.com",
-  "harshithsaiv2306@gmail.com",
-];
+import { INTERNAL_EMAILS } from "@/lib/analytics";
 const PAGE_SIZE = 20;
 const PIE_COLORS = ["#7b61ff", "#ea4335", "#1a73e8", "#f9ab00", "#12b5cb", "#34a853", "#d93025", "#ff6b35", "#e040fb", "#9c27b0"];
 
@@ -63,7 +58,7 @@ export default function AdminPage() {
     setField("theme", "dark");
   }, [setField]);
 
-  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email);
+  const isAdmin = !!user?.email && INTERNAL_EMAILS.includes(user.email);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);

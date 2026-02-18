@@ -2,14 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { JC_QUOTES } from "@/lib/julius-caesar-data";
 
 export function JCQuoteIdentifier() {
   const shuffledQuotes = useMemo(() => {
     const arr = [...JC_QUOTES];
     for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line react-hooks/purity -- intentional shuffle on mount
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
@@ -31,7 +31,7 @@ export function JCQuoteIdentifier() {
     if (isCorrect) {
       setScore((s) => s + 1);
     }
-    posthog.capture("jc_quote_answered", {
+    capture("jc_quote_answered", {
       quote_id: quote.id,
       correct: isCorrect,
       act: quote.act,
@@ -46,7 +46,7 @@ export function JCQuoteIdentifier() {
   };
 
   const handleReset = () => {
-    posthog.capture("jc_quote_reset", { score, total: totalAnswered });
+    capture("jc_quote_reset", { score, total: totalAnswered });
     setCurrentIndex(0);
     setSelectedOption(null);
     setSubmitted(false);

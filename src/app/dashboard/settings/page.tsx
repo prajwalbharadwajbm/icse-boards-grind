@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useMemo, useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useAuth } from "@/providers/auth-provider";
 import { Card } from "@/components/ui/card";
@@ -38,7 +38,7 @@ export default function SettingsPage() {
   const [importError, setImportError] = useState("");
 
   useEffect(() => {
-    posthog.capture("settings_page_viewed");
+    capture("settings_page_viewed");
   }, []);
 
   const showToast = (msg: string) => {
@@ -55,7 +55,7 @@ export default function SettingsPage() {
       grokApiKey,
       routine,
     }));
-    posthog.capture("settings_saved", {
+    capture("settings_saved", {
       study_hours: studyHours,
       target_percent: targetPercent,
       has_grok_key: !!grokApiKey,
@@ -73,7 +73,7 @@ export default function SettingsPage() {
     a.download = `icse-grind-backup-${today()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    posthog.capture("data_exported");
+    capture("data_exported");
     showToast("Data exported!");
   };
 
@@ -102,7 +102,7 @@ export default function SettingsPage() {
 
   const doImport = (mode: "replace" | "merge") => {
     if (!importData) return;
-    posthog.capture("data_imported", { mode });
+    capture("data_imported", { mode });
     if (mode === "replace") {
       setAll(importData);
     } else {
@@ -187,7 +187,7 @@ export default function SettingsPage() {
             <select
               value={lang}
               onChange={(e) => {
-                posthog.capture("language_changed", { new_language: e.target.value });
+                capture("language_changed", { new_language: e.target.value });
                 setField("selectedLanguage", e.target.value);
               }}
               className="w-full px-3 py-2 rounded-lg text-sm"
@@ -203,7 +203,7 @@ export default function SettingsPage() {
             <select
               value={elective}
               onChange={(e) => {
-                posthog.capture("elective_changed", { new_elective: e.target.value });
+                capture("elective_changed", { new_elective: e.target.value });
                 setField("selectedElective", e.target.value);
               }}
               className="w-full px-3 py-2 rounded-lg text-sm"
@@ -308,7 +308,7 @@ export default function SettingsPage() {
           <button
             onClick={() => {
               setField("leaderboardOptIn", !data.leaderboardOptIn);
-              posthog.capture("leaderboard_toggle", { enabled: !data.leaderboardOptIn });
+              capture("leaderboard_toggle", { enabled: !data.leaderboardOptIn });
             }}
             className="w-11 h-6 rounded-full transition-all relative"
             style={{ background: data.leaderboardOptIn ? "var(--primary)" : "var(--border)" }}
@@ -337,7 +337,7 @@ export default function SettingsPage() {
             <button
               onClick={() => {
                 setField("shareReportEnabled", !data.shareReportEnabled);
-                posthog.capture("parent_report_toggle", { enabled: !data.shareReportEnabled });
+                capture("parent_report_toggle", { enabled: !data.shareReportEnabled });
               }}
               className="w-11 h-6 rounded-full transition-all relative"
               style={{ background: data.shareReportEnabled ? "var(--primary)" : "var(--border)" }}

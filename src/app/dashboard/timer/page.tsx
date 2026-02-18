@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { capture } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { useStore } from "@/store/use-store";
 import { getSubjectLabels } from "@/lib/constants";
@@ -17,6 +18,10 @@ export default function TimerPage() {
 
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
+
+  useEffect(() => {
+    capture("timer_page_viewed");
+  }, []);
 
   const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
 
@@ -58,6 +63,7 @@ export default function TimerPage() {
     });
 
     if (currentBlock?.subjectKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init from planner
       setSelectedSubject(currentBlock.subjectKey);
       // Try to pick the first incomplete chapter for this subject
       const chapters = data.subjects[currentBlock.subjectKey] || [];
