@@ -56,10 +56,11 @@ export function CoachChat() {
     const apiKey = getEffectiveAIKey(data.grokApiKey);
     if (!text.trim() || streaming) return;
 
+    const ts = Date.now(); // eslint-disable-line react-hooks/purity -- event handler, not render
     const userMsg: CoachMessage = {
       role: "user",
       content: text.trim(),
-      timestamp: Date.now(),
+      timestamp: ts,
     };
     addMessage(userMsg);
     capture("coach_message_sent", {

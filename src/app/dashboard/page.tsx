@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { StatChip } from "@/components/ui/stat-chip";
@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   // F5: Auto-refresh every second for live countdown
   useEffect(() => {
-    posthog.capture("dashboard_viewed");
+    capture("dashboard_viewed");
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
@@ -49,14 +49,21 @@ export default function DashboardPage() {
     return count;
   }, [data.subjects]);
 
-  // Next exam countdown
-  const nextExam = exams.find((e) => e.date >= td);
+  // Next exam countdown — skip exams whose end time (11AM + duration) has passed
+  const nextExam = useMemo(() => {
+    return exams.find((e) => {
+      const durationHrs = parseFloat(e.duration) || 2;
+      const examEnd = new Date(e.date + "T11:00:00");
+      examEnd.setHours(examEnd.getHours() + durationHrs);
+      return examEnd.getTime() > now.getTime();
+    });
+  }, [exams, now]);
   const examDays = nextExam ? daysBetween(td, nextExam.date) : null;
 
   // F5: Live countdown computation
   const countdown = useMemo(() => {
     if (!nextExam) return null;
-    const examDate = new Date(nextExam.date + "T09:00:00"); // Exam starts ~9AM
+    const examDate = new Date(nextExam.date + "T11:00:00");
     const diff = examDate.getTime() - now.getTime();
     if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
     const days = Math.floor(diff / 86400000);
@@ -396,7 +403,7 @@ export default function DashboardPage() {
                   <Link
                     key={`weak-${i}`}
                     href="/dashboard/timer"
-                    onClick={() => posthog.capture("weak_area_clicked", { type: "weak_subject", subject: item.key })}
+                    onClick={() => capture("weak_area_clicked", { type: "weak_subject", subject: item.key })}
                     className="flex items-center gap-3 group"
                   >
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
@@ -413,7 +420,7 @@ export default function DashboardPage() {
                   <Link
                     key={`grammar-${i}`}
                     href="/dashboard/english"
-                    onClick={() => posthog.capture("weak_area_clicked", { type: "grammar", category: item.category })}
+                    onClick={() => capture("weak_area_clicked", { type: "grammar", category: item.category })}
                     className="flex items-center gap-3 group"
                   >
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#7b61ff" }} />
@@ -430,7 +437,7 @@ export default function DashboardPage() {
                   <Link
                     key={`rev-${i}`}
                     href="/dashboard/timer"
-                    onClick={() => posthog.capture("weak_area_clicked", { type: "revision", subject: item.subjectKey })}
+                    onClick={() => capture("weak_area_clicked", { type: "revision", subject: item.subjectKey })}
                     className="flex items-center gap-3 group"
                   >
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[item.subjectKey] || "var(--warning)" }} />

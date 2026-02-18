@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { sendChatCompletionSync } from "@/lib/ai-service";
@@ -59,10 +59,10 @@ export function GrammarDrill() {
           prev[categoryId] = [...list, parsed.question].slice(-10);
           return { recentGrammarQuestions: prev };
         });
-        posthog.capture("grammar_question_generated", { category: categoryId });
+        capture("grammar_question_generated", { category: categoryId });
       } catch (err) {
         setError((err as Error).message);
-        posthog.capture("grammar_question_failed", { category: categoryId, error: (err as Error).message });
+        capture("grammar_question_failed", { category: categoryId, error: (err as Error).message });
       } finally {
         setLoading(false);
       }
@@ -72,7 +72,7 @@ export function GrammarDrill() {
 
   const handleSelectCategory = (id: string) => {
     setSelectedCategory(id);
-    posthog.capture("grammar_category_selected", { category: id });
+    capture("grammar_category_selected", { category: id });
     generateQuestion(id);
   };
 
@@ -87,7 +87,7 @@ export function GrammarDrill() {
     setSubmitted(true);
 
     const isCorrect = selectedOption === question.correctIndex;
-    posthog.capture("grammar_question_answered", {
+    capture("grammar_question_answered", {
       category: selectedCategory,
       correct: isCorrect,
     });
@@ -187,6 +187,7 @@ export function GrammarDrill() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
+                capture("grammar_back_to_categories");
                 setSelectedCategory(null);
                 setQuestion(null);
                 setSubmitted(false);

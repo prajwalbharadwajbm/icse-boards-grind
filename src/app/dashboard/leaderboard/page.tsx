@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { collection, getDocs } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useAuth } from "@/providers/auth-provider";
@@ -29,7 +29,7 @@ export default function LeaderboardPage() {
   const [tab, setTab] = useState<"week" | "all">("week");
 
   useEffect(() => {
-    posthog.capture("leaderboard_viewed");
+    capture("leaderboard_viewed");
     // Ensure current user's data is in Firestore before loading
     pushLeaderboardData().then(() => loadLeaderboard());
   }, []);
@@ -58,7 +58,7 @@ export default function LeaderboardPage() {
 
   const handleOptIn = () => {
     setField("leaderboardOptIn", true);
-    posthog.capture("leaderboard_opted_in");
+    capture("leaderboard_opted_in");
     // Push data immediately after opting in
     setTimeout(() => pushLeaderboardData().then(() => loadLeaderboard()), 500);
   };

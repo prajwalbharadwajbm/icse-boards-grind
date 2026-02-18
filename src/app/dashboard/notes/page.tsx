@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
 import { getSubjectLabels, getSubjectColors } from "@/lib/constants";
@@ -15,7 +15,7 @@ export default function NotesPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    posthog.capture("notes_page_viewed");
+    capture("notes_page_viewed");
   }, []);
 
   // Flatten all notes grouped by subject
