@@ -9,10 +9,11 @@ import { JCFlashcards } from "@/components/english/jc-flashcards";
 import { JCQuiz } from "@/components/english/jc-quiz";
 import { JCCharacters } from "@/components/english/jc-characters";
 import { JCQuoteIdentifier } from "@/components/english/jc-quote-identifier";
-import { GrammarDrill } from "@/components/english/grammar-drill";
+import { JCLineByLine } from "@/components/english/jc-line-by-line";
+import { Poems } from "@/components/english/poems";
 
-type MainTab = "grammar" | "julius-caesar";
-type JCSubTab = "flashcards" | "quotes" | "scenes" | "characters" | "quiz";
+type MainTab = "julius-caesar" | "poems";
+type JCSubTab = "flashcards" | "quotes" | "scenes" | "characters" | "quiz" | "line-by-line";
 
 const JC_SUB_TABS: { id: JCSubTab; label: string }[] = [
   { id: "flashcards", label: "Flashcards" },
@@ -20,28 +21,19 @@ const JC_SUB_TABS: { id: JCSubTab; label: string }[] = [
   { id: "scenes", label: "Scenes" },
   { id: "characters", label: "Characters" },
   { id: "quiz", label: "MCQ Quiz" },
+  { id: "line-by-line", label: "Line by Line" },
 ];
 
 export default function EnglishPage() {
-  const grammarDrillStats = useStore((s) => s.grammarDrillStats);
   const jcFlashcardsReviewed = useStore((s) => s.jcFlashcardsReviewed);
   const jcQuizScores = useStore((s) => s.jcQuizScores);
 
-  const [mainTab, setMainTab] = useState<MainTab>("grammar");
+  const [mainTab, setMainTab] = useState<MainTab>("julius-caesar");
   const [jcSubTab, setJcSubTab] = useState<JCSubTab>("flashcards");
 
   useEffect(() => {
     capture("english_page_viewed");
   }, []);
-
-  // Stats
-  const grammarStats = useMemo(() => {
-    const entries = Object.values(grammarDrillStats);
-    const total = entries.reduce((a, e) => a + e.attempted, 0);
-    const correct = entries.reduce((a, e) => a + e.correct, 0);
-    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-    return { total, correct, accuracy };
-  }, [grammarDrillStats]);
 
   const bestQuizScore = useMemo(() => {
     if (jcQuizScores.length === 0) return null;
@@ -55,26 +47,15 @@ export default function EnglishPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>
-          English Practice
+          English Literature
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Grammar drills (Paper 1) and Julius Caesar revision (Paper 2)
+          Julius Caesar &amp; Poems revision (Paper 2)
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatChip
-          label="Grammar Accuracy"
-          value={grammarStats.total > 0 ? `${grammarStats.accuracy}%` : "--"}
-          color="#7b61ff"
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-          }
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <StatChip
           label="Flashcards Reviewed"
           value={jcFlashcardsReviewed.length}
@@ -101,7 +82,7 @@ export default function EnglishPage() {
 
       {/* Main Tabs */}
       <div className="flex gap-2">
-        {(["grammar", "julius-caesar"] as MainTab[]).map((tab) => (
+        {(["julius-caesar", "poems"] as MainTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => { setMainTab(tab); capture("english_tab_changed", { tab }); }}
@@ -115,13 +96,13 @@ export default function EnglishPage() {
               }`,
             }}
           >
-            {tab === "grammar" ? "Grammar Drills" : "Julius Caesar"}
+            {tab === "julius-caesar" ? "Julius Caesar" : "Poems"}
           </button>
         ))}
       </div>
 
-      {/* Grammar Drills */}
-      {mainTab === "grammar" && <GrammarDrill />}
+      {/* Poems */}
+      {mainTab === "poems" && <Poems />}
 
       {/* Julius Caesar */}
       {mainTab === "julius-caesar" && (
@@ -158,6 +139,7 @@ export default function EnglishPage() {
           {jcSubTab === "scenes" && <JCScenes />}
           {jcSubTab === "characters" && <JCCharacters />}
           {jcSubTab === "quiz" && <JCQuiz />}
+          {jcSubTab === "line-by-line" && <JCLineByLine />}
         </div>
       )}
     </div>
