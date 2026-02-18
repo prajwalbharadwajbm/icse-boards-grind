@@ -20,7 +20,7 @@ export function initPostHog() {
   posthog.init(key, {
     api_host: host || "https://eu.i.posthog.com",
     capture_pageview: false,
-    capture_pageleave: true,
+    capture_pageleave: false,
     autocapture: false,
     disable_session_recording: false,
     capture_exceptions: true,
