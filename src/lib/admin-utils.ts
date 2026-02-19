@@ -29,6 +29,7 @@ export interface AdminUser {
   selectedLanguage?: string;
   selectedElective?: string;
   solvedPapers?: string[];
+  credits?: number;
 }
 
 function today(): string {
@@ -271,6 +272,43 @@ export function getUserTotalChapters(user: AdminUser): number {
     total += chapters.length;
   }
   return total;
+}
+
+export function computeCreditStats(users: AdminUser[]): {
+  totalCredits: number;
+  avgCredits: number;
+  distribution: { range: string; count: number }[];
+} {
+  let totalCredits = 0;
+  let creditUsers = 0;
+
+  const bins = [
+    { range: "0", min: 0, max: 0 },
+    { range: "1-100", min: 1, max: 100 },
+    { range: "101-500", min: 101, max: 500 },
+    { range: "501-1000", min: 501, max: 1000 },
+    { range: "1001-2000", min: 1001, max: 2000 },
+    { range: "2000+", min: 2001, max: Infinity },
+  ];
+  const distribution = bins.map((b) => ({ range: b.range, count: 0 }));
+
+  for (const u of users) {
+    const c = u.credits ?? 0;
+    totalCredits += c;
+    creditUsers++;
+    for (let i = 0; i < bins.length; i++) {
+      if (c >= bins[i].min && c <= bins[i].max) {
+        distribution[i].count++;
+        break;
+      }
+    }
+  }
+
+  return {
+    totalCredits,
+    avgCredits: creditUsers > 0 ? Math.round(totalCredits / creditUsers) : 0,
+    distribution,
+  };
 }
 
 export function getUserSolvedPaperCount(user: AdminUser): number {

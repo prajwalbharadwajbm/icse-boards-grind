@@ -5,7 +5,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
 import { useRouter } from "next/navigation";
 import { getDbInstance } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, increment } from "firebase/firestore";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -20,7 +20,7 @@ import {
   computeTopStats, computeDAU, computeStudyHoursTrend,
   computeLanguageDistribution, computeElectiveDistribution,
   computeLearningStyleDist, computePrepLevelDist,
-  computeStreakDist, computeChapterCompletion,
+  computeStreakDist, computeChapterCompletion, computeCreditStats,
   getUserTotalHours, getUserChaptersDone, getUserTotalChapters,
   getUserSolvedPaperCount,
 } from "@/lib/admin-utils";
@@ -32,7 +32,7 @@ const PIE_COLORS = ["#7b61ff", "#ea4335", "#1a73e8", "#f9ab00", "#12b5cb", "#34a
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const pieLabel = (props: any) => `${props.name ?? ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`;
 
-type SortKey = "name" | "email" | "streak" | "hours" | "chapters" | "papers" | "target" | "prepLevel" | "lastActive" | "language" | "elective";
+type SortKey = "name" | "email" | "streak" | "hours" | "chapters" | "papers" | "credits" | "target" | "prepLevel" | "lastActive" | "language" | "elective";
 type SortDir = "asc" | "desc";
 
 export default function AdminPage() {
@@ -52,6 +52,10 @@ export default function AdminPage() {
 
   // Modal state
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+
+  // Grant credits state
+  const [granting, setGranting] = useState(false);
+  const [grantMsg, setGrantMsg] = useState("");
 
   // Force dark theme
   useEffect(() => {
@@ -77,6 +81,25 @@ export default function AdminPage() {
     }
   }, []);
 
+  const grantCredits = useCallback(async () => {
+    if (!confirm("Grant 1000 credits to ALL users?")) return;
+    setGranting(true);
+    setGrantMsg("");
+    try {
+      const db = getDbInstance();
+      const promises = users.map((u) =>
+        updateDoc(doc(db, "users", u.uid), { credits: increment(1000) })
+      );
+      await Promise.all(promises);
+      setGrantMsg(`Granted 1000 credits to ${users.length} users`);
+      fetchUsers();
+    } catch (e: unknown) {
+      setGrantMsg(e instanceof Error ? e.message : "Failed to grant credits");
+    } finally {
+      setGranting(false);
+    }
+  }, [users, fetchUsers]);
+
   useEffect(() => {
     if (isAdmin) fetchUsers();
   }, [isAdmin, fetchUsers]);
@@ -91,6 +114,7 @@ export default function AdminPage() {
   const prepLevelDist = useMemo(() => computePrepLevelDist(users), [users]);
   const streakDist = useMemo(() => computeStreakDist(users), [users]);
   const chapterComp = useMemo(() => computeChapterCompletion(users), [users]);
+  const creditStats = useMemo(() => computeCreditStats(users), [users]);
 
   // Table filtering, sorting, pagination
   const filteredUsers = useMemo(() => {
@@ -120,6 +144,7 @@ export default function AdminPage() {
         case "hours": av = getUserTotalHours(a); bv = getUserTotalHours(b); break;
         case "chapters": av = getUserChaptersDone(a); bv = getUserChaptersDone(b); break;
         case "papers": av = getUserSolvedPaperCount(a); bv = getUserSolvedPaperCount(b); break;
+        case "credits": av = a.credits ?? 0; bv = b.credits ?? 0; break;
         case "target": av = a.targetPercent || 0; bv = b.targetPercent || 0; break;
         case "prepLevel": av = a.prepLevel || ""; bv = b.prepLevel || ""; break;
         case "lastActive": av = a.lastStudyDate || ""; bv = b.lastStudyDate || ""; break;
@@ -191,6 +216,9 @@ export default function AdminPage() {
       <div className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between gap-3 backdrop-blur-lg" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
         <h1 className="text-lg font-bold truncate">Admin Analytics Dashboard</h1>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={grantCredits} disabled={granting || loading}>
+            {granting ? "Granting..." : "Grant 1000 Credits"}
+          </Button>
           <Button size="sm" variant="secondary" onClick={fetchUsers} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </Button>
@@ -205,15 +233,21 @@ export default function AdminPage() {
           {error}
         </div>
       )}
+      {grantMsg && (
+        <div className="mx-4 mt-3 p-3 rounded-lg text-sm" style={{ background: "rgba(52,168,83,0.15)", color: "#34a853" }}>
+          {grantMsg}
+        </div>
+      )}
 
       <div className="p-4 space-y-6 max-w-7xl mx-auto">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <StatCard label="Total Users" value={stats.totalUsers} />
           <StatCard label="Onboarded" value={`${stats.onboardedUsers}/${stats.totalUsers}`} />
           <StatCard label="Active Today" value={stats.activeToday} />
           <StatCard label="Active This Week" value={stats.activeThisWeek} />
           <StatCard label="Avg Streak" value={`${stats.avgStreak} days`} />
+          <StatCard label="Avg Credits" value={creditStats.avgCredits} />
         </div>
 
         {/* Charts Grid */}
@@ -339,6 +373,22 @@ export default function AdminPage() {
             </div>
           </Card>
 
+          {/* Credit Distribution */}
+          <Card>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>Credit Distribution</h3>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={creditStats.distribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="range" tick={{ fill: "var(--text-secondary)", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "var(--text-secondary)", fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
+                  <Bar dataKey="count" fill="#34a853" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
           {/* Chapter Completion by Subject */}
           <Card className="lg:col-span-2">
             <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>Avg Chapter Completion by Subject (%)</h3>
@@ -383,6 +433,7 @@ export default function AdminPage() {
                     ["hours", "Hours"],
                     ["chapters", "Ch. Done"],
                     ["papers", "Papers"],
+                    ["credits", "Credits"],
                     ["target", "Target %"],
                     ["prepLevel", "Prep"],
                     ["lastActive", "Last Active"],
@@ -414,6 +465,7 @@ export default function AdminPage() {
                     <td className="py-2 px-2">{Math.round(getUserTotalHours(u) * 10) / 10}</td>
                     <td className="py-2 px-2">{getUserChaptersDone(u)}</td>
                     <td className="py-2 px-2">{getUserSolvedPaperCount(u)}</td>
+                    <td className="py-2 px-2">{u.credits ?? 0}</td>
                     <td className="py-2 px-2">{u.targetPercent || 0}%</td>
                     <td className="py-2 px-2 whitespace-nowrap">{prepLabels[u.prepLevel || ""] || "N/A"}</td>
                     <td className="py-2 px-2 whitespace-nowrap">{u.lastStudyDate || "Never"}</td>
@@ -423,7 +475,7 @@ export default function AdminPage() {
                 ))}
                 {pagedUsers.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="py-8 text-center" style={{ color: "var(--text-secondary)" }}>
+                    <td colSpan={12} className="py-8 text-center" style={{ color: "var(--text-secondary)" }}>
                       {loading ? "Loading users..." : "No users found"}
                     </td>
                   </tr>
@@ -526,6 +578,7 @@ function UserDetailModal({ user, onClose }: { user: AdminUser | null; onClose: (
           <Row label="Total Hours" value={`${Math.round(totalHours * 10) / 10}h`} />
           <Row label="Chapters" value={`${chaptersDone}/${totalChapters}`} />
           <Row label="Papers Solved" value={`${getUserSolvedPaperCount(user)}`} />
+          <Row label="Credits" value={`${user.credits ?? 0}`} />
           <Row label="Target" value={`${user.targetPercent || 0}%`} />
           <Row label="Prep Level" value={prepLabels[user.prepLevel || ""] || "N/A"} />
           <Row label="Learning Style" value={user.learningStyle || "N/A"} />

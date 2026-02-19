@@ -9,7 +9,7 @@ export const CREDIT_COSTS = {
 
 export type CreditActivity = keyof typeof CREDIT_COSTS;
 
-export const DEFAULT_CREDITS = 500;
+export const DEFAULT_CREDITS = 1500;
 
 export const CREDIT_LABELS: Record<CreditActivity, string> = {
   mcq: "MCQ Question",
