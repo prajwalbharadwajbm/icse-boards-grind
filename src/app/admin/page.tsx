@@ -53,7 +53,8 @@ export default function AdminPage() {
   // Modal state
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
-  // Grant credits state
+  // Credit management state
+  const [creditModalOpen, setCreditModalOpen] = useState(false);
   const [granting, setGranting] = useState(false);
   const [grantMsg, setGrantMsg] = useState("");
 
@@ -81,20 +82,28 @@ export default function AdminPage() {
     }
   }, []);
 
-  const grantCredits = useCallback(async () => {
-    if (!confirm("Grant 1000 credits to ALL users?")) return;
+  const handleCreditAction = useCallback(async (amount: number, mode: "add" | "set", targetUid: string | "all") => {
+    const targets = targetUid === "all" ? users : users.filter((u) => u.uid === targetUid);
+    if (targets.length === 0) return;
+    const label = targetUid === "all" ? `all ${targets.length} users` : (targets[0].name || targets[0].email || targetUid);
+    const actionLabel = mode === "set" ? `Set credits to ${amount} for ${label}` : `${amount >= 0 ? "Add" : "Remove"} ${Math.abs(amount)} credits ${amount >= 0 ? "to" : "from"} ${label}`;
+    if (!confirm(`${actionLabel}?`)) return;
+
     setGranting(true);
     setGrantMsg("");
     try {
       const db = getDbInstance();
-      const promises = users.map((u) =>
-        updateDoc(doc(db, "users", u.uid), { credits: increment(1000) })
+      const promises = targets.map((u) =>
+        updateDoc(doc(db, "users", u.uid), {
+          credits: mode === "set" ? amount : increment(amount),
+        })
       );
       await Promise.all(promises);
-      setGrantMsg(`Granted 1000 credits to ${users.length} users`);
+      setGrantMsg(`Done: ${actionLabel}`);
+      setCreditModalOpen(false);
       fetchUsers();
     } catch (e: unknown) {
-      setGrantMsg(e instanceof Error ? e.message : "Failed to grant credits");
+      setGrantMsg(e instanceof Error ? e.message : "Failed to update credits");
     } finally {
       setGranting(false);
     }
@@ -216,8 +225,8 @@ export default function AdminPage() {
       <div className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between gap-3 backdrop-blur-lg" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
         <h1 className="text-lg font-bold truncate">Admin Analytics Dashboard</h1>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={grantCredits} disabled={granting || loading}>
-            {granting ? "Granting..." : "Grant 1000 Credits"}
+          <Button size="sm" variant="secondary" onClick={() => setCreditModalOpen(true)} disabled={loading}>
+            Manage Credits
           </Button>
           <Button size="sm" variant="secondary" onClick={fetchUsers} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
@@ -521,6 +530,15 @@ export default function AdminPage() {
 
       {/* User Detail Modal */}
       <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+
+      {/* Credit Management Modal */}
+      <CreditModal
+        open={creditModalOpen}
+        onClose={() => setCreditModalOpen(false)}
+        users={users}
+        onSubmit={handleCreditAction}
+        loading={granting}
+      />
     </div>
   );
 }
@@ -624,6 +642,177 @@ function UserDetailModal({ user, onClose }: { user: AdminUser | null; onClose: (
             </div>
           </div>
         )}
+      </div>
+    </Modal>
+  );
+}
+
+function CreditModal({
+  open,
+  onClose,
+  users,
+  onSubmit,
+  loading,
+}: {
+  open: boolean;
+  onClose: () => void;
+  users: AdminUser[];
+  onSubmit: (amount: number, mode: "add" | "set", targetUid: string | "all") => void;
+  loading: boolean;
+}) {
+  const [amount, setAmount] = useState(1000);
+  const [mode, setMode] = useState<"add" | "set">("add");
+  const [target, setTarget] = useState<"all" | "specific">("all");
+  const [selectedUid, setSelectedUid] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return users.slice(0, 20);
+    const q = userSearch.toLowerCase();
+    return users.filter((u) =>
+      (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q)
+    ).slice(0, 20);
+  }, [users, userSearch]);
+
+  const selectedUserObj = users.find((u) => u.uid === selectedUid);
+
+  return (
+    <Modal open={open} onClose={onClose} title="Manage Credits">
+      <div className="space-y-4">
+        {/* Mode */}
+        <div>
+          <label className="text-xs font-semibold block mb-1.5" style={{ color: "var(--text-secondary)" }}>Action</label>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: mode === "add" ? "var(--primary)" : "var(--bg)",
+                color: mode === "add" ? "#fff" : "var(--text-secondary)",
+                border: "1px solid var(--border)",
+              }}
+              onClick={() => setMode("add")}
+            >
+              Add / Remove
+            </button>
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: mode === "set" ? "var(--primary)" : "var(--bg)",
+                color: mode === "set" ? "#fff" : "var(--text-secondary)",
+                border: "1px solid var(--border)",
+              }}
+              onClick={() => setMode("set")}
+            >
+              Set Exact Value
+            </button>
+          </div>
+        </div>
+
+        {/* Amount */}
+        <div>
+          <label className="text-xs font-semibold block mb-1.5" style={{ color: "var(--text-secondary)" }}>
+            {mode === "add" ? "Amount (negative to remove)" : "Set credits to"}
+          </label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          {mode === "add" && (
+            <div className="flex gap-2 mt-2">
+              {[100, 500, 1000, -100, -500].map((v) => (
+                <button
+                  key={v}
+                  className="px-2 py-1 rounded text-[10px] font-semibold"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: v >= 0 ? "#34a853" : "#ea4335" }}
+                  onClick={() => setAmount(v)}
+                >
+                  {v > 0 ? `+${v}` : v}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Target */}
+        <div>
+          <label className="text-xs font-semibold block mb-1.5" style={{ color: "var(--text-secondary)" }}>Apply to</label>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: target === "all" ? "var(--primary)" : "var(--bg)",
+                color: target === "all" ? "#fff" : "var(--text-secondary)",
+                border: "1px solid var(--border)",
+              }}
+              onClick={() => { setTarget("all"); setSelectedUid(""); }}
+            >
+              All Users ({users.length})
+            </button>
+            <button
+              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: target === "specific" ? "var(--primary)" : "var(--bg)",
+                color: target === "specific" ? "#fff" : "var(--text-secondary)",
+                border: "1px solid var(--border)",
+              }}
+              onClick={() => setTarget("specific")}
+            >
+              Specific User
+            </button>
+          </div>
+        </div>
+
+        {/* User picker */}
+        {target === "specific" && (
+          <div>
+            <input
+              type="text"
+              placeholder="Search user by name or email..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-xs outline-none mb-2"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            <div className="max-h-36 overflow-y-auto space-y-1">
+              {filteredUsers.map((u) => (
+                <div
+                  key={u.uid}
+                  className="flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer text-xs transition-colors"
+                  style={{
+                    background: selectedUid === u.uid ? "var(--primary)" : "var(--bg)",
+                    color: selectedUid === u.uid ? "#fff" : "var(--text)",
+                    border: "1px solid var(--border)",
+                  }}
+                  onClick={() => setSelectedUid(u.uid)}
+                >
+                  <span>{u.name || "N/A"}</span>
+                  <span style={{ opacity: 0.7 }}>{u.credits ?? 0} credits</span>
+                </div>
+              ))}
+            </div>
+            {selectedUserObj && (
+              <p className="text-[10px] mt-1.5" style={{ color: "var(--text-secondary)" }}>
+                Selected: {selectedUserObj.name || selectedUserObj.email} — current: {selectedUserObj.credits ?? 0} credits
+                {mode === "add" && <> → {(selectedUserObj.credits ?? 0) + amount}</>}
+                {mode === "set" && <> → {amount}</>}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Submit */}
+        <Button
+          onClick={() => onSubmit(amount, mode, target === "all" ? "all" : selectedUid)}
+          disabled={loading || (target === "specific" && !selectedUid) || (mode === "set" && amount < 0)}
+          className="w-full"
+        >
+          {loading ? "Processing..." : mode === "add"
+            ? `${amount >= 0 ? "Add" : "Remove"} ${Math.abs(amount)} credits ${target === "all" ? "to all users" : "to selected user"}`
+            : `Set credits to ${amount} for ${target === "all" ? "all users" : "selected user"}`}
+        </Button>
       </div>
     </Modal>
   );
