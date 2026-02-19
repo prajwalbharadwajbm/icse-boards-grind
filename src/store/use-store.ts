@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_CHAPTERS, type Chapter, type Block } from "@/lib/constants";
+import { DEFAULT_CREDITS } from "@/lib/credits";
 
 export interface Routine {
   wake: string;
@@ -145,7 +146,7 @@ const defaultState: StoreState = {
   revisionNotes: {},
   leaderboardOptIn: true,
   shareReportEnabled: false,
-  credits: 500,
+  credits: DEFAULT_CREDITS,
   jcLineByLineStatus: {},
   poemReviewStatus: {},
   proseReviewStatus: {},
@@ -183,7 +184,7 @@ export const useStore = create<StoreState & StoreActions>()(
         }
         if (version < 2) {
           // Initialize credits for existing users
-          state.credits = 500;
+          state.credits = DEFAULT_CREDITS;
         }
         return state as unknown as StoreState & StoreActions;
       },

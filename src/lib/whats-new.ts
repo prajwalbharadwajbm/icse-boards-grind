@@ -151,6 +151,15 @@ export const whatsNewEntries: WhatsNewEntry[] = [
       "Study 5 ICSE prose pieces — The Elevator, The Girl Who Can, The Last Lesson, The Pedestrian & With the Photographer. Each story has summaries, passage flashcards, word meanings, literary devices, Q&A, and MCQ quizzes.",
     link: "/dashboard/english",
   },
+  {
+    version: "2026-02-19-bonus-credits",
+    date: "Feb 19, 2026",
+    emoji: "\u{1F381}",
+    title: "1000+ Bonus Credits for Everyone!",
+    description:
+      "Congrats! We're giving 1000 bonus credits to all existing users. Use them for MCQs, comprehension, subjective answers, and mock tests. New users now start with 1500 credits too — keep studying!",
+    link: "/dashboard",
+  },
 ];
 
 export function getLatestWhatsNewVersion(): string {
