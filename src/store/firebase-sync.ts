@@ -4,6 +4,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useStore, type StoreState } from "./use-store";
 import { DEFAULT_CREDITS } from "@/lib/credits";
+import { withSubjectKeys } from "@/lib/constants";
+import { avatarFor } from "@/lib/identity";
 import { anonymizeName, getCurrentWeekStart } from "@/lib/leaderboard";
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -54,6 +56,7 @@ async function pushToCloud() {
 
         await setDoc(doc(getDbInstance(), "leaderboard", currentUid), {
           name: anonymizeName(state.name),
+          avatar: avatarFor(state.avatar, state.name),
           streak: state.streak || 0,
           totalHours,
           chaptersDone: chapsDone,
@@ -83,6 +86,14 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
       if (cloudData.credits == null) {
         cloudData.credits = DEFAULT_CREDITS;
       }
+      // Older accounts never got chapter lists for their chosen language or elective
+      if (cloudData.onboarded) {
+        cloudData.subjects = withSubjectKeys(
+          cloudData.subjects,
+          cloudData.selectedLanguage || "kannada",
+          cloudData.selectedElective || "computer"
+        );
+      }
       useStore.getState().setAll(cloudData);
       // Ensure leaderboard data is pushed on load
       pushLeaderboardData();
@@ -110,6 +121,7 @@ export async function pushLeaderboardData() {
 
     await setDoc(doc(getDbInstance(), "leaderboard", currentUid), {
       name: anonymizeName(state.name),
+          avatar: avatarFor(state.avatar, state.name),
       streak: state.streak || 0,
       totalHours,
       chaptersDone: chapsDone,

@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Only these fields leave the server for the public parent report */
-const REPORT_FIELDS = ["name", "streak", "studyLog", "subjects", "selectedLanguage", "selectedElective"] as const;
+const REPORT_FIELDS = ["name", "avatar", "streak", "studyLog", "subjects", "selectedLanguage", "selectedElective"] as const;
 
 /**
  * GET /api/report/:uid — the read-only report a student shares with parents.

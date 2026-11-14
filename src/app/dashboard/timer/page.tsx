@@ -27,7 +27,7 @@ export default function TimerPage() {
 
   // Build subject options
   const subjectOptions = useMemo(() => {
-    const opts = [{ value: "", label: "Select Subject" }];
+    const opts = [{ value: "", label: "Select subject" }];
     Object.keys(SUBJECT_LABELS).forEach((key) => {
       opts.push({ value: key, label: SUBJECT_LABELS[key] });
     });
@@ -36,7 +36,7 @@ export default function TimerPage() {
 
   // Build chapter options based on selected subject
   const chapterOptions = useMemo(() => {
-    const opts = [{ value: "", label: "Select Chapter" }];
+    const opts = [{ value: "", label: "Select chapter" }];
     if (selectedSubject && data.subjects[selectedSubject]) {
       data.subjects[selectedSubject].forEach((ch) => {
         opts.push({ value: ch.name, label: ch.name });
@@ -84,31 +84,28 @@ export default function TimerPage() {
     <div className="max-w-7xl mx-auto">
       {/* Page Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col gap-6"
       >
+      <div className="flex flex-col gap-2">
         <h1
-          className="text-xl font-bold"
+          className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em]"
           style={{ color: "var(--text)" }}
         >
-          Study Timer
+          Study timer
         </h1>
         <p
-          className="text-sm mt-1"
+          className="text-base"
           style={{ color: "var(--text-secondary)" }}
         >
-          Stay focused with timed study sessions
+          Pick a chapter and start the clock
         </p>
-      </motion.div>
+      </div>
 
       {/* Subject / Chapter selection */}
-      <motion.div
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select
           label="Subject"
           options={subjectOptions}
@@ -122,34 +119,25 @@ export default function TimerPage() {
           onChange={(e) => setSelectedChapter(e.target.value)}
           disabled={!selectedSubject}
         />
-      </motion.div>
+      </div>
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left column: Timer + Ambient (wider) */}
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-3 space-y-4"
-        >
+        <div className="lg:col-span-3 flex flex-col gap-4">
           <TimerDisplay
             subject={selectedSubject}
             chapter={selectedChapter}
           />
           <AmbientPlayer />
-        </motion.div>
+        </div>
 
         {/* Right column: Stats */}
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15 }}
-          className="lg:col-span-2"
-        >
+        <div className="lg:col-span-2">
           <TimerStats />
-        </motion.div>
+        </div>
       </div>
+      </motion.div>
     </div>
   );
 }

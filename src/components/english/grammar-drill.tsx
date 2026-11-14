@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { sendChatCompletionSync } from "@/lib/ai-service";
 import {
   GRAMMAR_CATEGORIES,
@@ -108,14 +109,14 @@ export function GrammarDrill() {
       {/* Free AI banner */}
       {!selectedCategory && (
         <div
-          className="rounded-xl px-4 py-3 text-center text-sm"
+          className="rounded-2xl px-4 py-3 text-sm font-medium"
           style={{
-            background: "rgba(52,168,83,0.08)",
-            border: "1px solid rgba(52,168,83,0.2)",
-            color: "#34a853",
+            background: "var(--success-soft)",
+            border: "2px solid var(--outline)",
+            color: "var(--text)",
           }}
         >
-          AI-powered grammar drills are <strong>free</strong> for the next 4 days — no API key needed!
+          AI grammar drills are free for the next 4 days. No API key needed.
         </div>
       )}
 
@@ -132,44 +133,37 @@ export function GrammarDrill() {
               <button
                 key={cat.id}
                 onClick={() => handleSelectCategory(cat.id)}
-                className="text-left rounded-xl p-4 transition-all hover:scale-[1.02] cursor-pointer"
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                }}
+                className="text-left rounded-[20px] p-4 bg-[var(--bg-card)] transition-colors duration-150 hover:bg-[var(--paper)] cursor-pointer"
+                style={{ border: "2px solid var(--outline)" }}
               >
                 <p
-                  className="font-semibold text-sm mb-1"
+                  className="font-display text-lg font-extrabold tracking-[-0.01em] leading-tight mb-1"
                   style={{ color: "var(--text)" }}
                 >
                   {cat.label}
                 </p>
                 <p
-                  className="text-xs mb-2"
+                  className="text-[13px] mb-2"
                   style={{ color: "var(--text-secondary)" }}
                 >
                   {cat.description}
                 </p>
                 {stats && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full"
+                      className="text-xs font-bold tabular-nums"
                       style={{
-                        background:
-                          accuracy !== null && accuracy >= 70
-                            ? "rgba(52,168,83,0.12)"
-                            : "rgba(234,67,53,0.12)",
                         color:
                           accuracy !== null && accuracy >= 70
-                            ? "#34a853"
-                            : "#ea4335",
+                            ? "var(--success)"
+                            : "var(--danger)",
                       }}
                     >
                       {accuracy}% accuracy
                     </span>
                     <span
-                      className="text-xs"
-                      style={{ color: "var(--text-secondary)" }}
+                      className="text-xs font-bold tabular-nums"
+                      style={{ color: "var(--text-muted)" }}
                     >
                       {stats.attempted} attempted
                     </span>
@@ -184,8 +178,10 @@ export function GrammarDrill() {
       {/* Active Drill */}
       {selectedCategory && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <button
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 capture("grammar_back_to_categories");
                 setSelectedCategory(null);
@@ -193,16 +189,14 @@ export function GrammarDrill() {
                 setSubmitted(false);
                 setSelectedOption(null);
               }}
-              className="text-sm font-medium px-3 py-1.5 rounded-lg cursor-pointer"
-              style={{
-                color: "var(--primary)",
-                background: "rgba(123,97,255,0.1)",
-              }}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
               Back to categories
-            </button>
+            </Button>
             <span
-              className="text-sm font-semibold"
+              className="font-display text-[22px] font-extrabold tracking-[-0.01em] leading-tight"
               style={{ color: "var(--text)" }}
             >
               {GRAMMAR_CATEGORIES.find((c) => c.id === selectedCategory)?.label}
@@ -215,15 +209,15 @@ export function GrammarDrill() {
                 <div
                   className="w-5 h-5 border-2 rounded-full animate-spin"
                   style={{
-                    borderColor: "var(--border)",
+                    borderColor: "var(--divider)",
                     borderTopColor: "var(--primary)",
                   }}
                 />
                 <span
-                  className="text-sm"
+                  className="text-sm font-medium"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Generating question...
+                  Generating question
                 </span>
               </div>
             </Card>
@@ -232,17 +226,10 @@ export function GrammarDrill() {
           {error && (
             <Card>
               <div className="text-center py-6">
-                <p className="text-sm text-red-500 mb-3">{error}</p>
-                <button
-                  onClick={() => generateQuestion(selectedCategory)}
-                  className="text-sm font-medium px-4 py-2 rounded-lg cursor-pointer"
-                  style={{
-                    background: "var(--primary)",
-                    color: "#fff",
-                  }}
-                >
-                  Try Again
-                </button>
+                <p className="text-sm font-medium mb-4" style={{ color: "var(--danger)" }}>{error}</p>
+                <Button onClick={() => generateQuestion(selectedCategory)}>
+                  Try again
+                </Button>
               </div>
             </Card>
           )}
@@ -251,60 +238,57 @@ export function GrammarDrill() {
             {question && !loading && (
               <motion.div
                 key={question.question}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Card>
+                <Card className="sm:p-6" style={{ boxShadow: "4px 4px 0 var(--outline)" }}>
                   <div className="flex items-start justify-between gap-3 mb-4">
-                    <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                    <p className="text-base font-bold leading-relaxed" style={{ color: "var(--text)" }}>
                       {question.question}
                     </p>
                     <span
-                      className="shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold tabular-nums mt-1"
+                      style={{ color: "var(--text-muted)" }}
                     >
                       {CREDIT_COSTS.mcq}
                       <img src="/coin.svg" alt="credits" width={12} height={12} />
                     </span>
                   </div>
 
-                  <div className="space-y-2 mb-4">
+                  <div className="flex flex-col gap-2 mb-4">
                     {question.options.map((opt, i) => {
                       const isCorrect = i === question.correctIndex;
                       const isSelected = selectedOption === i;
-                      let bg = "transparent";
-                      let border = "var(--border)";
-                      let color = "var(--text)";
+                      let bg: string | undefined;
 
                       if (submitted) {
                         if (isCorrect) {
-                          bg = "rgba(52,168,83,0.1)";
-                          border = "#34a853";
-                          color = "#34a853";
+                          bg = "var(--success-soft)";
                         } else if (isSelected && !isCorrect) {
-                          bg = "rgba(234,67,53,0.1)";
-                          border = "#ea4335";
-                          color = "#ea4335";
+                          bg = "var(--danger-soft)";
                         }
                       } else if (isSelected) {
-                        bg = "rgba(123,97,255,0.1)";
-                        border = "var(--primary)";
-                        color = "var(--primary)";
+                        bg = "var(--primary-light)";
                       }
+                      const showCheck = submitted && isCorrect;
 
                       return (
                         <button
                           key={i}
                           onClick={() => !submitted && setSelectedOption(i)}
                           disabled={submitted}
-                          className="w-full text-left px-4 py-3 rounded-lg text-sm transition-all cursor-pointer disabled:cursor-default"
-                          style={{ background: bg, border: `1px solid ${border}`, color }}
+                          className={`w-full text-left flex items-center gap-3 min-h-[52px] px-4 py-3 rounded-2xl text-[15px] transition-colors duration-150 cursor-pointer disabled:cursor-default ${
+                            bg ? "" : "bg-[var(--bg-card)] enabled:hover:bg-[var(--paper)]"
+                          } ${isSelected || showCheck ? "font-bold" : ""}`}
+                          style={{ background: bg, border: "2px solid var(--outline)", color: "var(--text)" }}
                         >
-                          <span className="font-semibold mr-2">
+                          <span className="font-bold tabular-nums shrink-0">
                             {["A", "B", "C", "D"][i]}.
                           </span>
-                          {opt}
+                          <span className="flex-1 min-w-0">{opt}</span>
+                          {showCheck && <CheckGlyph />}
                         </button>
                       );
                     })}
@@ -312,51 +296,49 @@ export function GrammarDrill() {
 
                   {outOfCredits && !submitted && (
                     <div
-                      className="rounded-lg px-4 py-3 text-sm mb-3"
-                      style={{ background: "rgba(234,67,53,0.08)", color: "#ea4335" }}
+                      className="rounded-2xl px-4 py-3 text-sm mb-4"
+                      style={{
+                        background: "var(--danger-soft)",
+                        border: "2px solid var(--outline)",
+                        color: "var(--text)",
+                      }}
                     >
-                      Not enough credits — you need {CREDIT_COSTS.mcq} credits to submit an answer.
+                      Not enough credits. You need {CREDIT_COSTS.mcq} credits to submit an answer.
                     </div>
                   )}
 
                   {!submitted ? (
-                    <button
+                    <Button
                       onClick={handleSubmit}
                       disabled={selectedOption === null || outOfCredits || deducting}
-                      className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background: "var(--primary)", color: "#fff" }}
                     >
-                      {deducting ? "Submitting..." : "Submit"}
-                    </button>
+                      {deducting ? "Checking" : "Check answer"}
+                    </Button>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div
-                        className="rounded-lg p-3 text-sm"
+                        className="rounded-2xl px-4 py-3 text-sm leading-relaxed"
                         style={{
                           background:
                             selectedOption === question.correctIndex
-                              ? "rgba(52,168,83,0.08)"
-                              : "rgba(234,67,53,0.08)",
-                          color:
-                            selectedOption === question.correctIndex
-                              ? "#34a853"
-                              : "#ea4335",
+                              ? "var(--success-soft)"
+                              : "var(--danger-soft)",
+                          border: "2px solid var(--outline)",
+                          color: "var(--text)",
                         }}
                       >
-                        {selectedOption === question.correctIndex
-                          ? "Correct!"
-                          : "Incorrect."}{" "}
-                        <span style={{ color: "var(--text)" }}>
+                        <span className="font-bold">
+                          {selectedOption === question.correctIndex
+                            ? "Correct."
+                            : "Incorrect."}
+                        </span>{" "}
+                        <span>
                           {question.explanation}
                         </span>
                       </div>
-                      <button
-                        onClick={() => generateQuestion(selectedCategory)}
-                        className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer"
-                        style={{ background: "var(--primary)", color: "#fff" }}
-                      >
-                        Next Question
-                      </button>
+                      <Button onClick={() => generateQuestion(selectedCategory)}>
+                        Next question
+                      </Button>
                     </div>
                   )}
                 </Card>
@@ -366,5 +348,14 @@ export function GrammarDrill() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Marks the right answer once it is checked */
+function CheckGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-label="Correct answer" role="img">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }

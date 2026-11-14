@@ -32,11 +32,12 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
     }, 500);
   }, [subjectKey, chapter.name]);
 
-  const statusColor: Record<string, string> = {
-    not_started: "var(--border)",
-    in_progress: "var(--warning)",
-    completed: "var(--success)",
-    needs_revision: "var(--danger)",
+  // Status control fills: done is mint with a check, revision is tomato, in progress is sunshine
+  const statusFill: Record<string, string> = {
+    not_started: "var(--bg-card)",
+    in_progress: "var(--warning-soft)",
+    completed: "var(--success-soft)",
+    needs_revision: "var(--danger-soft)",
   };
 
   function cycleStatus() {
@@ -97,65 +98,38 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
   const hasNote = !!existingNote.trim();
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "8px 4px",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
+    <div style={{ borderBottom: "1px solid var(--divider)" }}>
+      <div className="flex items-center gap-2 min-h-[56px] py-2">
         {/* Status cycle button */}
         <button
           onClick={cycleStatus}
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-base font-bold cursor-pointer transition-colors duration-150"
           style={{
-            width: 36,
-            height: 36,
-            minWidth: 36,
-            borderRadius: 8,
-            border: `2px solid ${statusColor[chapter.status]}`,
-            background: chapter.status === "completed" ? "var(--success)" : "transparent",
-            color: chapter.status === "completed" ? "#fff" : statusColor[chapter.status],
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "all 0.15s ease",
+            border: "2px solid var(--outline)",
+            background: statusFill[chapter.status],
+            color: "var(--text)",
           }}
           title={`Status: ${chapter.status.replace("_", " ")}`}
+          aria-label={`Status: ${chapter.status.replace("_", " ")}. Click to change`}
         >
           {STATUS_LABELS[chapter.status]}
         </button>
 
         {/* Chapter name + revision badge */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0 pl-1">
           <span
+            className="text-[15px] font-medium"
             style={{
-              color: "var(--text)",
-              fontSize: 14,
-              fontWeight: 500,
+              color: chapter.status === "completed" ? "var(--text-muted)" : "var(--text)",
               textDecoration: chapter.status === "completed" ? "line-through" : "none",
-              opacity: chapter.status === "completed" ? 0.7 : 1,
             }}
           >
             {chapter.name}
           </span>
           {revisionBadge && (
             <span
-              style={{
-                marginLeft: 8,
-                fontSize: 11,
-                fontWeight: 600,
-                padding: "2px 8px",
-                borderRadius: 99,
-                background: revisionBadge.urgent ? "var(--danger)" : "var(--warning)",
-                color: "#fff",
-                whiteSpace: "nowrap",
-              }}
+              className="ml-2 text-xs font-bold whitespace-nowrap"
+              style={{ color: revisionBadge.urgent ? "var(--danger)" : "var(--text-muted)" }}
             >
               {revisionBadge.text}
             </span>
@@ -165,24 +139,13 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
         {/* Notes button */}
         <button
           onClick={() => setNoteOpen(!noteOpen)}
-          style={{
-            width: 28,
-            height: 28,
-            minWidth: 28,
-            borderRadius: 6,
-            border: "none",
-            background: "transparent",
-            color: hasNote ? "var(--primary)" : "var(--text-secondary)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: hasNote ? 1 : 0.5,
-            transition: "opacity 0.15s ease",
-          }}
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-150 hover:bg-[var(--paper)]"
+          style={{ color: hasNote ? "var(--primary)" : "var(--text-muted)" }}
           title={hasNote ? "Edit note" : "Add note"}
+          aria-label={hasNote ? "Edit note" : "Add note"}
+          aria-expanded={noteOpen}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={hasNote ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={hasNote ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
@@ -190,17 +153,12 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
 
         {/* Difficulty stars */}
         <div
-          style={{
-            display: "flex",
-            gap: 2,
-            fontSize: 12,
-            color: "var(--warning)",
-            flexShrink: 0,
-          }}
+          className="flex gap-0.5 text-xs shrink-0"
+          style={{ color: "var(--text)" }}
           title={`Difficulty: ${chapter.difficulty}/5`}
         >
           {Array.from({ length: 5 }, (_, i) => (
-            <span key={i} style={{ opacity: i < chapter.difficulty ? 1 : 0.25 }}>
+            <span key={i} style={{ opacity: i < chapter.difficulty ? 1 : 0.2 }}>
               ★
             </span>
           ))}
@@ -209,26 +167,11 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
         {/* Delete button */}
         <button
           onClick={deleteChapter}
-          style={{
-            width: 28,
-            height: 28,
-            minWidth: 28,
-            borderRadius: 6,
-            border: "none",
-            background: "transparent",
-            color: "var(--text-secondary)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: 0.5,
-            transition: "opacity 0.15s ease",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--danger)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-150 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--paper)]"
           title="Delete chapter"
+          aria-label="Delete chapter"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="3 6 5 6 21 6" />
             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
           </svg>
@@ -245,7 +188,7 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
             transition={{ duration: 0.15 }}
             style={{ overflow: "hidden" }}
           >
-            <div style={{ padding: "8px 4px 8px 50px" }}>
+            <div className="pb-3 pl-[52px]">
               <textarea
                 value={noteText}
                 onChange={(e) => {
@@ -254,17 +197,10 @@ export function ChapterRow({ chapter, subjectKey, index }: ChapterRowProps) {
                 }}
                 placeholder="Add revision notes for this chapter..."
                 rows={3}
+                className="w-full px-4 py-3 rounded-2xl text-sm resize-y outline-none border-2 border-[var(--outline)] transition-[border-color,box-shadow] duration-150 focus:border-[var(--primary)] focus:shadow-[2px_2px_0_var(--primary)]"
                 style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "var(--bg)",
+                  background: "var(--bg-card)",
                   color: "var(--text)",
-                  fontSize: 13,
-                  resize: "vertical",
-                  outline: "none",
-                  fontFamily: "inherit",
                 }}
               />
             </div>

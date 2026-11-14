@@ -11,15 +11,15 @@ export function NotificationCenter({ onClose }: Props) {
 
   return (
     <div
-      className="absolute right-0 top-full mt-2 w-80 max-h-96 rounded-xl overflow-hidden z-50 flex flex-col"
-      style={{ background: "var(--bg-card)", boxShadow: "var(--shadow-md)", border: "1px solid var(--border)" }}
+      className="absolute right-0 top-full mt-2 w-80 max-h-96 rounded-[20px] overflow-hidden z-50 flex flex-col"
+      style={{ background: "var(--bg-card)", border: "2px solid var(--outline)", boxShadow: "4px 4px 0 var(--outline)" }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-        <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>Notifications</span>
+      <div className="flex items-center justify-between px-4 h-12 shrink-0" style={{ borderBottom: "1px solid var(--divider)" }}>
+        <span className="font-display text-lg font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Notifications</span>
         <button
           onClick={() => { markAllRead(); onClose(); }}
-          className="text-xs"
-          style={{ color: "var(--primary)" }}
+          className="text-xs font-bold underline underline-offset-4 decoration-2 cursor-pointer"
+          style={{ color: "var(--text)" }}
         >
           Mark all read
         </button>
@@ -27,16 +27,16 @@ export function NotificationCenter({ onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto">
         {notifications.length === 0 ? (
-          <div className="p-6 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
+          <div className="p-6 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
             No notifications yet
           </div>
         ) : (
           notifications.slice(0, 10).map((n) => (
             <div
               key={n.id}
-              className="px-4 py-3 border-b last:border-b-0 flex gap-3"
+              className="px-4 py-2.5 min-h-10 border-b last:border-b-0 flex gap-3"
               style={{
-                borderColor: "var(--border)",
+                borderColor: "var(--divider)",
                 background: n.read ? "transparent" : "var(--primary-light)",
               }}
             >
@@ -49,9 +49,9 @@ export function NotificationCenter({ onClose }: Props) {
                     : "var(--primary)",
                 }}
               />
-              <div>
-                <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{n.title}</p>
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{n.message}</p>
+              <div className="min-w-0">
+                <p className={`text-[13px] ${n.read ? "font-medium" : "font-bold"}`} style={{ color: "var(--text)" }}>{n.title}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{n.message}</p>
               </div>
             </div>
           ))

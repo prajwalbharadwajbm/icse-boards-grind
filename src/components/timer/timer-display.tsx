@@ -59,28 +59,30 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
   const timeDisplay = `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
   const progress = totalSeconds > 0 ? seconds / totalSeconds : 0;
-  const ringColor = phase === "work" ? "var(--primary)" : "#16a34a";
+  const ringColor = phase === "work" ? "var(--primary)" : "var(--mint)";
 
   return (
-    <Card>
-      {/* Preset selector */}
-      <div className="flex gap-2 mb-6">
+    // The timer card is this screen's one pop element: it alone carries the hard shadow
+    <Card className="sm:p-6" style={{ borderRadius: 24, boxShadow: "4px 4px 0 var(--outline)" }}>
+      {/* Preset selector: pill chips, the active one in solid ink */}
+      <div className="flex flex-wrap gap-2 mb-6">
         {(
           [
             { key: "pomodoro", label: "25/5 Pomodoro" },
-            { key: "deep", label: "50/10 Deep Focus" },
+            { key: "deep", label: "50/10 Deep focus" },
             { key: "custom", label: "Custom" },
           ] as const
         ).map((p) => (
           <button
             key={p.key}
             onClick={() => setPreset(p.key)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              background: preset === p.key ? "var(--primary)" : "var(--bg)",
-              color: preset === p.key ? "#fff" : "var(--text-secondary)",
-              border: `1px solid ${preset === p.key ? "var(--primary)" : "var(--border)"}`,
-            }}
+            aria-pressed={preset === p.key}
+            className={`h-9 px-4 rounded-full text-sm cursor-pointer transition-colors duration-150 ${
+              preset === p.key
+                ? "font-bold bg-[var(--text)] text-[var(--bg)]"
+                : "font-medium bg-[var(--bg-card)] text-[var(--text)] hover:bg-[var(--paper)]"
+            }`}
+            style={{ border: "2px solid var(--outline)" }}
           >
             {p.label}
           </button>
@@ -126,24 +128,23 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
       {/* Timer ring */}
       <div className="flex flex-col items-center">
         <div className={running ? "timer-active" : ""}>
+          {/* Ring: cobalt while working, mint on a break, on a paper track */}
           <ProgressRing
-            radius={90}
-            stroke={8}
+            radius={96}
+            stroke={12}
             progress={progress}
             color={ringColor}
           >
             <div className="flex flex-col items-center">
               <span
-                className="text-4xl font-bold font-mono tracking-wider"
+                className="font-display text-5xl font-extrabold leading-none tabular-nums tracking-[-0.03em]"
                 style={{ color: "var(--text)" }}
               >
                 {timeDisplay}
               </span>
               <span
-                className="text-sm font-medium mt-1"
-                style={{
-                  color: phase === "work" ? "var(--primary)" : "#16a34a",
-                }}
+                className="text-sm font-bold mt-2"
+                style={{ color: "var(--text-secondary)" }}
               >
                 {phase === "work" ? "Work" : "Break"}
               </span>
@@ -159,7 +160,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
-                Start
+                Start timer
               </span>
             </Button>
           ) : (
@@ -175,7 +176,7 @@ export function TimerDisplay({ subject, chapter }: TimerDisplayProps) {
           )}
           <Button onClick={handleReset} variant="ghost" size="lg">
             <span className="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
               </svg>

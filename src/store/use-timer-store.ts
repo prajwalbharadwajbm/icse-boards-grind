@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { capture } from "@/lib/analytics";
 
 type TimerPhase = "work" | "break";
 type Preset = "pomodoro" | "deep" | "custom";
@@ -18,6 +19,12 @@ interface TimerStore {
   totalSeconds: number;
   running: boolean;
   phase: TimerPhase;
+  /**
+   * Wall-clock time (ms) when the current phase ends, while running.
+   * The countdown is derived from this, so it stays correct when the browser
+   * throttles or suspends timers (background tabs, locked phones).
+   */
+  endsAt: number | null;
 
   // Subject context
   subject: string;
@@ -46,6 +53,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   totalSeconds: 25 * 60,
   running: false,
   phase: "work",
+  endsAt: null,
   subject: "",
   chapter: "",
 
@@ -62,6 +70,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     set({
       preset,
       running: false,
+      endsAt: null,
       phase: "work",
       workMinutes: work,
       breakMinutes: brk,
@@ -77,6 +86,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     const { customWork, customBreak } = get();
     set({
       running: false,
+      endsAt: null,
       phase: "work",
       workMinutes: customWork,
       breakMinutes: customBreak,
@@ -88,13 +98,23 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   setSubject: (subject) => set({ subject }),
   setChapter: (chapter) => set({ chapter }),
 
-  start: () => set({ running: true }),
-  pause: () => set({ running: false }),
+  start: () => {
+    const { running, seconds } = get();
+    if (running) return;
+    set({ running: true, endsAt: Date.now() + seconds * 1000 });
+  },
+  pause: () => {
+    const { running, phase, seconds, totalSeconds } = get();
+    if (running) capture("timer_paused", { phase, seconds_left: seconds, total_seconds: totalSeconds });
+    set({ running: false, seconds: remainingSeconds(get()), endsAt: null });
+  },
 
   reset: () => {
-    const { workMinutes } = get();
+    const { workMinutes, phase, seconds, totalSeconds } = get();
+    if (seconds !== totalSeconds) capture("timer_reset", { phase, seconds_left: seconds, total_seconds: totalSeconds });
     set({
       running: false,
+      endsAt: null,
       phase: "work",
       seconds: workMinutes * 60,
       totalSeconds: workMinutes * 60,
@@ -103,18 +123,30 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
   tick: () => {
     const state = get();
-    if (state.seconds <= 1) {
+    if (!state.running) return null;
+    const now = Date.now();
+    const endsAt = state.endsAt ?? now + state.seconds * 1000;
+    const remaining = Math.max(0, Math.ceil((endsAt - now) / 1000));
+
+    if (remaining <= 0) {
       if (state.phase === "work") {
+        // The break starts when the focus block ended, even if the tab was asleep then
         const breakSecs = state.breakMinutes * 60;
-        set({ phase: "break", seconds: breakSecs, totalSeconds: breakSecs });
+        set({ phase: "break", seconds: breakSecs, totalSeconds: breakSecs, endsAt: endsAt + breakSecs * 1000 });
         return "work_done";
-      } else {
-        const workSecs = state.workMinutes * 60;
-        set({ phase: "work", seconds: workSecs, totalSeconds: workSecs, running: false });
-        return "break_done";
       }
+      const workSecs = state.workMinutes * 60;
+      set({ phase: "work", seconds: workSecs, totalSeconds: workSecs, running: false, endsAt: null });
+      return "break_done";
     }
-    set({ seconds: state.seconds - 1 });
+
+    if (remaining !== state.seconds || state.endsAt === null) set({ seconds: remaining, endsAt });
     return null;
   },
 }));
+
+/** Seconds left in the current phase, from the end time while running */
+function remainingSeconds(state: Pick<TimerStore, "running" | "endsAt" | "seconds">): number {
+  if (!state.running || state.endsAt === null) return state.seconds;
+  return Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
+}

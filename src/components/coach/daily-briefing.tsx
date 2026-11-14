@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { sendChatCompletionSync } from "@/lib/ai-service";
 import { buildDailyBriefingPrompt } from "@/lib/coach-prompts";
 import { today, getEffectiveAIKey } from "@/lib/utils";
+import { capture } from "@/lib/analytics";
 
 export function DailyBriefing() {
   const data = useStore();
@@ -16,8 +17,9 @@ export function DailyBriefing() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchBriefing = async () => {
+  const loadBriefing = async (trigger: "auto" | "refresh") => {
     const apiKey = getEffectiveAIKey(data.grokApiKey);
+    const startedAt = Date.now();
     setLoading(true);
     setError("");
     try {
@@ -27,6 +29,7 @@ export function DailyBriefing() {
         { role: "user", content: "Give me my daily briefing." },
       ]);
       setContent(result);
+      capture("coach_briefing_loaded", { trigger, duration_ms: Date.now() - startedAt });
       useStore.getState().update((s) => ({
         dailyBriefingCache: {
           ...s.dailyBriefingCache,
@@ -34,15 +37,18 @@ export function DailyBriefing() {
         },
       }));
     } catch (err) {
+      capture("coach_briefing_failed", { trigger, error: (err as Error).message.slice(0, 200) });
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchBriefing = () => loadBriefing("refresh");
+
   useEffect(() => {
     if (!content) {
-      fetchBriefing();
+      loadBriefing("auto");
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -50,8 +56,8 @@ export function DailyBriefing() {
     return (
       <Card>
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
-          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Preparing your daily briefing...</span>
+          <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
+          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Preparing your daily briefing</span>
         </div>
       </Card>
     );
@@ -70,16 +76,16 @@ export function DailyBriefing() {
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Daily Briefing</h3>
-        <Button variant="ghost" size="sm" onClick={fetchBriefing}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h3 className="font-display text-lg font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Daily briefing</h3>
+        <Button variant="ghost" size="md" onClick={fetchBriefing} aria-label="Refresh briefing" className="w-10 !px-0 shrink-0 -my-1 -mr-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10" />
             <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
           </svg>
         </Button>
       </div>
-      <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text)" }}>
+      <div className="text-[15px] leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text)" }}>
         {content.split(/(\*\*.*?\*\*)/).map((part, i) => {
           if (part.startsWith("**") && part.endsWith("**")) {
             return <strong key={i}>{part.slice(2, -2)}</strong>;

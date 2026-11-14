@@ -1,29 +1,35 @@
 {
   "name": "ICSE Boards Grind",
   "short_name": "Boards Grind",
-  "description": "Your personal ICSE 2026 board exam study dashboard",
+  "description": "Study planner for the ICSE 2027 board exams, with the CISCE timetable and a countdown to every paper",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#1a73e8",
+  "background_color": "#ffffff",
+  "theme_color": "#2f5bff",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
     {
-      "src": "/icon1.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon0.svg",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon0.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/apple-icon.png",
-      "sizes": "180x180",
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }

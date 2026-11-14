@@ -1,3 +1,5 @@
+import { notificationTypeFromTag, trackNotification } from "./analytics";
+
 export function dateStr(d: Date | string): string {
   if (typeof d === "string") return d;
   const year = d.getFullYear();
@@ -74,7 +76,7 @@ export function requestNotificationPermission(): void {
 export function sendNotification(title: string, body: string, tag: string): void {
   if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
     try {
-      new Notification(title, { body, tag });
+      trackNotification(notificationTypeFromTag(tag), new Notification(title, { body, tag }));
     } catch {
       /* silent */
     }

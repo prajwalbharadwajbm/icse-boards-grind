@@ -88,7 +88,7 @@ export default function ProgressPage() {
         const ds = dateStr(d);
         if (log[ds]) { hours += log[ds].hours || 0; sessions += log[ds].sessions || 0; }
       }
-      const label = w === 0 ? "This Week" : w === 1 ? "Last Week" : weekStart.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      const label = w === 0 ? "This week" : w === 1 ? "Last week" : weekStart.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
       weeks.push({ hours: Math.round(hours * 10) / 10, sessions, label });
     }
     return weeks.reverse();
@@ -121,40 +121,40 @@ export default function ProgressPage() {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Overall Ring */}
         <Card className="flex flex-col items-center justify-center">
-          <ProgressRing radius={85} stroke={10} progress={overallPct / 100} color="var(--primary)">
+          <ProgressRing radius={85} stroke={12} progress={overallPct / 100} color="var(--primary)">
             <div className="text-center">
-              <span className="text-3xl font-bold" style={{ color: "var(--text)" }}>{overallPct}%</span>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Overall</p>
+              <span className="font-display text-[38px] leading-none font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>{overallPct}%</span>
+              <p className="text-[13px] font-medium mt-1" style={{ color: "var(--text-muted)" }}>Overall</p>
             </div>
           </ProgressRing>
-          <div className="flex gap-6 mt-4">
+          <div className="flex gap-8 mt-5">
             <div className="text-center">
-              <p className="text-lg font-bold" style={{ color: "var(--text)" }}>{totalHours.toFixed(1)}h</p>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Total Study</p>
+              <p className="font-display text-[22px] leading-none font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>{totalHours.toFixed(1)}h</p>
+              <p className="text-[13px] font-medium mt-1.5" style={{ color: "var(--text-muted)" }}>Total study</p>
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold" style={{ color: "var(--text)" }}>{completedChapters}</p>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Chapters Done</p>
+              <p className="font-display text-[22px] leading-none font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>{completedChapters}</p>
+              <p className="text-[13px] font-medium mt-1.5" style={{ color: "var(--text-muted)" }}>Chapters done</p>
             </div>
           </div>
         </Card>
 
         {/* Subject Progress */}
         <Card className="lg:col-span-2">
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Subject Progress</h3>
-          <div className="space-y-3">
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-4" style={{ color: "var(--text)" }}>Subject progress</h3>
+          <div className="flex flex-col gap-3">
             {subjectStats.map((s) => (
               <div key={s.key} className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
-                <span className="text-sm w-32 shrink-0 truncate" style={{ color: "var(--text)" }}>{s.label}</span>
-                <div className="flex-1">
-                  <ProgressBar value={s.pct} color={s.color} />
+                <span className="text-sm font-medium w-32 shrink-0 truncate" style={{ color: "var(--text)" }}>{s.label}</span>
+                <div className="flex-1 min-w-0">
+                  <OutlinedBar pct={s.pct} fill="var(--mint)" />
                 </div>
-                <span className="text-sm font-medium w-10 text-right" style={{ color: "var(--text-secondary)" }}>{s.pct}%</span>
+                <span className="text-sm font-bold tabular-nums w-11 text-right" style={{ color: "var(--text)" }}>{s.pct}%</span>
               </div>
             ))}
           </div>
@@ -163,7 +163,7 @@ export default function ProgressPage() {
 
       {/* Heatmap */}
       <Card>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Study Activity (Last 60 Days)</h3>
+        <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-3" style={{ color: "var(--text)" }}>Study activity, last 60 days</h3>
         {/* Month labels */}
         <div className="flex mb-1">
           {(() => {
@@ -181,7 +181,7 @@ export default function ProgressPage() {
             });
             if (lastMonth !== -1) spans.push({ name: monthNames[lastMonth], count: currentCount });
             return spans.map((ms, i) => (
-              <span key={i} className="text-[10px]" style={{ color: "var(--text-secondary)", width: ms.count * 14 }}>{ms.name}</span>
+              <span key={i} className="text-[11px] font-medium" style={{ color: "var(--text-muted)", width: ms.count * 14 }}>{ms.name}</span>
             ));
           })()}
         </div>
@@ -189,10 +189,11 @@ export default function ProgressPage() {
           {heatmapData.days.map((day, i) => (
             <div
               key={i}
-              className="w-3 h-3 rounded-sm"
+              className="w-3 h-3 rounded-[4px]"
               style={{
-                background: "var(--primary)",
-                opacity: day.hours > 0 ? Math.max(0.15, day.hours / heatmapData.maxH) : 0.05,
+                background: day.hours > 0
+                  ? `color-mix(in srgb, var(--primary) ${Math.round(Math.max(0.2, day.hours / heatmapData.maxH) * 100)}%, var(--paper))`
+                  : "var(--paper)",
               }}
               title={`${formatDate(day.date)}: ${day.hours.toFixed(1)}h`}
             />
@@ -203,31 +204,32 @@ export default function ProgressPage() {
       {/* Weekly Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Weekly Summary</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Study Hours</span>
-              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{weeklyData[3]?.hours || 0}h</span>
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-2" style={{ color: "var(--text)" }}>Weekly summary</h3>
+          <div className="flex flex-col">
+            <div className="flex items-baseline justify-between py-3">
+              <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Study hours</span>
+              <span className="font-display text-[26px] leading-none font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>{weeklyData[3]?.hours || 0}h</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Sessions</span>
-              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{weeklyData[3]?.sessions || 0}</span>
+            <div className="flex items-baseline justify-between py-3" style={{ borderTop: "1px solid var(--divider)" }}>
+              <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Sessions</span>
+              <span className="font-display text-[26px] leading-none font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>{weeklyData[3]?.sessions || 0}</span>
             </div>
           </div>
         </Card>
 
         <Card>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Last 4 Weeks</h3>
-          <div className="flex items-end gap-3 h-32">
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-4" style={{ color: "var(--text)" }}>Last 4 weeks</h3>
+          <div className="flex items-end gap-3 h-36">
             {weeklyData.map((w, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{w.hours}h</span>
-                <div className="w-full rounded-t-md" style={{
-                  height: `${Math.max((w.hours / maxWeeklyHours) * 100, 4)}%`,
-                  background: "var(--primary)",
-                  opacity: i === 3 ? 1 : 0.5,
+              <div key={i} className="flex-1 min-w-0 h-full flex flex-col items-center justify-end gap-1.5">
+                <span className={`text-xs tabular-nums ${i === 3 ? "font-bold" : "font-medium"}`} style={{ color: i === 3 ? "var(--text)" : "var(--text-secondary)" }}>{w.hours}h</span>
+                <div className="w-full max-w-14" style={{
+                  height: Math.max((w.hours / maxWeeklyHours) * 88, 8),
+                  background: i === 3 ? "var(--primary)" : "var(--paper)",
+                  border: "2px solid var(--outline)",
+                  borderRadius: "8px 8px 4px 4px",
                 }} />
-                <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{w.label}</span>
+                <span className={`text-[11px] truncate max-w-full ${i === 3 ? "font-bold" : "font-medium"}`} style={{ color: i === 3 ? "var(--text)" : "var(--text-muted)" }}>{w.label}</span>
               </div>
             ))}
           </div>
@@ -237,18 +239,18 @@ export default function ProgressPage() {
       {/* Subject Distribution */}
       {subjectDist.totalMins > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Subject Distribution (This Week)</h3>
-          <div className="space-y-2">
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-4" style={{ color: "var(--text)" }}>Subject distribution this week</h3>
+          <div className="flex flex-col gap-3">
             {Object.entries(subjectDist.mins).sort((a, b) => b[1] - a[1]).map(([key, mins]) => {
               const pct = Math.round((mins / subjectDist.totalMins) * 100);
               return (
                 <div key={key} className="flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[key] }} />
-                  <span className="text-sm w-28 truncate" style={{ color: "var(--text)" }}>{subjectLabels[key] || key}</span>
-                  <div className="flex-1">
-                    <ProgressBar value={pct} color={subjectColors[key]} />
+                  <span className="text-sm font-medium w-28 shrink-0 truncate" style={{ color: "var(--text)" }}>{subjectLabels[key] || key}</span>
+                  <div className="flex-1 min-w-0">
+                    <ProgressBar value={pct} color="var(--primary)" />
                   </div>
-                  <span className="text-sm w-10 text-right" style={{ color: "var(--text-secondary)" }}>{pct}%</span>
+                  <span className="text-sm font-bold tabular-nums w-11 text-right" style={{ color: "var(--text)" }}>{pct}%</span>
                 </div>
               );
             })}
@@ -259,15 +261,15 @@ export default function ProgressPage() {
       {/* Exam Assessments */}
       {ratedExams.length > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Exam Self-Assessments</h3>
-          <div className="space-y-3">
-            {ratedExams.map((exam) => {
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-1" style={{ color: "var(--text)" }}>Exam self-assessments</h3>
+          <div className="flex flex-col">
+            {ratedExams.map((exam, i) => {
               const a = assessments[exam.key];
               return (
-                <div key={exam.key} className="flex items-center gap-3">
+                <div key={exam.key} className="flex items-center gap-3 py-2.5" style={{ borderTop: i > 0 ? "1px solid var(--divider)" : undefined }}>
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[exam.key] }} />
-                  <span className="text-sm flex-1" style={{ color: "var(--text)" }}>{exam.subject}</span>
-                  <span className="text-sm" style={{ color: "var(--warning)" }}>
+                  <span className="text-sm font-medium flex-1 min-w-0" style={{ color: "var(--text)" }}>{exam.subject}</span>
+                  <span className="text-sm shrink-0" style={{ color: "var(--warning)" }}>
                     {"\u2605".repeat(a.rating)}{"\u2606".repeat(5 - a.rating)}
                   </span>
                 </div>
@@ -276,6 +278,27 @@ export default function ProgressPage() {
           </div>
         </Card>
       )}
+    </div>
+  );
+}
+
+/* ── An outlined progress bar, filled with a sticker colour (same recipe as the dashboard) ── */
+
+function OutlinedBar({ pct, fill }: { pct: number; fill: string }) {
+  const value = Math.max(0, Math.min(100, pct));
+  return (
+    <div
+      className="h-3.5 rounded-full overflow-hidden"
+      style={{ border: "2px solid var(--outline)", background: "var(--bg-card)" }}
+      role="progressbar"
+      aria-valuenow={Math.round(value)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className="h-full origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ width: "100%", transform: `scaleX(${value / 100})`, background: fill, boxShadow: value > 0 && value < 100 ? "inset -2px 0 0 var(--outline)" : undefined }}
+      />
     </div>
   );
 }

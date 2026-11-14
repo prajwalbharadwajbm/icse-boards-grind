@@ -2,6 +2,8 @@
 
 // Push Notification Utilities for ICSE Boards Grind
 
+import { notificationTypeFromTag, trackNotification } from "./analytics";
+
 export interface ScheduledNotification {
   id: string;
   title: string;
@@ -84,16 +86,23 @@ export async function showNotification(
     badge: "/icon1.png",
     ...options,
   };
+  const data = (options?.data ?? {}) as Record<string, string>;
+  const type = data.type || notificationTypeFromTag(options?.tag);
 
   try {
-    new Notification(title, notifOptions);
+    trackNotification(type, new Notification(title, notifOptions));
     return true;
   } catch {
     // Mobile browsers don't support new Notification(), try SW
     try {
       const reg = await navigator.serviceWorker?.getRegistration();
       if (reg?.active) {
-        await reg.showNotification(title, notifOptions);
+        // sw.js opens data.url on click; the query lets PostHogPageview record the click
+        const url = new URL(data.url || "/dashboard", window.location.origin);
+        url.searchParams.set("from", "notification");
+        url.searchParams.set("notification_type", type);
+        await reg.showNotification(title, { ...notifOptions, data: { ...data, url: url.pathname + url.search } });
+        trackNotification(type);
         return true;
       }
     } catch (e) {
@@ -115,7 +124,7 @@ export function scheduleNotification(notification: ScheduledNotification): strin
     showNotification(notification.title, {
       body: notification.body,
       tag: notification.id,
-      data: notification.data,
+      data: { ...notification.data, type: notification.type },
     });
     return notification.id;
   }
@@ -127,7 +136,7 @@ export function scheduleNotification(notification: ScheduledNotification): strin
     showNotification(notification.title, {
       body: notification.body,
       tag: notification.id,
-      data: notification.data,
+      data: { ...notification.data, type: notification.type },
     });
     scheduledTimeouts.delete(notification.id);
     

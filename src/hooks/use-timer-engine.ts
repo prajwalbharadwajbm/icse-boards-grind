@@ -17,7 +17,7 @@ export function useTimerEngine() {
 
   useEffect(() => {
     if (running) {
-      intervalRef.current = setInterval(() => {
+      const step = () => {
         const result = useTimerStore.getState().tick();
 
         if (result === "work_done") {
@@ -26,28 +26,46 @@ export function useTimerEngine() {
           const msg = getTimerWorkDoneMessage(state.workMinutes);
           sendNotification(msg.title, msg.body, "timer-work-done");
           logStudyTime(state.subject, state.chapter, state.workMinutes);
+          const study = useStore.getState();
+          const sessionNumber = study.timerSessions.length;
           capture("timer_completed", {
             subject: state.subject || "general",
             chapter: state.chapter || "",
             duration_minutes: state.workMinutes,
+            session_number: sessionNumber,
+            is_first_session: sessionNumber === 1,
+            streak: study.streak,
+            hours_today: Math.round((study.studyLog[today()]?.hours ?? 0) * 100) / 100,
           });
         } else if (result === "break_done") {
           playBeep();
           const msg = getTimerBreakDoneMessage();
           sendNotification(msg.title, msg.body, "timer-break-done");
         }
-      }, 1000);
-    } else if (intervalRef.current) {
+      };
+
+      // The store derives time from a wall-clock end time, so ticking twice a second
+      // only refreshes the display; a throttled or suspended tab catches up on return.
+      intervalRef.current = setInterval(step, 500);
+      const onVisible = () => { if (document.visibilityState === "visible") step(); };
+      document.addEventListener("visibilitychange", onVisible);
+      window.addEventListener("focus", onVisible);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        document.removeEventListener("visibilitychange", onVisible);
+        window.removeEventListener("focus", onVisible);
+      };
+    }
+
+    if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
+    return undefined;
   }, [running]);
 }
 

@@ -14,6 +14,7 @@ const SLUGS = [
   ["parent-report"],
   ["settings"],
   ["english"],
+  ["onboarding"],
 ];
 
 export function generateStaticParams() {

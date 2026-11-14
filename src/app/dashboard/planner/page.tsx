@@ -167,7 +167,7 @@ export default function PlannerPage() {
   };
 
   const subjectOptions = [
-    { value: "", label: "-- Select Subject --" },
+    { value: "", label: "Select a subject" },
     ...Object.entries(SUBJECT_LABELS).map(([key, label]) => ({ value: key, label })),
   ];
 
@@ -182,61 +182,72 @@ export default function PlannerPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Date Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between flex-wrap gap-3"
       >
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={goToPrev}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button
+            onClick={goToPrev}
+            aria-label="Previous day"
+            className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-150 bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+            style={{ border: "2px solid var(--outline)", color: "var(--text)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-          </Button>
-          <div className="text-center">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+          </button>
+          <div className="text-center min-w-[150px]">
+            <h2 className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] whitespace-nowrap" style={{ color: "var(--text)" }}>
               {formatDate(planDate)}
             </h2>
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-sm font-medium mt-1" style={{ color: "var(--text-muted)" }}>
               {isPlanToday ? "Today" : planDate}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={goToNext}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button
+            onClick={goToNext}
+            aria-label="Next day"
+            className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-150 bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+            style={{ border: "2px solid var(--outline)", color: "var(--text)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-          </Button>
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {!isPlanToday && (
-            <Button variant="secondary" size="sm" onClick={goToToday}>
+            <Button variant="secondary" size="md" onClick={goToToday}>
               Today
             </Button>
           )}
-          <Button variant="secondary" size="sm" onClick={handleAddBlock}>
-            + Add Block
+          <Button variant="primary" size="md" onClick={handleAddBlock}>
+            Add block
           </Button>
           {hasCustomPlan && (
-            <Button variant="ghost" size="sm" onClick={handleResetPlan}>
-              Reset Plan
+            <Button variant="ghost" size="md" onClick={handleResetPlan}>
+              Reset plan
             </Button>
           )}
         </div>
       </motion.div>
 
       {/* Study Summary */}
-      <Card className="!py-3">
-        <div className="flex items-center justify-between">
+      <Card className="!py-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--primary)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }} aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
             <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
-              Total Study Time
+              Total study time
             </span>
           </div>
-          <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>
+          <span className="font-display text-[22px] leading-none font-extrabold tracking-[-0.01em] tabular-nums" style={{ color: "var(--text)" }}>
             {Math.floor(totalStudyMin / 60)}h {totalStudyMin % 60}m
           </span>
         </div>
@@ -246,7 +257,7 @@ export default function PlannerPage() {
               className="w-2 h-2 rounded-full"
               style={{ background: "var(--warning)" }}
             />
-            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            <span className="text-xs font-bold" style={{ color: "var(--warning)" }}>
               Custom plan active
             </span>
           </div>
@@ -255,30 +266,28 @@ export default function PlannerPage() {
 
       {/* Balance Warnings */}
       {warnings && warnings.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl p-4"
+        <div
+          className="rounded-[20px] p-5"
           style={{
-            background: "#fef3c7",
-            border: "1px solid #f59e0b",
+            background: "var(--warning-soft)",
+            border: "2px solid var(--outline)",
           }}
         >
-          <div className="flex items-start gap-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" className="shrink-0 mt-0.5">
+          <div className="flex items-start gap-2.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <div className="space-y-1">
               {warnings.map((w, i) => (
-                <p key={i} className="text-sm" style={{ color: "#92400e" }}>
+                <p key={i} className="text-sm" style={{ color: "var(--text)" }}>
                   {w}
                 </p>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Timeline */}
@@ -290,10 +299,10 @@ export default function PlannerPage() {
       />
 
       {/* Edit Block Modal */}
-      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title={editIndex !== null ? "Edit Block" : "Add Block"}>
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title={editIndex !== null ? "Edit block" : "Add block"}>
         <div className="space-y-4">
           <Select
-            label="Block Type"
+            label="Block type"
             options={typeOptions}
             value={editType}
             onChange={(e) => setEditType(e.target.value as Block["type"])}
@@ -322,13 +331,13 @@ export default function PlannerPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Start Time"
+              label="Start time"
               type="time"
               value={editStart}
               onChange={(e) => setEditStart(e.target.value)}
             />
             <Input
-              label="End Time"
+              label="End time"
               type="time"
               value={editEnd}
               onChange={(e) => setEditEnd(e.target.value)}
@@ -336,7 +345,7 @@ export default function PlannerPage() {
           </div>
 
           {editStart && editEnd && timeToMin(editEnd) > timeToMin(editStart) && (
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-xs tabular-nums" style={{ color: "var(--text-muted)" }}>
               Duration: {timeToMin(editEnd) - timeToMin(editStart)} minutes
             </p>
           )}
@@ -345,7 +354,7 @@ export default function PlannerPage() {
             <div>
               {editIndex !== null && (
                 <Button variant="danger" size="sm" onClick={handleDelete}>
-                  Delete
+                  Delete block
                 </Button>
               )}
             </div>
@@ -358,7 +367,7 @@ export default function PlannerPage() {
                 onClick={handleSave}
                 disabled={!editStart || !editEnd || timeToMin(editEnd) <= timeToMin(editStart)}
               >
-                Save
+                Save block
               </Button>
             </div>
           </div>

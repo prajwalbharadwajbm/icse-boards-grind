@@ -26,14 +26,14 @@ export function MiniTimer({ collapsed }: MiniTimerProps) {
   const secs = seconds % 60;
   const timeDisplay = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   const progress = totalSeconds > 0 ? seconds / totalSeconds : 0;
-  const ringColor = phase === "work" ? "var(--primary)" : "#16a34a";
+  const ringColor = phase === "work" ? "var(--primary)" : "var(--success)";
 
   if (collapsed) {
     return (
       <Link href="/dashboard/timer" className="block px-3 py-2">
         <div className="flex flex-col items-center gap-1">
           <ProgressRing radius={18} stroke={3} progress={progress} color={ringColor}>
-            <span className="text-[8px] font-bold font-mono text-white">{mins}m</span>
+            <span className="text-[9px] font-medium tabular-nums" style={{ color: "var(--text)" }}>{mins}m</span>
           </ProgressRing>
         </div>
       </Link>
@@ -43,22 +43,20 @@ export function MiniTimer({ collapsed }: MiniTimerProps) {
   return (
     <Link href="/dashboard/timer" className="block px-3 py-2">
       <div
-        className="rounded-lg p-2.5 flex items-center gap-2.5 transition-all hover:opacity-90"
+        className="rounded-2xl p-2.5 flex items-center gap-2.5 transition-colors hover:bg-[var(--paper)]"
         style={{
-          background: running
-            ? "linear-gradient(135deg, rgba(26,115,232,0.2), rgba(26,115,232,0.1))"
-            : "rgba(255,255,255,0.05)",
-          border: `1px solid ${running ? "rgba(26,115,232,0.3)" : "rgba(255,255,255,0.08)"}`,
+          background: "var(--sun-soft)",
+          border: "2px solid var(--outline)",
         }}
       >
         <ProgressRing radius={18} stroke={3} progress={progress} color={ringColor}>
           {running ? (
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: ringColor }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-50" style={{ background: ringColor }} />
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: ringColor }} />
             </span>
           ) : (
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="white" opacity={0.6}>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style={{ color: "var(--text-muted)" }}>
               <rect x="6" y="4" width="4" height="16" />
               <rect x="14" y="4" width="4" height="16" />
             </svg>
@@ -67,19 +65,16 @@ export function MiniTimer({ collapsed }: MiniTimerProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold font-mono text-white">{timeDisplay}</span>
+            <span className="text-sm font-medium tabular-nums" style={{ color: "var(--text)" }}>{timeDisplay}</span>
             <span
-              className="text-[10px] font-semibold uppercase px-1 rounded"
-              style={{
-                color: phase === "work" ? "var(--primary)" : "#16a34a",
-                background: phase === "work" ? "rgba(26,115,232,0.15)" : "rgba(22,163,74,0.15)",
-              }}
+              className="text-xs"
+              style={{ color: "var(--text-muted)" }}
             >
-              {phase}
+              {phase === "work" ? "Focus" : "Break"}
             </span>
           </div>
           {subject && (
-            <p className="text-[10px] text-white/40 truncate">{subject}</p>
+            <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{subject}</p>
           )}
         </div>
 
@@ -89,16 +84,17 @@ export function MiniTimer({ collapsed }: MiniTimerProps) {
             e.stopPropagation();
             running ? pause() : start();
           }}
-          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-          style={{ background: "rgba(255,255,255,0.1)" }}
+          aria-label={running ? "Pause timer" : "Resume timer"}
+          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:brightness-125"
+          style={{ background: "var(--bg-card)", border: "2px solid var(--outline)", color: "var(--text)" }}
         >
           {running ? (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16" />
               <rect x="14" y="4" width="4" height="16" />
             </svg>
           ) : (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
           )}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { useStore } from "@/store/use-store";
 import { Card } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { getSubjectLabels, getSubjectColors } from "@/lib/constants";
 import { today } from "@/lib/utils";
 
@@ -47,75 +47,75 @@ export function TimerStats() {
   const totalMinutesToday = subjectBreakdown.reduce((sum, s) => sum + s.minutes, 0);
 
   return (
-    <div className="space-y-4">
-      {/* Today's Summary */}
+    <div className="flex flex-col gap-4">
+      {/* Today's summary */}
       <Card>
         <h3
-          className="text-sm font-semibold mb-4"
+          className="font-display text-lg font-extrabold tracking-[-0.01em] mb-4"
           style={{ color: "var(--text)" }}
         >
-          Today&apos;s Summary
+          Today
         </h3>
         <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
+          <div>
             <p
-              className="text-2xl font-bold"
-              style={{ color: "var(--primary)" }}
+              className="font-display text-[30px] leading-none font-extrabold tracking-[-0.02em] tabular-nums"
+              style={{ color: "var(--text)" }}
             >
               {hoursToday.toFixed(1)}
             </p>
             <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--text-secondary)" }}
+              className="text-[13px] font-medium mt-1.5"
+              style={{ color: "var(--text-muted)" }}
             >
               Hours
             </p>
           </div>
-          <div className="text-center">
+          <div>
             <p
-              className="text-2xl font-bold"
-              style={{ color: "#16a34a" }}
+              className="font-display text-[30px] leading-none font-extrabold tracking-[-0.02em] tabular-nums"
+              style={{ color: "var(--text)" }}
             >
               {sessionsToday}
             </p>
             <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--text-secondary)" }}
+              className="text-[13px] font-medium mt-1.5"
+              style={{ color: "var(--text-muted)" }}
             >
               Sessions
             </p>
           </div>
-          <div className="text-center">
+          <div>
             <p
-              className="text-2xl font-bold"
-              style={{ color: "var(--warning)" }}
+              className="font-display text-[30px] leading-none font-extrabold tracking-[-0.02em] tabular-nums"
+              style={{ color: "var(--text)" }}
             >
               {streak}
             </p>
             <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--text-secondary)" }}
+              className="text-[13px] font-medium mt-1.5"
+              style={{ color: "var(--text-muted)" }}
             >
-              Day Streak
+              Day streak
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Subject Breakdown */}
+      {/* By subject */}
       <Card>
         <h3
-          className="text-sm font-semibold mb-3"
+          className="font-display text-lg font-extrabold tracking-[-0.01em] mb-3"
           style={{ color: "var(--text)" }}
         >
-          Subject Breakdown
+          By subject
         </h3>
         {subjectBreakdown.length === 0 ? (
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            No sessions yet today. Start a timer!
+            No sessions yet today. Start the timer to log one.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {subjectBreakdown.map((item) => {
               const pct =
                 totalMinutesToday > 0
@@ -123,38 +123,27 @@ export function TimerStats() {
                   : 0;
               return (
                 <div key={item.key}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: item.color }}
                       />
                       <span
-                        className="text-sm font-medium"
+                        className="text-sm font-medium truncate"
                         style={{ color: "var(--text)" }}
                       >
                         {item.label}
                       </span>
                     </div>
                     <span
-                      className="text-xs"
-                      style={{ color: "var(--text-secondary)" }}
+                      className="text-xs font-bold tabular-nums shrink-0"
+                      style={{ color: "var(--text-muted)" }}
                     >
                       {item.minutes} min
                     </span>
                   </div>
-                  <div
-                    className="h-1.5 rounded-full overflow-hidden"
-                    style={{ background: "var(--border)" }}
-                  >
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="h-full rounded-full"
-                      style={{ background: item.color }}
-                    />
-                  </div>
+                  <ProgressBar value={pct} color={item.color} />
                 </div>
               );
             })}
@@ -162,22 +151,26 @@ export function TimerStats() {
         )}
       </Card>
 
-      {/* Recent Sessions */}
+      {/* Recent sessions: a quiet list, rows split by soft dividers */}
       <Card>
         <h3
-          className="text-sm font-semibold mb-3"
+          className="font-display text-lg font-extrabold tracking-[-0.01em] mb-1"
           style={{ color: "var(--text)" }}
         >
-          Recent Sessions
+          Recent sessions
         </h3>
         {recentSessions.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
             No sessions recorded today.
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-col">
             {recentSessions.map((session, i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div
+                key={i}
+                className="flex items-center gap-3 py-2.5"
+                style={{ borderTop: i > 0 ? "1px solid var(--divider)" : undefined }}
+              >
                 <span
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{
@@ -187,7 +180,7 @@ export function TimerStats() {
                 />
                 <div className="flex-1 min-w-0">
                   <p
-                    className="text-sm font-medium truncate"
+                    className="text-sm font-bold truncate"
                     style={{ color: "var(--text)" }}
                   >
                     {SUBJECT_LABELS[session.subject] || session.subject}
@@ -195,15 +188,15 @@ export function TimerStats() {
                   {session.chapter && (
                     <p
                       className="text-xs truncate"
-                      style={{ color: "var(--text-secondary)" }}
+                      style={{ color: "var(--text-muted)" }}
                     >
                       {session.chapter}
                     </p>
                   )}
                 </div>
                 <span
-                  className="text-xs font-medium shrink-0"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-bold tabular-nums shrink-0"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   {session.minutes} min
                 </span>

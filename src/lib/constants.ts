@@ -37,46 +37,155 @@ export interface Elective {
   group: string;
 }
 
-// 8 core subjects (fixed for all ICSE students)
-export const CORE_EXAMS: Exam[] = [
-  { date: "2026-02-17", subject: "English Language Paper 1", key: "english_lang", duration: "2hrs" },
-  { date: "2026-02-20", subject: "English Literature Paper 2", key: "english_lit", duration: "2hrs" },
-  { date: "2026-03-02", subject: "Mathematics", key: "math", duration: "3hrs" },
-  { date: "2026-03-09", subject: "Physics", key: "physics", duration: "2hrs" },
-  { date: "2026-03-11", subject: "Chemistry", key: "chemistry", duration: "2hrs" },
-  { date: "2026-03-13", subject: "Biology", key: "biology", duration: "2hrs" },
-  { date: "2026-03-16", subject: "History & Civics", key: "history", duration: "2hrs" },
-  { date: "2026-03-18", subject: "Geography", key: "geography", duration: "2hrs" },
-];
+/** One year's ICSE (Class 10) timetable, as published by CISCE. */
+export interface ExamTimetable {
+  year: number;
+  /** When the timetable was published, and where the dates were checked */
+  released: string;
+  source: string;
+  /** Regular papers: reading time starts, writing starts, candidates seated by (24h, IST) */
+  readingStart: string;
+  writingStart: string;
+  seatedBy: string;
+  core: Exam[];
+  secondLanguages: SecondLanguage[];
+  electives: Elective[];
+}
 
-export const SECOND_LANGUAGES: SecondLanguage[] = [
-  { name: "Hindi", key: "hindi", date: "2026-02-26", duration: "3hrs" },
-  { name: "Kannada", key: "kannada", date: "2026-03-06", duration: "3hrs" },
-  { name: "Tamil", key: "tamil", date: "2026-03-06", duration: "3hrs" },
-  { name: "Telugu", key: "telugu", date: "2026-03-06", duration: "3hrs" },
-  { name: "Bengali", key: "bengali", date: "2026-03-06", duration: "3hrs" },
-  { name: "Malayalam", key: "malayalam", date: "2026-03-06", duration: "3hrs" },
-  { name: "Marathi", key: "marathi", date: "2026-03-06", duration: "3hrs" },
-  { name: "Gujarati", key: "gujarati", date: "2026-03-06", duration: "3hrs" },
-  { name: "Punjabi", key: "punjabi", date: "2026-03-06", duration: "3hrs" },
-  { name: "Urdu", key: "urdu", date: "2026-03-06", duration: "3hrs" },
-  { name: "French", key: "french", date: "2026-03-06", duration: "3hrs" },
-  { name: "German", key: "german", date: "2026-03-06", duration: "3hrs" },
-  { name: "Sanskrit", key: "sanskrit", date: "2026-03-06", duration: "3hrs" },
-];
+// ── ICSE 2026 (Feb–Mar 2026). Kept for reference and for past-year reports. ──
+const TIMETABLE_2026: ExamTimetable = {
+  year: 2026,
+  released: "2025-11-13",
+  source: "CISCE ICSE Year 2026 timetable",
+  readingStart: "10:45",
+  writingStart: "11:00",
+  seatedBy: "10:30",
+  core: [
+    { date: "2026-02-17", subject: "English Language Paper 1", key: "english_lang", duration: "2hrs" },
+    { date: "2026-02-20", subject: "English Literature Paper 2", key: "english_lit", duration: "2hrs" },
+    { date: "2026-03-02", subject: "Mathematics", key: "math", duration: "3hrs" },
+    { date: "2026-03-09", subject: "Physics", key: "physics", duration: "2hrs" },
+    { date: "2026-03-11", subject: "Chemistry", key: "chemistry", duration: "2hrs" },
+    { date: "2026-03-13", subject: "Biology", key: "biology", duration: "2hrs" },
+    { date: "2026-03-16", subject: "History & Civics", key: "history", duration: "2hrs" },
+    { date: "2026-03-18", subject: "Geography", key: "geography", duration: "2hrs" },
+  ],
+  secondLanguages: [
+    { name: "Hindi", key: "hindi", date: "2026-02-26", duration: "3hrs" },
+    { name: "Kannada", key: "kannada", date: "2026-03-06", duration: "3hrs" },
+    { name: "Tamil", key: "tamil", date: "2026-03-06", duration: "3hrs" },
+    { name: "Telugu", key: "telugu", date: "2026-03-06", duration: "3hrs" },
+    { name: "Bengali", key: "bengali", date: "2026-03-06", duration: "3hrs" },
+    { name: "Malayalam", key: "malayalam", date: "2026-03-06", duration: "3hrs" },
+    { name: "Marathi", key: "marathi", date: "2026-03-06", duration: "3hrs" },
+    { name: "Gujarati", key: "gujarati", date: "2026-03-06", duration: "3hrs" },
+    { name: "Punjabi", key: "punjabi", date: "2026-03-06", duration: "3hrs" },
+    { name: "Urdu", key: "urdu", date: "2026-03-06", duration: "3hrs" },
+    { name: "French", key: "french", date: "2026-03-06", duration: "3hrs" },
+    { name: "German", key: "german", date: "2026-03-06", duration: "3hrs" },
+    { name: "Sanskrit", key: "sanskrit", date: "2026-03-06", duration: "3hrs" },
+  ],
+  electives: [
+    { name: "Computer Applications", key: "computer", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Economic Applications", key: "economic_app", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Physical Education", key: "physical_ed", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Home Science", key: "home_science", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Fashion Designing", key: "fashion", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Cookery", key: "cookery", date: "2026-03-23", duration: "2hrs", group: "III-A" },
+    { name: "Commercial Studies", key: "commercial", date: "2026-03-25", duration: "2hrs", group: "II" },
+    { name: "French (Elective)", key: "french_elective", date: "2026-03-25", duration: "2hrs", group: "II" },
+    { name: "Economics", key: "economics", date: "2026-03-27", duration: "2hrs", group: "II" },
+    { name: "Environmental Science", key: "env_science", date: "2026-03-30", duration: "2hrs", group: "II" },
+  ],
+};
 
-export const ELECTIVES: Elective[] = [
-  { name: "Computer Applications", key: "computer", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Economic Applications", key: "economic_app", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Physical Education", key: "physical_ed", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Home Science", key: "home_science", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Fashion Designing", key: "fashion", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Cookery", key: "cookery", date: "2026-03-23", duration: "2hrs", group: "III-A" },
-  { name: "Commercial Studies", key: "commercial", date: "2026-03-25", duration: "2hrs", group: "II" },
-  { name: "French (Elective)", key: "french_elective", date: "2026-03-25", duration: "2hrs", group: "II" },
-  { name: "Economics", key: "economics", date: "2026-03-27", duration: "2hrs", group: "II" },
-  { name: "Environmental Science", key: "env_science", date: "2026-03-30", duration: "2hrs", group: "II" },
-];
+// ── ICSE 2027 (15 Feb – 31 Mar 2027). Published by CISCE on 10 Nov 2026. ──
+// Dates cross-checked across OneIndia, CareerIndia and Careers360 reports of the official PDF.
+// New for 2027: reading time 10:00, writing 10:15, seated by 9:45 (was 10:45 / 11:00).
+// Durations follow the 2026 paper lengths.
+const SECOND_LANGUAGE_DAY_2027 = "2027-03-19"; // Indian and foreign languages, one sitting
+const GROUP_3A_DAY_2027 = "2027-03-17"; // Group III elective, section A
+
+const TIMETABLE_2027: ExamTimetable = {
+  year: 2027,
+  released: "2026-11-10",
+  source: "CISCE ICSE Year 2027 timetable",
+  readingStart: "10:00",
+  writingStart: "10:15",
+  seatedBy: "09:45",
+  core: [
+    { date: "2027-02-15", subject: "English Language Paper 1", key: "english_lang", duration: "2hrs" },
+    { date: "2027-02-18", subject: "English Literature Paper 2", key: "english_lit", duration: "2hrs" },
+    { date: "2027-02-22", subject: "Mathematics", key: "math", duration: "3hrs" },
+    { date: "2027-02-26", subject: "History & Civics", key: "history", duration: "2hrs" },
+    { date: "2027-03-01", subject: "Geography", key: "geography", duration: "2hrs" },
+    { date: "2027-03-08", subject: "Physics", key: "physics", duration: "2hrs" },
+    { date: "2027-03-12", subject: "Chemistry", key: "chemistry", duration: "2hrs" },
+    { date: "2027-03-15", subject: "Biology", key: "biology", duration: "2hrs" },
+  ],
+  secondLanguages: [
+    { name: "Hindi", key: "hindi", date: "2027-03-04", duration: "3hrs" },
+    { name: "Kannada", key: "kannada", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Tamil", key: "tamil", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Telugu", key: "telugu", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Bengali", key: "bengali", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Malayalam", key: "malayalam", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Marathi", key: "marathi", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Gujarati", key: "gujarati", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Punjabi", key: "punjabi", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Urdu", key: "urdu", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "French", key: "french", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "German", key: "german", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+    { name: "Sanskrit", key: "sanskrit", date: SECOND_LANGUAGE_DAY_2027, duration: "3hrs" },
+  ],
+  electives: [
+    { name: "Computer Applications", key: "computer", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Economic Applications", key: "economic_app", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Commercial Applications", key: "commercial_app", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Physical Education", key: "physical_ed", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Home Science", key: "home_science", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Fashion Designing", key: "fashion", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Cookery", key: "cookery", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Technical Drawing Applications", key: "tech_drawing", date: GROUP_3A_DAY_2027, duration: "2hrs", group: "III-A" },
+    { name: "Robotics & Artificial Intelligence", key: "robotics_ai", date: "2027-02-24", duration: "2hrs", group: "III-B" },
+    { name: "Environmental Science", key: "env_science", date: "2027-03-25", duration: "2hrs", group: "II" },
+    { name: "Commercial Studies", key: "commercial", date: "2027-03-29", duration: "2hrs", group: "II" },
+    { name: "Economics", key: "economics", date: "2027-03-31", duration: "2hrs", group: "II" },
+    { name: "French (Elective)", key: "french_elective", date: "2027-03-31", duration: "2hrs", group: "II" },
+    { name: "Sanskrit (Elective)", key: "sanskrit_elective", date: "2027-03-31", duration: "2hrs", group: "II" },
+  ],
+};
+
+export const TIMETABLES: Record<number, ExamTimetable> = {
+  2026: TIMETABLE_2026,
+  2027: TIMETABLE_2027,
+};
+
+/** The board exam year the app is preparing students for. Bump this (and add a timetable) each November. */
+export const EXAM_YEAR = 2027;
+export const TIMETABLE: ExamTimetable = TIMETABLES[EXAM_YEAR];
+
+// Current-year lists (used by onboarding, settings and admin)
+export const CORE_EXAMS: Exam[] = TIMETABLE.core;
+export const SECOND_LANGUAGES: SecondLanguage[] = TIMETABLE.secondLanguages;
+export const ELECTIVES: Elective[] = TIMETABLE.electives;
+
+/** Writing start of a paper as a local Date, e.g. 2027-02-15 10:15 */
+export function examStart(date: string): Date {
+  return new Date(`${date}T${TIMETABLE.writingStart}:00`);
+}
+
+/** Paper length in hours, from strings like "2hrs" or "2.5hrs" */
+export function examHours(duration: string): number {
+  return parseFloat(duration) || 2;
+}
+
+/** When a paper finishes writing */
+export function examEnd(exam: Pick<Exam, "date" | "duration">): Date {
+  const end = examStart(exam.date);
+  end.setMinutes(end.getMinutes() + Math.round(examHours(exam.duration) * 60));
+  return end;
+}
 
 /** Build the full exam list from core + selected language + selected elective */
 export function getExams(languageKey: string, electiveKey: string): Exam[] {
@@ -123,6 +232,7 @@ export const ALL_SUBJECT_COLORS: Record<string, string> = {
   computer: "#5f6368", economic_app: "#4caf50", physical_ed: "#ff5252",
   home_science: "#e91e63", fashion: "#ab47bc", cookery: "#ff7043",
   commercial: "#42a5f5", french_elective: "#26a69a", economics: "#66bb6a", env_science: "#29b6f6",
+  commercial_app: "#5c6bc0", tech_drawing: "#8d6e63", robotics_ai: "#00acc1", sanskrit_elective: "#ab47bc",
 };
 
 /** Get labels for all subjects including the selected language and elective */
@@ -172,7 +282,8 @@ export function getSubjectColors(languageKey: string, electiveKey: string): Reco
     computer: "#5f6368", economic_app: "#4caf50", physical_ed: "#ff5252",
     home_science: "#e91e63", fashion: "#ab47bc", cookery: "#ff7043",
     commercial: "#42a5f5", french_elective: "#26a69a", economics: "#66bb6a",
-    env_science: "#29b6f6",
+    env_science: "#29b6f6", commercial_app: "#5c6bc0", tech_drawing: "#8d6e63",
+    robotics_ai: "#00acc1", sanskrit_elective: "#ab47bc",
   };
 
   if (langColors[languageKey]) colors[languageKey] = langColors[languageKey];
@@ -255,6 +366,23 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
   return chapters;
 }
 
+/**
+ * Make sure every subject the student takes has a chapter list, adding an empty or default
+ * list for any that is missing (e.g. after choosing Hindi, or switching elective).
+ * Existing lists are never replaced.
+ */
+export function withSubjectKeys(
+  subjects: Record<string, Chapter[]> | undefined,
+  languageKey: string,
+  electiveKey: string
+): Record<string, Chapter[]> {
+  const next = { ...(subjects || {}) };
+  for (const [key, chapters] of Object.entries(getDefaultChapters(languageKey, electiveKey))) {
+    if (!next[key]) next[key] = chapters;
+  }
+  return next;
+}
+
 // Static references for backward compatibility (default selections)
 export const EXAMS = getExams("kannada", "computer");
 
@@ -292,12 +420,13 @@ export const SECTION_TITLES: Record<string, string> = {
   calendar: "Calendar",
   subjects: "Subjects",
   planner: "Planner",
-  coach: "AI Coach",
+  coach: "AI coach",
   timer: "Timer",
   progress: "Progress",
-  papers: "Practice Papers",
+  papers: "Practice papers",
   settings: "Settings",
-  notes: "Revision Notes",
+  notes: "Revision notes",
   leaderboard: "Leaderboard",
-  "parent-report": "Parent Report",
+  "parent-report": "Parent report",
+  english: "English",
 };

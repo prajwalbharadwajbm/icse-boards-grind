@@ -53,33 +53,36 @@ export default function NotesPage() {
   }, [filtered]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: "var(--text)" }}>Revision Notes</h2>
-        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+    <div className="max-w-4xl mx-auto flex flex-col gap-6">
+      <header className="flex flex-col gap-2">
+        <h2 className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: "var(--text)" }}>
+          Revision notes
+        </h2>
+        <p className="text-base" style={{ color: "var(--text-secondary)" }}>
           All your chapter notes in one place.
         </p>
-      </div>
+      </header>
 
       {/* Search */}
       <input
         type="text"
-        placeholder="Search by subject, chapter, or note..."
+        placeholder="Search by subject, chapter or note"
+        aria-label="Search notes"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full px-4 py-2.5 rounded-lg text-sm"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text)" }}
+        className="w-full h-11 px-4 rounded-xl text-sm outline-none border-2 border-[var(--outline)] transition-[border-color,box-shadow] duration-150 focus:border-[var(--primary)] focus:shadow-[2px_2px_0_var(--primary)]"
+        style={{ background: "var(--bg-card)", color: "var(--text)" }}
       />
 
       {allNotes.length === 0 ? (
         <Card>
           <div className="text-center py-8">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.5" className="mx-auto mb-3 opacity-50">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3" aria-hidden="true">
               <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
               <polyline points="14 2 14 8 20 8" />
             </svg>
-            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>No notes yet</p>
-            <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Add notes from the Subjects page.</p>
+            <p className="font-display text-lg font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>No notes yet</p>
+            <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>Open a chapter on the Subjects page to add a note.</p>
           </div>
         </Card>
       ) : filtered.length === 0 ? (
@@ -89,17 +92,17 @@ export default function NotesPage() {
       ) : (
         Object.entries(grouped).map(([subjectKey, notes]) => (
           <Card key={subjectKey}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: subjectColors[subjectKey] || "var(--primary)" }} />
-              <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+            <div className="flex items-center gap-2.5 mb-1">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[subjectKey] || "var(--primary)" }} />
+              <h3 className="font-display text-lg font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>
                 {subjectLabels[subjectKey] || subjectKey}
               </h3>
             </div>
-            <div className="space-y-3">
+            <div>
               {notes.map((n, i) => (
-                <div key={i} className="pl-5 border-l-2" style={{ borderColor: subjectColors[n.subjectKey] || "var(--border)" }}>
-                  <p className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{n.chapter}</p>
-                  <p className="text-sm mt-0.5 whitespace-pre-wrap" style={{ color: "var(--text)" }}>{n.note}</p>
+                <div key={i} className="py-3" style={{ borderTop: i > 0 ? "1px solid var(--divider)" : undefined }}>
+                  <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{n.chapter}</p>
+                  <p className="text-sm mt-1 whitespace-pre-wrap" style={{ color: "var(--text)" }}>{n.note}</p>
                 </div>
               ))}
             </div>

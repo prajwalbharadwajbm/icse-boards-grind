@@ -22,7 +22,7 @@ export function ProgressRing({ radius, stroke, progress, color = "var(--primary)
           cy={radius}
           r={normalizedRadius}
           fill="transparent"
-          stroke="var(--border)"
+          stroke="var(--paper)"
           strokeWidth={stroke}
         />
         <circle
@@ -35,7 +35,7 @@ export function ProgressRing({ radius, stroke, progress, color = "var(--primary)
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="transition-all duration-300"
+          className="transition-[stroke-dashoffset] duration-300"
         />
       </svg>
       {children && (

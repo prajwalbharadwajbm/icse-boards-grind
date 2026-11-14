@@ -5,37 +5,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { JC_CHARACTERS } from "@/lib/julius-caesar-data";
 
-const TRAIT_COLORS = [
-  "#7b61ff", "#1a73e8", "#34a853", "#f9ab00", "#ea4335",
-  "#e040fb", "#00bcd4",
-];
-
 export function JCCharacters() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {JC_CHARACTERS.map((char, ci) => {
+      {JC_CHARACTERS.map((char) => {
         const isOpen = expandedId === char.id;
         return (
           <div
             key={char.id}
-            className="rounded-xl p-4 transition-all"
+            className="rounded-[20px] p-5"
             style={{
               background: "var(--bg-card)",
-              border: `1px solid ${isOpen ? "var(--primary)" : "var(--border)"}`,
+              border: "2px solid var(--outline)",
             }}
           >
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h4
-                  className="text-sm font-bold"
+                  className="font-display text-lg font-extrabold tracking-[-0.01em] leading-tight"
                   style={{ color: "var(--text)" }}
                 >
                   {char.name}
                 </h4>
                 <p
-                  className="text-xs"
+                  className="text-[13px] mt-0.5"
                   style={{ color: "var(--text-secondary)" }}
                 >
                   {char.role}
@@ -44,23 +39,12 @@ export function JCCharacters() {
             </div>
 
             {/* Traits */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {char.traits.map((trait, ti) => (
-                <span
-                  key={trait}
-                  className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                  style={{
-                    background: `${TRAIT_COLORS[(ci + ti) % TRAIT_COLORS.length]}15`,
-                    color: TRAIT_COLORS[(ci + ti) % TRAIT_COLORS.length],
-                  }}
-                >
-                  {trait}
-                </span>
-              ))}
-            </div>
+            <p className="text-xs font-bold mb-3" style={{ color: "var(--text-muted)" }}>
+              {char.traits.join(" · ")}
+            </p>
 
             <p
-              className="text-xs leading-relaxed mb-3"
+              className="text-sm leading-relaxed mb-4"
               style={{ color: "var(--text)" }}
             >
               {char.significance}
@@ -78,19 +62,26 @@ export function JCCharacters() {
                   });
                 }
               }}
-              className="text-xs font-medium cursor-pointer flex items-center gap-1"
-              style={{ color: "var(--primary)" }}
+              aria-expanded={isOpen}
+              className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+                isOpen
+                  ? "bg-[var(--text)] text-[var(--bg)] font-bold"
+                  : "bg-[var(--bg-card)] text-[var(--text)] font-medium hover:bg-[var(--paper)]"
+              }`}
+              style={{ border: "2px solid var(--outline)" }}
             >
-              Key Quotes ({char.keyQuotes.length})
+              Key quotes ({char.keyQuotes.length})
               <motion.svg
                 width="12"
                 height="12"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               >
                 <polyline points="6 9 12 15 18 9" />
               </motion.svg>
@@ -102,28 +93,25 @@ export function JCCharacters() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-4" style={{ borderTop: "1px solid var(--divider)" }}>
                     {char.keyQuotes.map((kq, i) => (
                       <div
                         key={i}
-                        className="rounded-lg p-3"
-                        style={{
-                          background: "rgba(123,97,255,0.05)",
-                          border: "1px solid rgba(123,97,255,0.1)",
-                        }}
+                        className="py-3"
+                        style={{ borderTop: i > 0 ? "1px solid var(--divider)" : undefined }}
                       >
                         <p
-                          className="text-xs italic mb-1"
+                          className="text-[15px] font-serif italic leading-relaxed mb-1"
                           style={{ color: "var(--text)" }}
                         >
                           &ldquo;{kq.quote}&rdquo;
                         </p>
                         <p
-                          className="text-[10px]"
-                          style={{ color: "var(--text-secondary)" }}
+                          className="text-xs"
+                          style={{ color: "var(--text-muted)" }}
                         >
                           {kq.context}
                         </p>

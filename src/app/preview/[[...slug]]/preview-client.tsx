@@ -2,11 +2,13 @@
 
 import { Suspense, useEffect, useState, useRef, type ComponentType } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
-import Link from "next/link";
 import { useStore } from "@/store/use-store";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { StudyProgressBar } from "@/components/layout/study-progress-bar";
+import { CoachBanner } from "@/components/layout/coach-banner";
+import { useAuth } from "@/providers/auth-provider";
+import { useTimerEngine } from "@/hooks/use-timer-engine";
 import { getDefaultChapters } from "@/lib/constants";
 import type { StoreState } from "@/store/use-store";
 
@@ -24,6 +26,7 @@ import LeaderboardPage from "@/app/dashboard/leaderboard/page";
 import ParentReportPage from "@/app/dashboard/parent-report/page";
 import SettingsPage from "@/app/dashboard/settings/page";
 import EnglishPage from "@/app/dashboard/english/page";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 /** Map slug to page component */
 const PAGE_MAP: Record<string, ComponentType> = {
@@ -84,6 +87,8 @@ function buildDemoData(): Partial<StoreState> {
   return {
     onboarded: true,
     name: "Arjun Sharma",
+    avatar: "samosa",
+    studyVibe: "night_owl",
     learningStyle: "mixed",
     studyHours: 6,
     targetPercent: 90,
@@ -114,7 +119,7 @@ function buildDemoData(): Partial<StoreState> {
       dinner: "20:00",
       sleep: "22:30",
     },
-    theme: "dark",
+    theme: "light",
     timerSessions: [],
     planCache: {},
     customPlans: {},
@@ -140,9 +145,12 @@ function PreviewContent() {
   const uid = searchParams.get("uid");
   const [ready, setReady] = useState(false);
   const cleanupRef = useRef(false);
+  // AuthProvider resets the store once Firebase reports a signed-out visitor,
+  // so load the demo data only after auth has settled.
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!uid) return;
+    if (!uid || authLoading) return;
 
     const store = useStore.getState();
     store.setAll(buildDemoData());
@@ -156,11 +164,12 @@ function PreviewContent() {
         useStore.getState().resetStore();
       }
     };
-  }, [uid]);
+  }, [uid, authLoading]);
 
   useEffect(() => {
     if (!ready) return;
-    document.documentElement.setAttribute("data-theme", "dark");
+    // Sticker brand previews in its light theme
+    document.documentElement.setAttribute("data-theme", "light");
     return () => {
       document.documentElement.removeAttribute("data-theme");
     };
@@ -168,9 +177,9 @@ function PreviewContent() {
 
   if (!uid) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0f0f", color: "#fff" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0b0d14", color: "#eef0f5" }}>
         <div className="text-center space-y-3 p-6">
-          <h1 className="text-2xl font-bold">Preview Unavailable</h1>
+          <h1 className="text-2xl font-medium">Preview unavailable</h1>
           <p className="text-sm" style={{ color: "#999" }}>
             A valid <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: "#222" }}>uid</code> parameter is required.
           </p>
@@ -184,10 +193,10 @@ function PreviewContent() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0f0f" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0b0d14" }}>
         <div
           className="w-10 h-10 border-3 border-solid rounded-full animate-spin"
-          style={{ borderColor: "#7b61ff", borderTopColor: "transparent" }}
+          style={{ borderColor: "#6b84f2", borderTopColor: "transparent" }}
         />
       </div>
     );
@@ -195,6 +204,8 @@ function PreviewContent() {
 
   // Resolve which page to render: /preview → "", /preview/subjects → "subjects"
   const slug = pathname.replace(/^\/preview\/?/, "").split("/")[0] || "";
+  // Onboarding is full screen, without the dashboard shell
+  if (slug === "onboarding") return <OnboardingFlow preview />;
   const PageComponent = PAGE_MAP[slug] || DashboardPage;
 
   return (
@@ -210,9 +221,12 @@ function PreviewShell({ children, currentSlug, uid }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const showCoachBanner = currentSlug !== "coach" && currentSlug !== "settings";
 
+  // Same global timer engine as dashboard/layout.tsx, so the timer ticks in previews too
+  useTimerEngine();
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--bg)" }}>
-      <div className="flex w-full h-full pt-7">
+      <div className="flex w-full h-full">
         <Sidebar
           collapsed={collapsed}
           mobileOpen={mobileOpen}
@@ -224,22 +238,9 @@ function PreviewShell({ children, currentSlug, uid }: { children: React.ReactNod
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <Topbar onMenuClick={() => setMobileOpen(true)} />
           <StudyProgressBar />
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
             {showCoachBanner && (
-              <Link href={`/preview/coach?uid=${uid}`}>
-                <div
-                  className="mb-4 rounded-lg px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #7b61ff, #1a73e8)" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" className="shrink-0">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                  <span className="text-xs font-semibold text-white">AI Study Coach — Get personalized help free!</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" className="shrink-0 ml-auto">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </div>
-              </Link>
+              <CoachBanner href={`/preview/coach?uid=${uid}`} />
             )}
             {children}
           </main>
@@ -253,10 +254,10 @@ export function PreviewClient() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0f0f" }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: "#0b0d14" }}>
           <div
             className="w-10 h-10 border-3 border-solid rounded-full animate-spin"
-            style={{ borderColor: "#7b61ff", borderTopColor: "transparent" }}
+            style={{ borderColor: "#6b84f2", borderTopColor: "transparent" }}
           />
         </div>
       }

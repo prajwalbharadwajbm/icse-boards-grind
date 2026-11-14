@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans, Newsreader } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/auth-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
@@ -7,17 +7,22 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Providers } from "@/providers/heroui-provider";
 import { PostHogPageview } from "@/components/posthog-pageview";
 import { Suspense } from "react";
+import { EXAM_YEAR } from "@/lib/constants";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Sticker brand: Bricolage Grotesque for display, DM Sans for reading, Newsreader for literary quotes
+const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", weight: ["500", "700", "800"] });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", weight: ["400", "500", "700"] });
+const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-newsreader", weight: ["400", "500"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "ICSE Boards Grind — Your 2026 Board Exam Study Dashboard",
+    default: `ICSE Boards Grind — Study planner for ICSE ${EXAM_YEAR}`,
     template: "%s | ICSE Boards Grind",
   },
-  description: "Free ICSE 2026 board exam study planner with AI coach, study timer, progress tracking, revision scheduler, and smart timetable. Plan, track, and grind smarter.",
+  description: `Free ICSE ${EXAM_YEAR} board exam study planner with the official CISCE timetable, a countdown to every paper, study timer, revision scheduler, progress tracking and an AI coach.`,
   keywords: [
-    "ICSE board exam 2026",
+    `ICSE board exam ${EXAM_YEAR}`,
+    `ICSE ${EXAM_YEAR} timetable`,
     "ICSE study planner",
     "board exam preparation",
     "study timer",
@@ -30,13 +35,13 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL("https://icse-boards-grind.vercel.app"),
   openGraph: {
-    title: "ICSE Boards Grind — Your 2026 Board Exam Study Dashboard",
-    description: "Free ICSE 2026 board exam study planner with AI coach, study timer, progress tracking, and smart timetable.",
+    title: `ICSE Boards Grind — Study planner for ICSE ${EXAM_YEAR}`,
+    description: `Free ICSE ${EXAM_YEAR} study planner with the official timetable, a countdown to every paper, study timer and progress tracking.`,
     siteName: "ICSE Boards Grind",
     type: "website",
     images: [
       {
-        url: "/icon0.svg",
+        url: "/icons/icon-512x512.png",
         width: 512,
         height: 512,
         alt: "ICSE Boards Grind Logo",
@@ -45,13 +50,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "ICSE Boards Grind — Study Dashboard for ICSE 2026",
-    description: "Free ICSE 2026 board exam study planner with AI coach, study timer, and progress tracking.",
+    title: `ICSE Boards Grind — Study planner for ICSE ${EXAM_YEAR}`,
+    description: `Free ICSE ${EXAM_YEAR} study planner with the official timetable, study timer and progress tracking.`,
     images: ["/icon1.png"],
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
       { url: "/icon0.svg", type: "image/svg+xml" },
     ],
     apple: "/apple-icon.png",
@@ -69,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#0d1117" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Boards Grind" />
@@ -77,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="google-adsense-account" content="ca-pub-9077222671653004" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${bricolage.variable} ${dmSans.variable} ${newsreader.variable} font-sans antialiased`}>
         <AuthProvider>
           <PostHogProvider>
             <Suspense fallback={null}>

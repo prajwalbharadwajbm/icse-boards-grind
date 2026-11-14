@@ -3,6 +3,9 @@
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
 import Link from "next/link";
+import { EXAM_YEAR } from "@/lib/constants";
+import { StickerAvatar } from "@/components/brand/avatars";
+import { vibeFor } from "@/lib/identity";
 
 interface Props {
   onClose: () => void;
@@ -13,6 +16,8 @@ export function ProfileDropdown({ onClose }: Props) {
   const theme = useStore((s) => s.theme);
   const setField = useStore((s) => s.setField);
   const name = useStore((s) => s.name) || "Student";
+  const avatar = useStore((s) => s.avatar);
+  const vibe = vibeFor(useStore((s) => s.studyVibe));
 
   const toggleTheme = () => {
     setField("theme", theme === "light" ? "dark" : "light");
@@ -20,20 +25,23 @@ export function ProfileDropdown({ onClose }: Props) {
 
   return (
     <div
-      className="absolute right-0 top-full mt-2 w-56 rounded-xl py-1 z-50"
-      style={{ background: "var(--bg-card)", boxShadow: "var(--shadow-md)", border: "1px solid var(--border)" }}
+      className="absolute right-0 top-full mt-2 w-56 rounded-[20px] overflow-hidden z-50"
+      style={{ background: "var(--bg-card)", border: "2px solid var(--outline)", boxShadow: "4px 4px 0 var(--outline)" }}
     >
-      <div className="px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-        <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{name}</p>
-        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>ICSE 2026 Boards</p>
+      <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid var(--divider)" }}>
+        <StickerAvatar avatar={avatar} seed={name} size={44} tilt={-6} />
+        <div className="min-w-0">
+          <p className="font-display text-lg font-extrabold tracking-[-0.01em] leading-tight truncate" style={{ color: "var(--text)" }}>{name}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{vibe ? `${vibe.name}, ` : ""}ICSE {EXAM_YEAR}</p>
+        </div>
       </div>
 
       <button
         onClick={() => { toggleTheme(); onClose(); }}
-        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:opacity-80"
-        style={{ color: "var(--text)" }}
+        className="w-full flex items-center gap-3 px-4 h-10 text-sm font-medium cursor-pointer transition-colors duration-150 hover:bg-[var(--paper)]"
+        style={{ color: "var(--text)", borderBottom: "1px solid var(--divider)" }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           {theme === "light" ? (
             <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
           ) : (
@@ -46,35 +54,33 @@ export function ProfileDropdown({ onClose }: Props) {
             </>
           )}
         </svg>
-        {theme === "light" ? "Dark Mode" : "Light Mode"}
+        {theme === "light" ? "Dark mode" : "Light mode"}
       </button>
 
       <Link
         href="/dashboard/settings"
         onClick={onClose}
-        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:opacity-80"
-        style={{ color: "var(--text)" }}
+        className="w-full flex items-center gap-3 px-4 h-10 text-sm font-medium transition-colors duration-150 hover:bg-[var(--paper)]"
+        style={{ color: "var(--text)", borderBottom: "1px solid var(--divider)" }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.65.77 1.09 1.46 1.11H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
         </svg>
         Settings
       </Link>
 
-      <div className="border-t my-1" style={{ borderColor: "var(--border)" }} />
-
       <button
         onClick={async () => { onClose(); await logout(); }}
-        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:opacity-80"
+        className="w-full flex items-center gap-3 px-4 h-10 text-sm font-bold cursor-pointer transition-colors duration-150 hover:bg-[var(--paper)]"
         style={{ color: "var(--danger)" }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
           <polyline points="16 17 21 12 16 7" />
           <line x1="21" y1="12" x2="9" y2="12" />
         </svg>
-        Sign Out
+        Sign out
       </button>
     </div>
   );

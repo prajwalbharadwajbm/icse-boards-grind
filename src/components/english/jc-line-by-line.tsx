@@ -11,6 +11,15 @@ function statusKey(act: number, scene: number, idx: number) {
   return `${act}-${scene}-${idx}`;
 }
 
+/** Sticker pill: ink when active, outlined paper otherwise */
+function pillClass(active: boolean, size = "h-9") {
+  return `${size} px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+    active
+      ? "bg-[var(--text)] text-[var(--bg)] font-bold"
+      : "bg-[var(--bg-card)] text-[var(--text)] font-medium hover:bg-[var(--paper)]"
+  }`;
+}
+
 export function JCLineByLine() {
   const jcLineByLineStatus = useStore((s) => s.jcLineByLineStatus);
   const update = useStore((s) => s.update);
@@ -96,27 +105,20 @@ export function JCLineByLine() {
 
   if (!currentScene) return null;
 
+  const confidentPct = (sceneProgress.confident / sceneProgress.total) * 100;
+  const reviewPct = (sceneProgress.reviewed / sceneProgress.total) * 100;
+
   return (
     <div className="space-y-4">
       {/* Act selector */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {acts.map((act) => (
           <button
             key={act}
             onClick={() => handleActChange(act)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
-            style={{
-              background:
-                selectedAct === act
-                  ? "rgba(123,97,255,0.15)"
-                  : "var(--bg-card)",
-              color: selectedAct === act ? "#7b61ff" : "var(--text-secondary)",
-              border: `1px solid ${
-                selectedAct === act
-                  ? "rgba(123,97,255,0.3)"
-                  : "var(--border)"
-              }`,
-            }}
+            aria-pressed={selectedAct === act}
+            className={pillClass(selectedAct === act)}
+            style={{ border: "2px solid var(--outline)" }}
           >
             Act {act}
           </button>
@@ -129,55 +131,54 @@ export function JCLineByLine() {
           <button
             key={scene.scene}
             onClick={() => handleSceneChange(idx)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
-            style={{
-              background:
-                selectedSceneIdx === idx
-                  ? "var(--primary)"
-                  : "var(--bg-card)",
-              color:
-                selectedSceneIdx === idx ? "#fff" : "var(--text-secondary)",
-              border: `1px solid ${
-                selectedSceneIdx === idx ? "transparent" : "var(--border)"
-              }`,
-            }}
+            aria-pressed={selectedSceneIdx === idx}
+            className={`${pillClass(selectedSceneIdx === idx, "min-h-9 py-1.5")} leading-tight text-left`}
+            style={{ border: "2px solid var(--outline)" }}
           >
             Scene {scene.scene}: {scene.title}
           </button>
         ))}
       </div>
 
-      {/* Progress bar */}
+      {/* Progress */}
       <div
-        className="rounded-xl p-3"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+        className="rounded-[20px] p-4"
+        style={{
+          background: "var(--bg-card)",
+          border: "2px solid var(--outline)",
+        }}
       >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-3">
+          <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
             Progress
           </span>
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            <span style={{ color: "#34a853" }}>{sceneProgress.confident} confident</span>
+          <span className="text-xs font-bold tabular-nums" style={{ color: "var(--text-muted)" }}>
+            <span style={{ color: "var(--success)" }}>{sceneProgress.confident} confident</span>
             {" / "}
-            <span style={{ color: "#ea4335" }}>{sceneProgress.reviewed} needs review</span>
+            <span style={{ color: "var(--danger)" }}>{sceneProgress.reviewed} needs review</span>
             {" / "}
             {sceneProgress.total - sceneProgress.confident - sceneProgress.reviewed} unmarked
           </span>
         </div>
-        <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+        <div
+          className="w-full h-3.5 rounded-full overflow-hidden"
+          style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }}
+        >
           <div className="h-full flex">
             <div
-              className="h-full transition-all"
+              className="h-full transition-[width]"
               style={{
-                width: `${(sceneProgress.confident / sceneProgress.total) * 100}%`,
-                background: "#34a853",
+                width: `${confidentPct}%`,
+                background: "var(--mint)",
+                boxShadow: confidentPct > 0 && confidentPct < 100 ? "inset -2px 0 0 var(--outline)" : undefined,
               }}
             />
             <div
-              className="h-full transition-all"
+              className="h-full transition-[width]"
               style={{
-                width: `${(sceneProgress.reviewed / sceneProgress.total) * 100}%`,
-                background: "#ea4335",
+                width: `${reviewPct}%`,
+                background: "var(--tomato)",
+                boxShadow: reviewPct > 0 && confidentPct + reviewPct < 100 ? "inset -2px 0 0 var(--outline)" : undefined,
               }}
             />
           </div>
@@ -187,11 +188,12 @@ export function JCLineByLine() {
       {/* Opening stage direction */}
       {currentScene.openingDirection && (
         <div
-          className="rounded-xl px-4 py-3 text-sm italic"
+          className="rounded-2xl px-4 py-3 text-sm"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
+            background: "var(--paper)",
+            border: "2px solid var(--outline)",
             color: "var(--text-secondary)",
+            fontStyle: "italic",
           }}
         >
           {currentScene.openingDirection}
@@ -199,7 +201,7 @@ export function JCLineByLine() {
       )}
 
       {/* Dialogue cards */}
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         {currentScene.lines.map((line, idx) => {
           const key = statusKey(currentScene.act, currentScene.scene, idx);
           const status = jcLineByLineStatus[key];
@@ -207,23 +209,17 @@ export function JCLineByLine() {
           return (
             <div
               key={idx}
-              className="rounded-xl overflow-hidden"
+              className="rounded-[20px] overflow-hidden"
               style={{
                 background: "var(--bg-card)",
-                border: `1px solid ${
-                  status === "needs_review"
-                    ? "rgba(234,67,53,0.4)"
-                    : status === "confident"
-                    ? "rgba(52,168,83,0.4)"
-                    : "var(--border)"
-                }`,
+                border: "2px solid var(--outline)",
               }}
             >
               {/* Speaker + stage direction */}
-              <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+              <div className="px-4 pt-3 pb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span
-                  className="text-xs font-bold uppercase tracking-wide"
-                  style={{ color: "var(--primary)" }}
+                  className="text-sm font-bold"
+                  style={{ color: "var(--text)" }}
                 >
                   {line.speaker}
                 </span>
@@ -237,38 +233,34 @@ export function JCLineByLine() {
                 )}
                 {status && (
                   <span
-                    className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    className="ml-auto text-xs font-bold"
                     style={{
-                      background:
-                        status === "needs_review"
-                          ? "rgba(234,67,53,0.1)"
-                          : "rgba(52,168,83,0.1)",
-                      color: status === "needs_review" ? "#ea4335" : "#34a853",
+                      color: status === "needs_review" ? "var(--danger)" : "var(--success)",
                     }}
                   >
-                    {status === "needs_review" ? "Needs Review" : "Confident"}
+                    {status === "needs_review" ? "Needs review" : "Confident"}
                   </span>
                 )}
               </div>
 
               {/* Original text */}
-              <div className="px-4 pb-2">
+              <div className="px-4 pb-3">
                 <p
-                  className="text-sm leading-relaxed whitespace-pre-line"
-                  style={{ color: "var(--text)", fontStyle: "italic" }}
+                  className="text-base font-serif italic leading-relaxed whitespace-pre-line"
+                  style={{ color: "var(--text)" }}
                 >
                   {line.original}
                 </p>
               </div>
 
               {/* Divider */}
-              <div className="mx-4" style={{ borderTop: "1px solid var(--border)" }} />
+              <div className="mx-4" style={{ borderTop: "1px solid var(--divider)" }} />
 
               {/* Modern translation */}
-              <div className="px-4 pt-2 pb-2">
+              <div className="px-4 pt-3 pb-3">
                 <p
-                  className="text-xs font-semibold uppercase tracking-wide mb-1"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium mb-1"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Modern English
                 </p>
@@ -282,49 +274,40 @@ export function JCLineByLine() {
 
               {/* Status buttons */}
               <div
-                className="px-4 py-2 flex gap-2"
-                style={{ borderTop: "1px solid var(--border)" }}
+                className="px-4 py-3 flex flex-wrap gap-2"
+                style={{ borderTop: "1px solid var(--divider)" }}
               >
                 <button
                   onClick={() => toggleStatus(idx, "needs_review")}
-                  className="px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+                  aria-pressed={status === "needs_review"}
+                  className={`h-9 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+                    status === "needs_review" ? "font-bold" : "font-medium bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+                  }`}
                   style={{
-                    background:
-                      status === "needs_review"
-                        ? "rgba(234,67,53,0.15)"
-                        : "transparent",
-                    color:
-                      status === "needs_review"
-                        ? "#ea4335"
-                        : "var(--text-secondary)",
-                    border: `1px solid ${
-                      status === "needs_review"
-                        ? "rgba(234,67,53,0.3)"
-                        : "var(--border)"
-                    }`,
+                    background: status === "needs_review" ? "var(--danger-soft)" : undefined,
+                    color: "var(--text)",
+                    border: "2px solid var(--outline)",
                   }}
                 >
-                  Needs Review
+                  Needs review
                 </button>
                 <button
                   onClick={() => toggleStatus(idx, "confident")}
-                  className="px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+                  aria-pressed={status === "confident"}
+                  className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+                    status === "confident" ? "font-bold" : "font-medium bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+                  }`}
                   style={{
-                    background:
-                      status === "confident"
-                        ? "rgba(52,168,83,0.15)"
-                        : "transparent",
-                    color:
-                      status === "confident"
-                        ? "#34a853"
-                        : "var(--text-secondary)",
-                    border: `1px solid ${
-                      status === "confident"
-                        ? "rgba(52,168,83,0.3)"
-                        : "var(--border)"
-                    }`,
+                    background: status === "confident" ? "var(--success-soft)" : undefined,
+                    color: "var(--text)",
+                    border: "2px solid var(--outline)",
                   }}
                 >
+                  {status === "confident" && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
                   Confident
                 </button>
               </div>
