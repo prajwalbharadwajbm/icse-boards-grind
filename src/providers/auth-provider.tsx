@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo, signOut, type User } from "firebase/auth";
-import { auth, getDbInstance } from "@/lib/firebase";
+import { getAuthInstance, getDbInstance } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { loadFromCloud, setCurrentUid, startSyncListener, stopSyncListener } from "@/store/firebase-sync";
 import { useStore } from "@/store/use-store";
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsub = onAuthStateChanged(getAuthInstance(), async (firebaseUser) => {
       if (firebaseUser) {
         setCurrentUid(firebaseUser.uid);
         await loadFromCloud(firebaseUser.uid);
@@ -57,11 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(getAuthInstance(), email, password);
   };
 
   const loginWithGoogle = async () => {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(getAuthInstance(), googleProvider);
     const email = result.user.email;
     if (getAdditionalUserInfo(result)?.isNewUser && !(email && INTERNAL_EMAILS.includes(email))) {
       capture("user_signed_up", { method: "google" });
@@ -69,13 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
+    await createUserWithEmailAndPassword(getAuthInstance(), email, password);
     if (!INTERNAL_EMAILS.includes(email)) capture("user_signed_up", { method: "email" });
   };
 
   const logout = async () => {
     capture("user_logged_out");
-    await signOut(auth);
+    await signOut(getAuthInstance());
   };
 
   return (
