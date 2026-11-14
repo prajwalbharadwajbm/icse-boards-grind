@@ -4,21 +4,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-primary: #1a73e8;
-  --color-primary-hover: #1557b0;
-  --color-primary-light: #e8f0fe;
-  --color-danger: #dc2626;
-  --color-success: #16a34a;
-  --color-warning: #ca8a04;
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-surface: #ffffff;
-  --color-surface-dark: #151b23;
-  --color-bg: #f5f5f5;
-  --color-bg-dark: #0d1117;
-  --color-text-main: #202124;
-  --color-text-secondary: #5f6368;
-  --color-border: #dadce0;
-  --color-sidebar-bg: #0d1117;
-  --color-sidebar-text: #d2d2d6;
+  --color-surface-dark: #1b1b1b;
+  --color-bg: #ffffff;
+  --color-bg-dark: #121212;
+  --color-text-main: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+  --color-sidebar-bg: var(--bg-sidebar);
+  --color-sidebar-text: var(--text-secondary);
 
   --color-subject-physics: #1a73e8;
   --color-subject-math: #ea4335;
@@ -30,41 +30,85 @@
   --color-subject-geography: #1e8e3e;
   --color-subject-computer: #5f6368;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Sticker brand: Bricolage Grotesque for display, DM Sans for reading.
+     Newsreader stays only for italic literary quotations in the English screens. */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), ui-sans-serif, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
 }
 
+/*
+  Sticker: white paper, black outlines, cobalt for actions.
+  Sunshine, tomato and mint are sticker colours: rewards, the countdown sticker and states.
+  One sticker per screen keeps it clean.
+*/
 :root {
-  --bg: #f5f5f5;
+  --bg: #ffffff;
   --bg-card: #ffffff;
-  --bg-sidebar: #0d1117;
-  --text: #202124;
-  --text-secondary: #5f6368;
-  --text-sidebar: #d2d2d6;
-  --primary: #1a73e8;
-  --primary-light: #e8f0fe;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --warning: #ca8a04;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --radius: 12px;
-  --border: #dadce0;
-  --transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-raised: #f3f3ee;
+  --bg-sidebar: #ffffff;
+  --paper: #f3f3ee;
+  --outline: #000000;
+  --border: #000000;
+  --divider: rgba(0, 0, 0, 0.12);
+  --text: #000000;
+  --text-secondary: #3d3d3d;
+  --text-muted: #6b6b6b;
+  --text-sidebar: #3d3d3d;
+  --sidebar-raised: #000000;
+  --primary: #2f5bff;
+  --primary-hover: #1f48e6;
+  --on-primary: #ffffff;
+  --primary-light: #e9eeff;
+  --sun: #ffd43b;
+  --sun-soft: #fff6d6;
+  --tomato: #ff5c47;
+  --mint: #45d69b;
+  --danger: #d93a26;
+  --success: #0e7a4e;
+  --warning: #8a5a00;
+  --shadow: none;
+  --shadow-pop: 3px 3px 0 var(--outline);
+  --shadow-md: 4px 4px 0 var(--outline);
+  --radius: 20px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition: 0.15s var(--ease);
+
+  /* Soft fills for answer states, banners and tags */
+  --primary-soft: var(--primary-light);
+  --success-soft: color-mix(in srgb, var(--mint) 28%, transparent);
+  --danger-soft: color-mix(in srgb, var(--tomato) 18%, transparent);
+  --warning-soft: var(--sun-soft);
+  --success-line: var(--outline);
+  --danger-line: var(--outline);
+  --primary-line: var(--outline);
 }
 
+/* Night mode: the same stickers, outlined in paper on near-black */
 [data-theme="dark"] {
-  --bg: #0d1117;
-  --bg-card: #151b23;
-  --text: #e6edf3;
-  --text-secondary: #8b949e;
-  --primary: #4d91f6;
-  --primary-light: #152238;
-  --border: #21262d;
-  --danger: #f85149;
-  --success: #3fb950;
-  --warning: #d29922;
-  --shadow: none;
-  --shadow-md: none;
+  --bg: #121212;
+  --bg-card: #1b1b1b;
+  --bg-raised: #262626;
+  --bg-sidebar: #121212;
+  --paper: #262626;
+  --outline: #f3f3ee;
+  --border: #f3f3ee;
+  --divider: rgba(243, 243, 238, 0.14);
+  --text: #f3f3ee;
+  --text-secondary: #c9c9c2;
+  --text-muted: #9a9a93;
+  --text-sidebar: #c9c9c2;
+  --sidebar-raised: #f3f3ee;
+  --primary: #6b8bff;
+  --primary-hover: #8aa3ff;
+  --on-primary: #000000;
+  --primary-light: #1e2752;
+  --sun-soft: #3a3214;
+  --danger: #ff7a68;
+  --success: #45d69b;
+  --warning: #ffd43b;
+  --success-soft: color-mix(in srgb, var(--mint) 22%, transparent);
+  --danger-soft: color-mix(in srgb, var(--tomato) 22%, transparent);
 }
 
 * {
@@ -79,6 +123,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -87,7 +144,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--divider);
   border-radius: 3px;
 }
 
@@ -108,23 +165,18 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, var(--bg-card) 25%, var(--border) 50%, var(--bg-card) 75%);
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--paper) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* Timer ring animation */
-@keyframes pulse-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(77, 145, 246, 0.3)); }
-  50% { filter: drop-shadow(0 0 16px rgba(77, 145, 246, 0.5)); }
-}
-
+/* Timer ring: no glow, the ring itself shows progress */
 .timer-active {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: none;
 }
 
 /* HeroUI overrides for dark theme consistency */
 .dark [data-slot="base"],
 .dark .heroui-card {
-  --heroui-content1: 21 27 35;
+  --heroui-content1: 27 27 27;
 }

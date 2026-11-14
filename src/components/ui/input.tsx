@@ -15,8 +15,8 @@ export function Input({ label, className = "", ...props }: InputProps) {
         </label>
       )}
       <input
-        className={`w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-[var(--primary)]/30 ${className}`}
-        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+        className={`w-full h-11 px-4 rounded-xl text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--primary)] focus:shadow-[2px_2px_0_var(--primary)] ${className}`}
+        style={{ background: "var(--bg-card)", border: "2px solid var(--outline)", color: "var(--text)" }}
         {...props}
       />
     </div>

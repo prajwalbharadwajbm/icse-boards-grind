@@ -52,6 +52,10 @@ export interface ParsedPlanChange {
 export interface StoreState {
   onboarded: boolean;
   name: string;
+  /** Sticker avatar key from src/lib/identity.ts ("" until picked) */
+  avatar: string;
+  /** Study vibe key from src/lib/identity.ts ("" until picked) */
+  studyVibe: string;
   learningStyle: "visual" | "reading" | "practice" | "mixed";
   studyHours: number;
   subjectRatings: Record<string, "weak" | "medium" | "strong">;
@@ -107,6 +111,8 @@ export interface StoreActions {
 const defaultState: StoreState = {
   onboarded: false,
   name: "",
+  avatar: "",
+  studyVibe: "",
   learningStyle: "mixed",
   studyHours: 8,
   subjectRatings: {},

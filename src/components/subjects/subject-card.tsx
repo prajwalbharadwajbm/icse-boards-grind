@@ -7,15 +7,17 @@ import { getSubjectColors, getSubjectLabels, type Chapter } from "@/lib/constant
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { ProgressBar } from "@/components/ui/progress-bar";
+import { Input } from "@/components/ui/input";
 import { ChapterRow } from "@/components/subjects/chapter-row";
 
 interface SubjectCardProps {
   subjectKey: string;
 }
 
+const NO_CHAPTERS: Chapter[] = [];
+
 export function SubjectCard({ subjectKey }: SubjectCardProps) {
-  const chapters: Chapter[] = useStore((s) => s.subjects[subjectKey] || []);
+  const chapters: Chapter[] = useStore((s) => s.subjects[subjectKey] ?? NO_CHAPTERS);
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
   const [expanded, setExpanded] = useState(false);
@@ -54,71 +56,45 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
 
   return (
     <>
-      <Card style={{ padding: 0, overflow: "hidden" }}>
+      <Card className="!p-0 overflow-hidden">
         {/* Header - click to expand */}
         <button
           onClick={() => setExpanded(!expanded)}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "16px 20px",
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
+          aria-expanded={expanded}
+          className="w-full flex items-center gap-3 min-h-[64px] px-5 py-4 text-left cursor-pointer transition-colors duration-150 hover:bg-[var(--paper)]"
         >
-          {/* Color dot */}
-          <span
-            style={{
-              width: 12,
-              height: 12,
-              minWidth: 12,
-              borderRadius: "50%",
-              background: color,
-            }}
-          />
+          {/* Subject dot */}
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
 
           {/* Label + count */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <span
-              style={{
-                color: "var(--text)",
-                fontSize: 15,
-                fontWeight: 600,
-              }}
-            >
+          <span className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+            <span className="font-display text-lg font-extrabold tracking-[-0.01em] truncate" style={{ color: "var(--text)" }}>
               {label}
             </span>
-            <span
-              style={{
-                marginLeft: 10,
-                color: "var(--text-secondary)",
-                fontSize: 13,
-              }}
-            >
+            <span className="text-xs font-bold tabular-nums whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
               {completed}/{total} done
             </span>
-          </div>
+          </span>
 
-          {/* Progress bar */}
-          <div style={{ width: 120, flexShrink: 0 }}>
-            <ProgressBar value={pct} color={color} height={6} />
-          </div>
+          {/* Progress */}
+          <span className="w-20 sm:w-[140px] shrink-0">
+            <OutlinedBar pct={pct} fill="var(--mint)" />
+          </span>
 
           {/* Chevron */}
           <motion.svg
             animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             width="18"
             height="18"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="var(--text-secondary)"
+            stroke="var(--text)"
             strokeWidth="2"
-            style={{ flexShrink: 0 }}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0"
+            aria-hidden="true"
           >
             <polyline points="6 9 12 15 18 9" />
           </motion.svg>
@@ -131,28 +107,17 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               style={{ overflow: "hidden" }}
             >
-              <div
-                style={{
-                  padding: "0 20px 16px",
-                  borderTop: "1px solid var(--border)",
-                }}
-              >
+              <div className="px-5 pb-5" style={{ borderTop: "1px solid var(--divider)" }}>
                 {/* Chapter list */}
                 {chapters.length === 0 ? (
-                  <p
-                    style={{
-                      color: "var(--text-secondary)",
-                      fontSize: 13,
-                      padding: "16px 0 8px",
-                    }}
-                  >
+                  <p className="text-sm pt-4 pb-1" style={{ color: "var(--text-secondary)" }}>
                     No chapters added yet. Add your first chapter to start tracking.
                   </p>
                 ) : (
-                  <div style={{ paddingTop: 8 }}>
+                  <div className="pt-1">
                     {chapters.map((ch, i) => (
                       <ChapterRow
                         key={`${subjectKey}-${i}`}
@@ -165,18 +130,13 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
                 )}
 
                 {/* Add Chapter button */}
-                <div style={{ paddingTop: 12 }}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setModalOpen(true)}
-                    style={{ display: "flex", alignItems: "center", gap: 6 }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <div className="pt-4">
+                  <Button variant="secondary" size="md" onClick={() => setModalOpen(true)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Add Chapter
+                    Add chapter
                   </Button>
                 </div>
               </div>
@@ -193,72 +153,34 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
           setNewChapterName("");
           setNewDifficulty(3);
         }}
-        title={`Add Chapter — ${label}`}
+        title={`Add chapter: ${label}`}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="flex flex-col gap-4">
           {/* Chapter name */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 6,
-                color: "var(--text)",
-              }}
-            >
-              Chapter Name
-            </label>
-            <input
-              type="text"
-              value={newChapterName}
-              onChange={(e) => setNewChapterName(e.target.value)}
-              placeholder="e.g. Refraction of Light"
-              onKeyDown={(e) => { if (e.key === "Enter") addChapter(); }}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--bg)",
-                color: "var(--text)",
-                fontSize: 14,
-                outline: "none",
-              }}
-            />
-          </div>
+          <Input
+            label="Chapter name"
+            type="text"
+            value={newChapterName}
+            onChange={(e) => setNewChapterName(e.target.value)}
+            placeholder="e.g. Refraction of Light"
+            onKeyDown={(e) => { if (e.key === "Enter") addChapter(); }}
+          />
 
           {/* Difficulty stars */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 6,
-                color: "var(--text)",
-              }}
-            >
+            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
               Difficulty
             </label>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   onClick={() => setNewDifficulty(star)}
+                  aria-label={`Difficulty ${star} of 5`}
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-base cursor-pointer transition-colors duration-150 bg-[var(--bg-card)] hover:bg-[var(--paper)]"
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: star <= newDifficulty ? "var(--warning)" : "var(--bg)",
-                    color: star <= newDifficulty ? "#fff" : "var(--text-secondary)",
-                    fontSize: 16,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    border: "2px solid var(--outline)",
+                    color: star <= newDifficulty ? "var(--warning)" : "var(--text-muted)",
                   }}
                 >
                   ★
@@ -268,10 +190,10 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 4 }}>
+          <div className="flex gap-2.5 justify-end pt-1">
             <Button
               variant="secondary"
-              size="sm"
+              size="md"
               onClick={() => {
                 setModalOpen(false);
                 setNewChapterName("");
@@ -282,15 +204,36 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
             </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={addChapter}
               disabled={!newChapterName.trim()}
             >
-              Save
+              Save chapter
             </Button>
           </div>
         </div>
       </Modal>
     </>
+  );
+}
+
+/* ── A subject's progress as an outlined bar ── */
+
+function OutlinedBar({ pct, fill }: { pct: number; fill: string }) {
+  const value = Math.max(0, Math.min(100, pct));
+  return (
+    <span
+      className="block h-3.5 rounded-full overflow-hidden"
+      style={{ border: "2px solid var(--outline)", background: "var(--bg-card)" }}
+      role="progressbar"
+      aria-valuenow={Math.round(value)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <span
+        className="block h-full origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ width: "100%", transform: `scaleX(${value / 100})`, background: fill, boxShadow: value > 0 && value < 100 ? "inset -2px 0 0 var(--outline)" : undefined }}
+      />
+    </span>
   );
 }

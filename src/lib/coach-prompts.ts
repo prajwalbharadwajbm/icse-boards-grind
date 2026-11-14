@@ -1,4 +1,5 @@
 import { getExams, getSubjectLabels } from "./constants";
+import { vibeFor } from "./identity";
 import { today, daysBetween } from "./utils";
 import type { StoreState } from "@/store/use-store";
 
@@ -11,6 +12,8 @@ export function buildStudentContext(data: StoreState): string {
 
   const lines: string[] = [];
   lines.push(`Student: ${data.name || "Student"}`);
+  const vibe = vibeFor(data.studyVibe);
+  if (vibe) lines.push(`Study vibe: ${vibe.name}. The student ${vibe.coach}.`);
   lines.push(`Target: ${data.targetPercent || 90}%`);
   lines.push(`Daily study target: ${data.studyHours || 8} hours`);
   lines.push(`Prep level: ${data.prepLevel || "somewhat"}`);

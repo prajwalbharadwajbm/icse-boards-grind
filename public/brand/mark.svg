@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="512" height="512">
+  <title>ICSE Boards Grind</title>
+  <!-- Sticker: a sunshine starburst slapped on a cobalt tile, BG drawn in marker -->
+  <rect width="120" height="120" rx="30" fill="#2F5BFF"/>
+  <g transform="rotate(-10 60 60)">
+    <polygon points="60.0,16.0 69.1,26.2 82.0,21.9 84.7,35.3 98.1,38.0 93.8,50.9 104.0,60.0 93.8,69.1 98.1,82.0 84.7,84.7 82.0,98.1 69.1,93.8 60.0,104.0 50.9,93.8 38.0,98.1 35.3,84.7 21.9,82.0 26.2,69.1 16.0,60.0 26.2,50.9 21.9,38.0 35.3,35.3 38.0,21.9 50.9,26.2" fill="#FFD43B" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+    <g transform="translate(60 60) scale(0.92) translate(-60 -60)" fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M31 42 V78"/><path d="M31 42 H40 A9 9 0 0 1 40 60 H31"/><path d="M31 60 H42 A9 9 0 0 1 42 78 H31"/><path d="M85.3 49.7 A16 16 0 1 0 88.9 61.4 H76"/></g>
+  </g>
+</svg>

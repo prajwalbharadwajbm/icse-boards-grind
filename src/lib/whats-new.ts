@@ -160,6 +160,15 @@ export const whatsNewEntries: WhatsNewEntry[] = [
       "Congrats! We're giving 1000 bonus credits to all existing users. Use them for MCQs, comprehension, subjective answers, and mock tests. New users now start with 1500 credits too — keep studying!",
     link: "/dashboard",
   },
+  {
+    version: "2026-11-14-icse-2027",
+    date: "Nov 14, 2026",
+    emoji: "\u{1F4C5}",
+    title: "The ICSE 2027 timetable is in",
+    description:
+      "Your countdown, planner and calendar now follow the CISCE timetable for 15 February to 31 March 2027. Papers start earlier this year: reading time at 10:00 am, writing at 10:15 am. Boards Grind also has a brand new look, with a sticker for every streak.",
+    link: "/dashboard",
+  },
 ];
 
 export function getLatestWhatsNewVersion(): string {

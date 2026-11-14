@@ -3,12 +3,26 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { getDbInstance } from "@/lib/firebase";
-import { getExams, getSubjectLabels, getSubjectColors } from "@/lib/constants";
+import { getExams, getSubjectLabels, getSubjectColors, EXAM_YEAR } from "@/lib/constants";
 import { today, daysBetween, formatDate } from "@/lib/utils";
 import type { StoreState } from "@/store/use-store";
 import { capture } from "@/lib/analytics";
+import { StickerMark } from "@/components/brand/sticker";
+import { StickerAvatar } from "@/components/brand/avatars";
+
+/*
+  The public report parents open. Light-only and printable, so it uses the literal
+  Sticker light values instead of theme tokens.
+*/
+const INK = "#000";
+const INK_2 = "#3d3d3d";
+const MUTED = "#6b6b6b";
+const PAPER = "#ffffff";
+const COBALT = "#2f5bff";
+const SUN = "#ffd43b";
+const MINT = "#45d69b";
+const DIVIDER = "rgba(0, 0, 0, 0.12)";
+const OUTLINE = `2px solid ${INK}`;
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -26,20 +40,22 @@ function ReportContent() {
     }
     (async () => {
       try {
-        const snap = await getDoc(doc(getDbInstance(), "users", uid));
-        if (!snap.exists()) {
+        // Served by /api/report, which returns only the report fields and only while sharing is on
+        const res = await fetch(`/api/report/${encodeURIComponent(uid)}`, { cache: "no-store" });
+        if (res.status === 404) {
           capture("parent_report_opened", { status: "not_found" });
           setError("Report not found.");
           return;
         }
-        const d = snap.data() as Partial<StoreState>;
-        if (!d.shareReportEnabled) {
+        if (res.status === 403) {
           capture("parent_report_opened", { status: "not_shared" });
           setError("This report is not shared.");
           return;
         }
+        if (!res.ok) throw new Error(`Report request failed: ${res.status}`);
+        const { report } = (await res.json()) as { report: Partial<StoreState> };
         capture("parent_report_opened", { status: "ok" });
-        setData(d);
+        setData(report);
       } catch {
         capture("parent_report_opened", { status: "error" });
         setError("Failed to load report.");
@@ -89,20 +105,28 @@ function ReportContent() {
     return { totalHours, weekHours, chapsDone, totalChapters, subjectProgress, streak: data.streak || 0 };
   }, [data]);
 
+  const spinner = (
+    <div
+      className="w-8 h-8 rounded-full animate-spin"
+      style={{ border: `3px solid ${DIVIDER}`, borderTopColor: COBALT }}
+    />
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: PAPER }}>
+        {spinner}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-lg font-semibold text-gray-800">{error}</p>
-          <p className="text-sm text-gray-500 mt-2">The student may have disabled sharing.</p>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: PAPER }}>
+        <div className="text-center flex flex-col items-center">
+          <StickerMark size={44} />
+          <p className="font-display text-xl font-extrabold tracking-[-0.01em] mt-4" style={{ color: INK }}>{error}</p>
+          <p className="text-sm mt-1.5" style={{ color: MUTED }}>The student may have disabled sharing.</p>
         </div>
       </div>
     );
@@ -112,67 +136,89 @@ function ReportContent() {
 
   const upcomingExams = exams.filter((e) => e.date >= td).slice(0, 6);
   const overallPct = stats.totalChapters > 0 ? Math.round((stats.chapsDone / stats.totalChapters) * 100) : 0;
+  const card = { background: PAPER, border: OUTLINE } as const;
+  const ringC = 2 * Math.PI * 50;
 
   return (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">{data.name || "Student"}</h1>
-          <p className="text-sm text-gray-500 mt-1">ICSE 2026 Progress Report</p>
+    <div
+      className="min-h-screen print:!bg-white"
+      style={{ background: PAPER, color: INK, WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
+    >
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 pb-5 mb-7" style={{ borderBottom: OUTLINE }}>
+          <StickerMark size={34} />
+          <span className="font-display text-[19px] font-extrabold tracking-[-0.02em] leading-none whitespace-nowrap" style={{ color: INK }}>
+            Boards Grind
+          </span>
         </div>
 
-        {/* Overall Progress Ring */}
-        <div className="flex justify-center mb-8">
-          <div className="relative w-32 h-32">
-            <svg className="w-full h-full" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" strokeWidth="10" />
+        {/* Header */}
+        <div className="text-center mb-7">
+          <div className="flex justify-center mb-3">
+            <StickerAvatar avatar={(data as { avatar?: string }).avatar} seed={data.name} size={72} tilt={-6} />
+          </div>
+          <h1 className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: INK }}>{data.name || "Student"}</h1>
+          <p className="text-base mt-2" style={{ color: INK_2 }}>ICSE {EXAM_YEAR} progress report</p>
+        </div>
+
+        {/* Overall progress ring */}
+        <div className="flex justify-center mb-7">
+          <div className="relative w-36 h-36">
+            <svg className="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+              {/* An outlined track: ink ring with a paper centre line */}
+              <circle cx="60" cy="60" r="50" fill="none" stroke={INK} strokeWidth="16" />
+              <circle cx="60" cy="60" r="50" fill="none" stroke={PAPER} strokeWidth="12" />
               <circle
-                cx="60" cy="60" r="50" fill="none" stroke="#7b61ff" strokeWidth="10"
-                strokeDasharray={`${overallPct * 3.14} 314`}
-                strokeLinecap="round"
+                cx="60" cy="60" r="50" fill="none" stroke={COBALT} strokeWidth="12"
+                strokeDasharray={`${(overallPct / 100) * ringC} ${ringC}`}
                 transform="rotate(-90 60 60)"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-gray-900">{overallPct}%</span>
-              <span className="text-xs text-gray-500">{stats.chapsDone}/{stats.totalChapters}</span>
+              <span className="font-display text-[30px] font-extrabold leading-none tabular-nums" style={{ color: INK }}>{overallPct}%</span>
+              <span className="text-xs font-medium tabular-nums mt-1" style={{ color: MUTED }}>{stats.chapsDone}/{stats.totalChapters}</span>
             </div>
           </div>
         </div>
 
-        {/* Key Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
-            <p className="text-2xl font-bold text-gray-900">{stats.weekHours.toFixed(1)}h</p>
-            <p className="text-xs text-gray-500">This Week</p>
-          </div>
-          <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
-            <p className="text-2xl font-bold text-gray-900">{stats.totalHours.toFixed(1)}h</p>
-            <p className="text-xs text-gray-500">Total Hours</p>
-          </div>
-          <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
-            <p className="text-2xl font-bold text-gray-900">{stats.streak}</p>
-            <p className="text-xs text-gray-500">Day Streak</p>
-          </div>
+        {/* Key stats */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-7">
+          {[
+            { v: `${stats.weekHours.toFixed(1)}h`, l: "This week" },
+            { v: `${stats.totalHours.toFixed(1)}h`, l: "Total hours" },
+            { v: `${stats.streak}`, l: "Day streak" },
+          ].map((t) => (
+            <div key={t.l} className="text-center px-2 py-4 rounded-[20px]" style={card}>
+              <p className="font-display text-2xl sm:text-[28px] font-extrabold leading-none tracking-[-0.02em] tabular-nums" style={{ color: INK }}>{t.v}</p>
+              <p className="text-[13px] font-medium mt-1.5" style={{ color: MUTED }}>{t.l}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Subject Progress */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-8">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Subject Progress</h3>
-          <div className="space-y-3">
+        {/* Subject progress */}
+        <div className="rounded-[20px] p-5 mb-7 break-inside-avoid" style={card}>
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-4" style={{ color: INK }}>Subject progress</h3>
+          <div className="space-y-3.5">
             {stats.subjectProgress.map((sp) => {
               const pct = sp.total > 0 ? Math.round((sp.done / sp.total) * 100) : 0;
               return (
                 <div key={sp.key}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-gray-700">{subjectLabels[sp.key] || sp.key}</span>
-                    <span className="text-xs text-gray-500">{sp.done}/{sp.total}</span>
+                  <div className="flex justify-between items-center gap-3 mb-1.5">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[sp.key] || COBALT }} />
+                      <span className="text-sm font-medium truncate" style={{ color: INK }}>{subjectLabels[sp.key] || sp.key}</span>
+                    </span>
+                    <span className="text-xs font-bold tabular-nums" style={{ color: MUTED }}>{sp.done}/{sp.total}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+                  <div className="h-3 rounded-full overflow-hidden" style={{ background: PAPER, border: OUTLINE }}>
                     <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: subjectColors[sp.key] || "#7b61ff" }}
+                      className="h-full"
+                      style={{
+                        width: `${pct}%`,
+                        background: MINT,
+                        boxShadow: pct > 0 && pct < 100 ? `inset -2px 0 0 ${INK}` : undefined,
+                      }}
                     />
                   </div>
                 </div>
@@ -181,20 +227,29 @@ function ReportContent() {
           </div>
         </div>
 
-        {/* Upcoming Exams */}
+        {/* Upcoming exams */}
         {upcomingExams.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-8">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">Exam Schedule</h3>
-            <div className="space-y-2">
-              {upcomingExams.map((exam) => (
-                <div key={exam.key} className="flex justify-between items-center py-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: subjectColors[exam.key] || "#7b61ff" }} />
-                    <span className="text-sm text-gray-700">{exam.subject}</span>
+          <div className="rounded-[20px] p-5 mb-7 break-inside-avoid" style={card}>
+            <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-2" style={{ color: INK }}>Exam schedule</h3>
+            <div>
+              {upcomingExams.map((exam, i) => (
+                <div
+                  key={exam.key}
+                  className="flex justify-between items-center gap-3 min-h-11 py-1.5 border-b last:border-b-0"
+                  style={{ borderColor: DIVIDER }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[exam.key] || COBALT }} />
+                    <span className={`text-sm truncate ${i === 0 ? "font-bold" : ""}`} style={{ color: INK }}>{exam.subject}</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500">{formatDate(exam.date)}</span>
-                    <span className="text-xs text-gray-400 ml-2">{daysBetween(td, exam.date)}d</span>
+                  <div className="flex items-center gap-2 shrink-0 tabular-nums">
+                    <span className="text-sm" style={{ color: INK_2 }}>{formatDate(exam.date)}</span>
+                    <span
+                      className={`text-xs font-bold ${i === 0 ? "px-2 py-0.5 rounded-full" : "w-9 text-right"}`}
+                      style={i === 0 ? { background: SUN, color: "#000", border: OUTLINE } : { color: MUTED }}
+                    >
+                      {daysBetween(td, exam.date)}d
+                    </span>
                   </div>
                 </div>
               ))}
@@ -203,7 +258,7 @@ function ReportContent() {
         )}
 
         {/* Footer */}
-        <div className="text-center text-xs text-gray-400 mb-4">
+        <div className="text-center text-xs mb-4" style={{ color: MUTED }}>
           Generated on {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
         </div>
 
@@ -211,10 +266,9 @@ function ReportContent() {
         <div className="text-center print:hidden">
           <button
             onClick={() => window.print()}
-            className="px-6 py-2 rounded-lg text-sm font-medium text-white"
-            style={{ background: "#7b61ff" }}
+            className="inline-flex items-center justify-center h-10 px-4 rounded-full text-sm font-bold cursor-pointer border-2 border-[#000] bg-[#2f5bff] text-white shadow-[2px_2px_0_#000] transition-[background-color,transform,box-shadow] duration-150 hover:bg-[#1f48e6] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
           >
-            Print / Save as PDF
+            Print or save as PDF
           </button>
         </div>
       </div>
@@ -225,8 +279,11 @@ function ReportContent() {
 export default function ParentReportPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: PAPER }}>
+        <div
+          className="w-8 h-8 rounded-full animate-spin"
+          style={{ border: `3px solid ${DIVIDER}`, borderTopColor: COBALT }}
+        />
       </div>
     }>
       <ReportContent />

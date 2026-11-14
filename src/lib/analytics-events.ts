@@ -24,7 +24,11 @@ export interface AnalyticsEventMap {
     study_hours: number;
     target_percent: number;
     prep_level: string;
+    avatar: string;
+    study_vibe: string;
   };
+  /** A sticker avatar and study vibe chosen in onboarding or changed in Settings */
+  identity_picked: { avatar: string; study_vibe: string; source: "onboarding" | "settings" };
 
   // ── Dashboard ─────────────────────────────────────────────────────────
   dashboard_viewed: Record<string, never>;

@@ -87,7 +87,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     
     if (perm === "granted") {
       // Show a test notification
-      await showNotification("Notifications Enabled! 🎉", {
+      await showNotification("Notifications enabled", {
         body: "You'll now receive study reminders and exam alerts.",
         tag: "setup-complete",
       });
@@ -107,8 +107,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           body: "This is how your study reminders will look!",
           icon: "/icon1.png",
         });
-        n.onshow = () => setTestStatus("Sent! Check your notifications.");
-        n.onerror = () => setTestStatus("Failed - check macOS notification settings for your browser");
+        n.onshow = () => setTestStatus("Sent. Check your notifications.");
+        n.onerror = () => setTestStatus("Failed. Check your system notification settings for this browser");
         // Clear status after 3s
         setTimeout(() => setTestStatus(null), 3000);
       } else {
@@ -141,11 +141,10 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
   if (!isSupported) {
     return (
-      <Card className="p-6">
+      <Card>
         <div className="text-center">
-          <div className="text-4xl mb-4">😕</div>
-          <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text)" }}>
-            Notifications Not Supported
+          <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-2" style={{ color: "var(--text)" }}>
+            Notifications not supported
           </h3>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Your browser doesn&apos;t support push notifications. Try using Chrome, Edge, or Firefox on desktop,
@@ -157,35 +156,43 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   }
 
   return (
-    <Card className="p-6 space-y-6">
+    <Card className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--text)" }}>
-          🔔 Push Notifications
+        <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-1" style={{ color: "var(--text)" }}>
+          Push notifications
         </h3>
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
           Get reminders for study sessions, exams, and revisions
         </p>
       </div>
 
       {/* Permission Status */}
       <div
-        className="p-4 rounded-lg flex items-center gap-4"
+        className="px-4 py-3.5 rounded-2xl flex items-center gap-3"
         style={{
-          background: permission === "granted" ? "var(--success-light)" : "var(--bg-secondary)",
+          background:
+            permission === "granted"
+              ? "var(--success-soft)"
+              : permission === "denied"
+              ? "var(--danger-soft)"
+              : "var(--paper)",
+          border: "2px solid var(--outline)",
         }}
       >
-        <div className="text-2xl">
-          {permission === "granted" ? "✅" : permission === "denied" ? "🚫" : "🔔"}
-        </div>
-        <div className="flex-1">
-          <p className="font-medium" style={{ color: "var(--text)" }}>
+        {permission === "granted" && (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" style={{ color: "var(--text)" }} aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-bold" style={{ color: "var(--text)" }}>
             {permission === "granted"
-              ? "Notifications Enabled"
+              ? "Notifications enabled"
               : permission === "denied"
-              ? "Notifications Blocked"
-              : "Notifications Not Enabled"}
+              ? "Notifications blocked"
+              : "Notifications not enabled"}
           </p>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
             {permission === "granted"
               ? "You'll receive study reminders"
               : permission === "denied"
@@ -194,12 +201,12 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           </p>
         </div>
         {permission !== "granted" && permission !== "denied" && (
-          <Button onClick={handleEnableNotifications} disabled={isLoading}>
+          <Button onClick={handleEnableNotifications} disabled={isLoading} className="shrink-0">
             {isLoading ? "Enabling..." : "Enable"}
           </Button>
         )}
         {permission === "granted" && (
-          <Button variant="secondary" onClick={handleTestNotification}>
+          <Button variant="secondary" onClick={handleTestNotification} className="shrink-0">
             Test
           </Button>
         )}
@@ -207,7 +214,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
       {/* Test status feedback */}
       {testStatus && (
-        <p className="text-xs px-4" style={{ color: "var(--text-secondary)" }}>{testStatus}</p>
+        <p className="text-[13px] font-medium" style={{ color: "var(--text-muted)" }}>{testStatus}</p>
       )}
 
       {/* Notification Preferences */}
@@ -219,47 +226,65 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
-            <h4 className="font-medium" style={{ color: "var(--text)" }}>
-              Notification Types
+            <h4 className="font-display text-base font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>
+              Notification types
             </h4>
 
-            {[
-              { key: "studyReminders", label: "Study Session Reminders", emoji: "📚" },
-              { key: "examAlerts", label: "Exam Alerts", emoji: "📝" },
-              { key: "revisionDue", label: "Revision Due", emoji: "🔄" },
-              { key: "breakReminders", label: "Break Reminders", emoji: "☕" },
-              { key: "milestones", label: "Milestone Celebrations", emoji: "🏆" },
-              { key: "dailyGoalAlerts", label: "Daily Goal & Streak Alerts", emoji: "🎯" },
-            ].map(({ key, label, emoji }) => (
-              <label
-                key={key}
-                className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-opacity-50"
-                style={{ background: "var(--bg-secondary)" }}
-              >
-                <span className="text-lg">{emoji}</span>
-                <span className="flex-1" style={{ color: "var(--text)" }}>
-                  {label}
-                </span>
-                <input
-                  type="checkbox"
-                  checked={prefs[key as keyof typeof prefs] as boolean}
-                  onChange={(e) => updatePref(key as keyof typeof prefs, e.target.checked)}
-                  className="w-5 h-5 rounded accent-blue-500"
-                />
-              </label>
-            ))}
+            <div>
+              {[
+                { key: "studyReminders", label: "Study session reminders" },
+                { key: "examAlerts", label: "Exam alerts" },
+                { key: "revisionDue", label: "Revision due" },
+                { key: "breakReminders", label: "Break reminders" },
+                { key: "milestones", label: "Milestones" },
+                { key: "dailyGoalAlerts", label: "Daily goal and streak alerts" },
+              ].map(({ key, label }) => {
+                const on = prefs[key as keyof typeof prefs] as boolean;
+                return (
+                  <label
+                    key={key}
+                    className="flex items-center gap-3 min-h-11 py-1.5 cursor-pointer border-b last:border-b-0"
+                    style={{ borderColor: "var(--divider)" }}
+                  >
+                    <span className="flex-1 text-[15px]" style={{ color: "var(--text)" }}>
+                      {label}
+                    </span>
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={on}
+                      onChange={(e) => updatePref(key as keyof typeof prefs, e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="relative w-11 h-6 rounded-full shrink-0 border-2 border-[var(--outline)] transition-colors duration-150 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--primary)]"
+                      style={{ background: on ? "var(--primary)" : "var(--paper)" }}
+                    >
+                      <span
+                        className="absolute top-[2px] w-4 h-4 rounded-full transition-[left] duration-150"
+                        style={{
+                          left: on ? 22 : 2,
+                          background: "#ffffff",
+                          border: "2px solid var(--outline)",
+                        }}
+                      />
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
 
-            <div className="pt-2">
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+            <div className="pt-1">
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
                 Remind me before sessions
               </label>
               <select
                 value={prefs.reminderMinutes}
                 onChange={(e) => updatePref("reminderMinutes", Number(e.target.value))}
-                className="w-full p-3 rounded-lg border"
+                className="w-full h-11 px-4 rounded-xl text-sm outline-none border-2 border-[var(--outline)] transition-[border-color,box-shadow] duration-150 focus:border-[var(--primary)] focus:shadow-[2px_2px_0_var(--primary)]"
                 style={{
-                  background: "var(--bg-secondary)",
-                  borderColor: "var(--border)",
+                  background: "var(--bg-card)",
                   color: "var(--text)",
                 }}
               >
@@ -270,9 +295,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               </select>
             </div>
 
-            <div className="pt-4 flex gap-3">
+            <div className="pt-2 flex gap-3">
               <Button onClick={handleSavePrefs} className="flex-1">
-                Save Preferences
+                Save preferences
               </Button>
               {onClose && (
                 <Button variant="secondary" onClick={onClose}>
@@ -285,8 +310,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       </AnimatePresence>
 
       {/* Service Worker Status */}
-      <div className="text-xs pt-2" style={{ color: "var(--text-secondary)" }}>
-        Service Worker: {swRegistered ? "✓ Registered" : "Not registered"}
+      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+        Service worker: {swRegistered ? "registered" : "not registered"}
       </div>
     </Card>
   );

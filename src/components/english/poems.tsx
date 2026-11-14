@@ -8,18 +8,32 @@ import { useCredits } from "@/hooks/use-credits";
 import { POEMS_DATA, type PoemData } from "@/lib/poems-data";
 import { CREDIT_COSTS } from "@/lib/credits";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { StarSticker } from "@/components/brand/sticker";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 type StudyMode = "summary" | "line-by-line" | "word-meanings" | "literary-devices" | "qa" | "mcq-quiz";
 type ReviewStatus = "needs_review" | "confident";
 
 const STUDY_MODES: { id: StudyMode; label: string }[] = [
   { id: "summary", label: "Summary" },
-  { id: "line-by-line", label: "Line-by-Line" },
-  { id: "word-meanings", label: "Word Meanings" },
-  { id: "literary-devices", label: "Literary Devices" },
-  { id: "qa", label: "Subjective Questions" },
-  { id: "mcq-quiz", label: "MCQ Quiz" },
+  { id: "line-by-line", label: "Line-by-line" },
+  { id: "word-meanings", label: "Word meanings" },
+  { id: "literary-devices", label: "Literary devices" },
+  { id: "qa", label: "Subjective questions" },
+  { id: "mcq-quiz", label: "MCQ quiz" },
 ];
+
+/** Sticker pill for chips and tabs: outlined, the active one is solid ink */
+function pillClass(active: boolean) {
+  return `h-9 px-4 rounded-full text-sm border-2 border-[var(--outline)] transition-colors cursor-pointer ${
+    active
+      ? "bg-[var(--text)] text-[var(--bg)] font-bold"
+      : "bg-[var(--bg-card)] text-[var(--text)] font-medium hover:bg-[var(--paper)]"
+  }`;
+}
 
 function stanzaKey(poemId: string, idx: number) {
   return `${poemId}:${idx}`;
@@ -109,19 +123,15 @@ export function Poems() {
   }, [poem, poemReviewStatus]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Poem selector */}
       <div className="flex flex-wrap gap-2">
         {POEMS_DATA.map((p, idx) => (
           <button
             key={p.id}
             onClick={() => handlePoemChange(idx)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
-            style={{
-              background: selectedPoemIdx === idx ? "var(--primary)" : "var(--bg-card)",
-              color: selectedPoemIdx === idx ? "#fff" : "var(--text-secondary)",
-              border: `1px solid ${selectedPoemIdx === idx ? "transparent" : "var(--border)"}`,
-            }}
+            aria-pressed={selectedPoemIdx === idx}
+            className={pillClass(selectedPoemIdx === idx)}
           >
             {p.title}
           </button>
@@ -130,13 +140,16 @@ export function Poems() {
 
       {/* Poem title + poet */}
       <div
-        className="rounded-xl px-4 py-3"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+        className="rounded-[20px] px-5 py-4"
+        style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }}
       >
-        <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+        <h2
+          className="font-display text-[22px] font-extrabold tracking-[-0.01em] leading-tight"
+          style={{ color: "var(--text)" }}
+        >
           {poem.title}
         </h2>
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
           by {poem.poet}
         </p>
       </div>
@@ -147,15 +160,8 @@ export function Poems() {
           <button
             key={mode.id}
             onClick={() => handleModeChange(mode.id)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
-            style={{
-              background:
-                studyMode === mode.id ? "rgba(123,97,255,0.15)" : "var(--bg-card)",
-              color: studyMode === mode.id ? "#7b61ff" : "var(--text-secondary)",
-              border: `1px solid ${
-                studyMode === mode.id ? "rgba(123,97,255,0.3)" : "var(--border)"
-              }`,
-            }}
+            aria-pressed={studyMode === mode.id}
+            className={pillClass(studyMode === mode.id)}
           >
             {mode.label}
           </button>
@@ -193,41 +199,42 @@ export function Poems() {
 function SummaryView({ poem }: { poem: PoemData }) {
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-xl p-4"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-      >
-        <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text)" }}>
+      <Card>
+        <h3
+          className="font-display text-lg font-extrabold tracking-[-0.01em] mb-2"
+          style={{ color: "var(--text)" }}
+        >
           Summary
         </h3>
         <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>
           {poem.summary}
         </p>
-      </div>
+      </Card>
 
-      <div
-        className="rounded-xl p-4"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-      >
-        <h3 className="text-sm font-bold mb-3" style={{ color: "var(--text)" }}>
+      <Card>
+        <h3
+          className="font-display text-lg font-extrabold tracking-[-0.01em] mb-3"
+          style={{ color: "var(--text)" }}
+        >
           Themes
         </h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
           {poem.themes.map((theme) => (
             <span
               key={theme}
-              className="px-3 py-1 rounded-full text-xs font-medium"
-              style={{
-                background: "rgba(123,97,255,0.1)",
-                color: "#7b61ff",
-                border: "1px solid rgba(123,97,255,0.2)",
-              }}
+              className="inline-flex items-center gap-2 text-sm font-medium"
+              style={{ color: "var(--text)" }}
             >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: "var(--text-muted)" }}
+                aria-hidden="true"
+              />
               {theme}
             </span>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -269,38 +276,46 @@ function LineByLineView({
     <div className="space-y-4">
       {/* Progress */}
       <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+        <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
           Stanza {currentIndex + 1} of {total}
         </span>
-        <span
-          className="text-xs px-2 py-0.5 rounded-full"
-          style={{ background: "rgba(52,168,83,0.12)", color: "#34a853" }}
-        >
+        <span className="text-xs font-bold tabular-nums" style={{ color: "var(--success)" }}>
           {progress.confident}/{total} confident
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+      {/* Progress bar: confident in mint, needs review in tomato */}
+      <div
+        className="w-full h-3.5 rounded-full overflow-hidden"
+        style={{ border: "2px solid var(--outline)", background: "var(--bg-card)" }}
+      >
         <div className="h-full flex">
           <div
-            className="h-full transition-all"
+            className="h-full transition-[width]"
             style={{
               width: `${(progress.confident / total) * 100}%`,
-              background: "#34a853",
+              background: "var(--mint)",
+              boxShadow:
+                progress.confident > 0 && progress.confident < total
+                  ? "inset -2px 0 0 var(--outline)"
+                  : undefined,
             }}
           />
           <div
-            className="h-full transition-all"
+            className="h-full transition-[width]"
             style={{
               width: `${(progress.needsReview / total) * 100}%`,
-              background: "#ea4335",
+              background: "var(--tomato)",
+              boxShadow:
+                progress.needsReview > 0 && progress.confident + progress.needsReview < total
+                  ? "inset -2px 0 0 var(--outline)"
+                  : undefined,
             }}
           />
         </div>
       </div>
 
-      {/* Flashcard with 3D flip */}
+      {/* Flashcard with 3D flip: the one pop element on this screen */}
       <div
         className="relative mx-auto w-full"
         style={{ perspective: "1000px", maxWidth: 560 }}
@@ -313,40 +328,31 @@ function LineByLineView({
             minHeight: 280,
           }}
           animate={{ rotateY: flipped ? 180 : 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.3, ease: EASE }}
         >
           {/* Front — Poem text */}
           <div
-            className="absolute inset-0 rounded-xl p-6 flex flex-col items-center justify-center text-center"
+            className="absolute inset-0 rounded-[24px] p-6 flex flex-col items-center justify-center text-center"
             style={{
               background: "var(--bg-card)",
-              border: `1px solid ${
-                status === "needs_review"
-                  ? "rgba(234,67,53,0.4)"
-                  : status === "confident"
-                  ? "rgba(52,168,83,0.4)"
-                  : "var(--border)"
-              }`,
+              border: "2px solid var(--outline)",
+              boxShadow: "4px 4px 0 var(--outline)",
               backfaceVisibility: "hidden",
             }}
           >
             {status && (
               <span
-                className="absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                className="absolute top-4 right-5 text-xs font-bold"
                 style={{
-                  background:
-                    status === "needs_review"
-                      ? "rgba(234,67,53,0.1)"
-                      : "rgba(52,168,83,0.1)",
-                  color: status === "needs_review" ? "#ea4335" : "#34a853",
+                  color: status === "needs_review" ? "var(--danger)" : "var(--success)",
                 }}
               >
-                {status === "needs_review" ? "Needs Review" : "Confident"}
+                {status === "needs_review" ? "Needs review" : "Confident"}
               </span>
             )}
             <span
-              className="text-xs font-bold uppercase tracking-wide mb-3"
-              style={{ color: "var(--primary)" }}
+              className="text-[13px] font-medium mb-3"
+              style={{ color: "var(--text-muted)" }}
             >
               Stanza {currentIndex + 1}
             </span>
@@ -356,17 +362,19 @@ function LineByLineView({
             >
               {stanza.lines}
             </p>
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
               Tap to reveal explanation
             </p>
           </div>
 
           {/* Back — Explanation */}
           <div
-            className="absolute inset-0 rounded-xl p-6 flex flex-col justify-center"
+            className="absolute inset-0 rounded-[24px] p-6 flex flex-col justify-center"
             style={{
               background: "var(--bg-card)",
-              border: "1px solid var(--primary)",
+              border: "2px solid var(--outline)",
+              // The flip mirrors this face, so a left offset lands bottom-right like the front
+              boxShadow: "-4px 4px 0 var(--outline)",
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
             }}
@@ -374,21 +382,21 @@ function LineByLineView({
             <div className="space-y-3">
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-[13px] font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Stanza {currentIndex + 1}
                 </span>
               </div>
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Poem
                 </span>
                 <p
-                  className="text-sm italic leading-relaxed whitespace-pre-line"
+                  className="text-sm font-serif italic leading-relaxed whitespace-pre-line"
                   style={{ color: "var(--text)" }}
                 >
                   {stanza.lines}
@@ -396,8 +404,8 @@ function LineByLineView({
               </div>
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Explanation
                 </span>
@@ -411,32 +419,26 @@ function LineByLineView({
       </div>
 
       {/* Review buttons */}
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2">
         <button
           onClick={() => onToggleStatus(currentIndex, "needs_review")}
-          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
-          style={{
-            background:
-              status === "needs_review" ? "rgba(234,67,53,0.15)" : "transparent",
-            color: status === "needs_review" ? "#ea4335" : "var(--text-secondary)",
-            border: `1px solid ${
-              status === "needs_review" ? "rgba(234,67,53,0.3)" : "var(--border)"
-            }`,
-          }}
+          aria-pressed={status === "needs_review"}
+          className={`h-9 px-4 rounded-full text-sm border-2 border-[var(--outline)] text-[var(--text)] transition-colors cursor-pointer ${
+            status === "needs_review"
+              ? "bg-[var(--danger-soft)] font-bold"
+              : "bg-[var(--bg-card)] font-medium hover:bg-[var(--paper)]"
+          }`}
         >
-          Needs Review
+          Needs review
         </button>
         <button
           onClick={() => onToggleStatus(currentIndex, "confident")}
-          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
-          style={{
-            background:
-              status === "confident" ? "rgba(52,168,83,0.15)" : "transparent",
-            color: status === "confident" ? "#34a853" : "var(--text-secondary)",
-            border: `1px solid ${
-              status === "confident" ? "rgba(52,168,83,0.3)" : "var(--border)"
-            }`,
-          }}
+          aria-pressed={status === "confident"}
+          className={`h-9 px-4 rounded-full text-sm border-2 border-[var(--outline)] text-[var(--text)] transition-colors cursor-pointer ${
+            status === "confident"
+              ? "bg-[var(--success-soft)] font-bold"
+              : "bg-[var(--bg-card)] font-medium hover:bg-[var(--paper)]"
+          }`}
         >
           Confident
         </button>
@@ -446,35 +448,34 @@ function LineByLineView({
       <div className="flex items-center justify-center gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
+          aria-label="Previous stanza"
+          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-colors border-2 border-[var(--outline)] bg-[var(--bg-card)] hover:bg-[var(--paper)]"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1.5">
           {poem.stanzas.map((_, i) => {
             const dotKey = stanzaKey(poem.id, i);
             const dotStatus = poemReviewStatus[dotKey];
             return (
               <div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full transition-all"
+                className={`h-2.5 rounded-full transition-[width,background-color] ${
+                  i === currentIndex ? "w-5" : "w-2.5"
+                }`}
                 style={{
+                  border: "2px solid var(--outline)",
                   background:
                     i === currentIndex
-                      ? "var(--primary)"
+                      ? "var(--text)"
                       : dotStatus === "confident"
-                      ? "#34a853"
+                      ? "var(--mint)"
                       : dotStatus === "needs_review"
-                      ? "#ea4335"
-                      : "var(--border)",
-                  transform: i === currentIndex ? "scale(1.4)" : "scale(1)",
+                      ? "var(--tomato)"
+                      : "var(--bg-card)",
                 }}
               />
             );
@@ -483,13 +484,10 @@ function LineByLineView({
 
         <button
           onClick={() => navigate(1)}
-          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
+          aria-label="Next stanza"
+          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-colors border-2 border-[var(--outline)] bg-[var(--bg-card)] hover:bg-[var(--paper)]"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
@@ -503,31 +501,34 @@ function LineByLineView({
 function WordMeaningsView({ poem }: { poem: PoemData }) {
   return (
     <div
-      className="rounded-xl overflow-hidden"
-      style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+      className="rounded-[20px] overflow-hidden"
+      style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }}
     >
-      <div className="px-4 py-3">
-        <h3 className="text-sm font-bold" style={{ color: "var(--text)" }}>
-          Word Meanings
+      <div className="px-5 py-4">
+        <h3
+          className="font-display text-lg font-extrabold tracking-[-0.01em]"
+          style={{ color: "var(--text)" }}
+        >
+          Word meanings
         </h3>
       </div>
-      <div style={{ borderTop: "1px solid var(--border)" }}>
+      <div style={{ borderTop: "1px solid var(--divider)" }}>
         {poem.wordMeanings.map((wm, idx) => (
           <div
             key={idx}
-            className="px-4 py-2.5 flex gap-3"
+            className="px-5 py-3 flex gap-4"
             style={{
               borderBottom:
-                idx < poem.wordMeanings.length - 1 ? "1px solid var(--border)" : undefined,
+                idx < poem.wordMeanings.length - 1 ? "1px solid var(--divider)" : undefined,
             }}
           >
             <span
-              className="text-sm font-semibold shrink-0"
-              style={{ color: "var(--primary)", minWidth: "140px" }}
+              className="text-sm font-bold shrink-0"
+              style={{ color: "var(--text)", minWidth: "140px" }}
             >
               {wm.word}
             </span>
-            <span className="text-sm" style={{ color: "var(--text)" }}>
+            <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
               {wm.meaning}
             </span>
           </div>
@@ -543,23 +544,15 @@ function LiteraryDevicesView({ poem }: { poem: PoemData }) {
   return (
     <div className="space-y-3">
       {poem.literaryDevices.map((ld, idx) => (
-        <div
-          key={idx}
-          className="rounded-xl p-4"
-          style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-        >
+        <Card key={idx}>
           <span
-            className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold mb-2"
-            style={{
-              background: "rgba(123,97,255,0.1)",
-              color: "#7b61ff",
-              border: "1px solid rgba(123,97,255,0.2)",
-            }}
+            className="block font-display text-lg font-extrabold tracking-[-0.01em] mb-2"
+            style={{ color: "var(--text)" }}
           >
             {ld.device}
           </span>
           <p
-            className="text-sm italic mb-2 leading-relaxed"
+            className="text-sm font-serif italic mb-2 leading-relaxed"
             style={{ color: "var(--text)" }}
           >
             &ldquo;{ld.example}&rdquo;
@@ -567,7 +560,7 @@ function LiteraryDevicesView({ poem }: { poem: PoemData }) {
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             {ld.explanation}
           </p>
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -589,16 +582,16 @@ function QAView({
   canAffordQA: boolean;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {/* Credit info */}
       <div
-        className="rounded-xl px-4 py-2.5 flex items-center justify-between"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+        className="rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
+        style={{ background: "var(--paper)", border: "2px solid var(--outline)" }}
       >
-        <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-          Each answer costs <strong style={{ color: "var(--text)" }}>25 credits</strong>
+        <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          Each answer costs <strong className="font-bold" style={{ color: "var(--text)" }}>25 credits</strong>
         </span>
-        <span className="text-xs font-semibold" style={{ color: "var(--primary)" }}>
+        <span className="text-[13px] font-bold tabular-nums" style={{ color: "var(--text)" }}>
           {credits} credits
         </span>
       </div>
@@ -608,18 +601,19 @@ function QAView({
         return (
           <div
             key={idx}
-            className="rounded-xl overflow-hidden"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+            className="rounded-2xl overflow-hidden"
+            style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }}
           >
             <button
               onClick={() => onToggle(idx)}
-              className="w-full px-4 py-3 text-left flex items-start gap-3 cursor-pointer"
+              aria-expanded={isRevealed}
+              className="w-full min-h-[52px] px-4 py-4 text-left flex items-start gap-3 cursor-pointer transition-colors enabled:hover:bg-[var(--paper)] disabled:cursor-not-allowed"
               disabled={!isRevealed && !canAffordQA}
               style={{ opacity: !isRevealed && !canAffordQA ? 0.5 : 1 }}
             >
               <span
-                className="text-xs font-bold mt-0.5 shrink-0"
-                style={{ color: "var(--primary)" }}
+                className="text-xs font-bold mt-0.5 shrink-0 tabular-nums"
+                style={{ color: "var(--text-muted)" }}
               >
                 Q{idx + 1}.
               </span>
@@ -637,18 +631,14 @@ function QAView({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className="shrink-0 ml-auto mt-0.5"
-                  style={{ color: "var(--text-secondary)" }}
+                  style={{ color: "var(--text)" }}
                 >
                   <polyline points="6 15 12 9 18 15" />
                 </svg>
               ) : (
                 <span
-                  className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
-                  style={{
-                    background: canAffordQA ? "rgba(123,97,255,0.1)" : "rgba(234,67,53,0.1)",
-                    color: canAffordQA ? "#7b61ff" : "#ea4335",
-                    border: `1px solid ${canAffordQA ? "rgba(123,97,255,0.2)" : "rgba(234,67,53,0.2)"}`,
-                  }}
+                  className="shrink-0 text-xs font-bold tabular-nums whitespace-nowrap mt-0.5"
+                  style={{ color: canAffordQA ? "var(--text-muted)" : "var(--danger)" }}
                 >
                   25 credits
                 </span>
@@ -656,8 +646,8 @@ function QAView({
             </button>
             {isRevealed && (
               <div
-                className="px-4 pb-3"
-                style={{ borderTop: "1px solid var(--border)" }}
+                className="px-4 pb-4"
+                style={{ borderTop: "1px solid var(--divider)" }}
               >
                 <p className="text-sm leading-relaxed pt-3" style={{ color: "var(--text)" }}>
                   {qa.answer}
@@ -743,11 +733,11 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
   if (!q || total === 0) {
     return (
       <div
-        className="rounded-xl p-6 text-center"
-        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+        className="rounded-[20px] p-6 text-center"
+        style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }}
       >
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          No MCQ questions available for this poem yet.
+          No MCQ questions for this poem yet. Try another study mode.
         </p>
       </div>
     );
@@ -761,50 +751,46 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
     const pct = Math.round((finalScore / total) * 100);
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: EASE }}
       >
         <Card>
           <div className="text-center py-6">
+            <div className="flex justify-center mb-3">
+              <StarSticker size={72} />
+            </div>
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold"
+              className="font-display text-[44px] leading-none font-extrabold tabular-nums mb-3"
               style={{
-                background:
-                  pct >= 70
-                    ? "rgba(52,168,83,0.12)"
-                    : pct >= 40
-                    ? "rgba(249,171,0,0.12)"
-                    : "rgba(234,67,53,0.12)",
                 color:
-                  pct >= 70 ? "#34a853" : pct >= 40 ? "#f9ab00" : "#ea4335",
+                  pct >= 70 ? "var(--success)" : pct >= 40 ? "var(--warning)" : "var(--danger)",
               }}
             >
               {pct}%
             </div>
             <h3
-              className="text-lg font-bold mb-1"
+              className="font-display text-[22px] font-extrabold tracking-[-0.01em] mb-1"
               style={{ color: "var(--text)" }}
             >
-              Quiz Complete!
+              Quiz complete
             </h3>
-            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
-              You scored {finalScore} out of {total} — {poem.title}
+            <p className="text-sm mb-5" style={{ color: "var(--text-secondary)" }}>
+              You scored {finalScore} out of {total} on {poem.title}
             </p>
 
-            <div className="flex flex-wrap justify-center gap-1.5 mb-6">
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
               {poem.mcqs.map((_, i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold tabular-nums"
                   style={{
                     background:
                       answers[i] === poem.mcqs[i]?.correctIndex
-                        ? "rgba(52,168,83,0.12)"
-                        : "rgba(234,67,53,0.12)",
-                    color:
-                      answers[i] === poem.mcqs[i]?.correctIndex
-                        ? "#34a853"
-                        : "#ea4335",
+                        ? "var(--success-soft)"
+                        : "var(--danger-soft)",
+                    border: "2px solid var(--outline)",
+                    color: "var(--text)",
                   }}
                 >
                   {i + 1}
@@ -812,13 +798,7 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
               ))}
             </div>
 
-            <button
-              onClick={handleRetake}
-              className="px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer"
-              style={{ background: "var(--primary)", color: "#fff" }}
-            >
-              Retake Quiz
-            </button>
+            <Button onClick={handleRetake}>Retake quiz</Button>
           </div>
         </Card>
       </motion.div>
@@ -828,40 +808,30 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
   return (
     <div className="space-y-4">
       {/* Progress bar */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
             Question {currentQ + 1} of {total}
           </span>
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          <span className="text-xs font-bold tabular-nums" style={{ color: "var(--text-muted)" }}>
             {Math.round(((currentQ + 1) / total) * 100)}%
           </span>
         </div>
-        <div
-          className="h-1.5 rounded-full overflow-hidden"
-          style={{ background: "var(--border)" }}
-        >
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: "var(--primary)" }}
-            animate={{ width: `${((currentQ + 1) / total) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        <ProgressBar value={((currentQ + 1) / total) * 100} />
       </div>
 
-      {/* Question */}
-      <Card>
+      {/* Question: the one pop element on this screen */}
+      <Card style={{ boxShadow: "4px 4px 0 var(--outline)" }}>
         <div className="flex items-start justify-between gap-3 mb-4">
           <p
-            className="font-medium text-sm leading-relaxed whitespace-pre-line"
+            className="text-base font-bold leading-relaxed whitespace-pre-line"
             style={{ color: "var(--text)" }}
           >
             {q.question}
           </p>
           <span
-            className="shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(251,191,36,0.12)", color: "#d97706" }}
+            className="shrink-0 flex items-center gap-1 text-xs font-bold tabular-nums mt-1"
+            style={{ color: "var(--text-muted)" }}
           >
             {CREDIT_COSTS.mcq}
             <img src="/coin.svg" alt="credits" width={12} height={12} />
@@ -872,24 +842,16 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
           {q.options.map((opt, i) => {
             const isCorrect = i === q.correctIndex;
             const isSelected = selectedOption === i;
-            let bg = "transparent";
-            let border = "var(--border)";
-            let color = "var(--text)";
+            let stateClass = "bg-[var(--bg-card)] enabled:hover:bg-[var(--paper)]";
 
             if (submitted) {
               if (isCorrect) {
-                bg = "rgba(52,168,83,0.1)";
-                border = "#34a853";
-                color = "#34a853";
+                stateClass = "bg-[var(--success-soft)]";
               } else if (isSelected && !isCorrect) {
-                bg = "rgba(234,67,53,0.1)";
-                border = "#ea4335";
-                color = "#ea4335";
+                stateClass = "bg-[var(--danger-soft)]";
               }
             } else if (isSelected) {
-              bg = "rgba(123,97,255,0.1)";
-              border = "var(--primary)";
-              color = "var(--primary)";
+              stateClass = "bg-[var(--primary-light)]";
             }
 
             return (
@@ -897,10 +859,25 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
                 key={i}
                 onClick={() => !submitted && setSelectedOption(i)}
                 disabled={submitted}
-                className="w-full text-left px-4 py-3 rounded-lg text-sm transition-all cursor-pointer disabled:cursor-default"
-                style={{ background: bg, border: `1px solid ${border}`, color }}
+                className={`w-full min-h-[52px] text-left px-4 py-3 rounded-2xl text-sm font-medium flex items-center justify-between gap-3 border-2 border-[var(--outline)] text-[var(--text)] transition-colors cursor-pointer disabled:cursor-default ${stateClass}`}
               >
-                {opt}
+                <span>{opt}</span>
+                {submitted && isCorrect && (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="shrink-0"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
               </button>
             );
           })}
@@ -908,23 +885,20 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
 
         {submitted && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg p-3 text-sm mb-4"
+            transition={{ duration: 0.3, ease: EASE }}
+            className="rounded-2xl p-4 text-sm leading-relaxed mb-4"
             style={{
               background:
                 selectedOption === q.correctIndex
-                  ? "rgba(52,168,83,0.08)"
-                  : "rgba(234,67,53,0.08)",
+                  ? "var(--success-soft)"
+                  : "var(--danger-soft)",
+              border: "2px solid var(--outline)",
             }}
           >
-            <span
-              style={{
-                color:
-                  selectedOption === q.correctIndex ? "#34a853" : "#ea4335",
-              }}
-            >
-              {selectedOption === q.correctIndex ? "Correct!" : "Incorrect."}
+            <span className="font-bold" style={{ color: "var(--text)" }}>
+              {selectedOption === q.correctIndex ? "Correct" : "Incorrect"}
             </span>{" "}
             <span style={{ color: "var(--text)" }}>{q.explanation}</span>
           </motion.div>
@@ -932,30 +906,24 @@ function PoemMCQQuiz({ poem }: { poem: PoemData }) {
 
         {outOfCredits && !submitted && (
           <div
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ background: "rgba(234,67,53,0.08)", color: "#ea4335" }}
+            className="rounded-2xl px-4 py-3 text-sm font-medium mb-3"
+            style={{ background: "var(--danger-soft)", border: "2px solid var(--outline)", color: "var(--text)" }}
           >
-            Not enough credits — you need {CREDIT_COSTS.mcq} credits to submit an answer.
+            Not enough credits. You need {CREDIT_COSTS.mcq} credits to submit an answer.
           </div>
         )}
 
         {!submitted ? (
-          <button
+          <Button
             onClick={handleSubmit}
             disabled={selectedOption === null || outOfCredits || deducting}
-            className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: "var(--primary)", color: "#fff" }}
           >
-            {deducting ? "Submitting..." : "Submit"}
-          </button>
+            {deducting ? "Submitting…" : "Submit answer"}
+          </Button>
         ) : (
-          <button
-            onClick={handleNext}
-            className="px-5 py-2 rounded-lg text-sm font-medium cursor-pointer"
-            style={{ background: "var(--primary)", color: "#fff" }}
-          >
-            {currentQ === total - 1 ? "Finish Quiz" : "Next Question"}
-          </button>
+          <Button onClick={handleNext}>
+            {currentQ === total - 1 ? "Finish quiz" : "Next question"}
+          </Button>
         )}
       </Card>
     </div>

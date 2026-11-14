@@ -12,11 +12,15 @@ export function ProgressBar({ value, color = "var(--primary)", height = 6, class
   return (
     <div
       className={`rounded-full overflow-hidden ${className}`}
-      style={{ height, background: "var(--border)" }}
+      style={{ height, background: "var(--bg-raised)" }}
+      role="progressbar"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
     >
       <div
-        className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${pct}%`, background: color }}
+        className="h-full w-full rounded-full origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ transform: `scaleX(${pct / 100})`, background: color }}
       />
     </div>
   );

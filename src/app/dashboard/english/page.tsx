@@ -18,12 +18,21 @@ type JCSubTab = "flashcards" | "quotes" | "scenes" | "characters" | "quiz" | "li
 
 const JC_SUB_TABS: { id: JCSubTab; label: string }[] = [
   { id: "flashcards", label: "Flashcards" },
-  { id: "quotes", label: "Quote Identifier" },
+  { id: "quotes", label: "Quote identifier" },
   { id: "scenes", label: "Scenes" },
   { id: "characters", label: "Characters" },
-  { id: "quiz", label: "MCQ Quiz" },
-  { id: "line-by-line", label: "Line by Line" },
+  { id: "quiz", label: "MCQ quiz" },
+  { id: "line-by-line", label: "Line by line" },
 ];
+
+/** Sticker pill: ink when active, outlined paper otherwise */
+function pillClass(active: boolean) {
+  return `h-9 px-4 rounded-full text-sm whitespace-nowrap transition-colors duration-150 cursor-pointer ${
+    active
+      ? "bg-[var(--text)] text-[var(--bg)] font-bold"
+      : "bg-[var(--bg-card)] text-[var(--text)] font-medium hover:bg-[var(--paper)]"
+  }`;
+}
 
 export default function EnglishPage() {
   const jcFlashcardsReviewed = useStore((s) => s.jcFlashcardsReviewed);
@@ -46,56 +55,36 @@ export default function EnglishPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>
+      <header className="flex flex-col gap-2">
+        <h1
+          className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em]"
+          style={{ color: "var(--text)" }}
+        >
           English Literature
         </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Julius Caesar, Poems &amp; Prose revision (Paper 2)
+        <p className="text-base" style={{ color: "var(--text-secondary)" }}>
+          Julius Caesar, poems and prose revision (Paper 2)
         </p>
-      </div>
+      </header>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatChip label="Flashcards reviewed" value={jcFlashcardsReviewed.length} />
         <StatChip
-          label="Flashcards Reviewed"
-          value={jcFlashcardsReviewed.length}
-          color="#1a73e8"
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="M12 4v16" />
-            </svg>
-          }
-        />
-        <StatChip
-          label="Best Quiz Score"
+          label="Best quiz score"
           value={bestQuizScore !== null ? `${bestQuizScore}%` : "--"}
-          color="#34a853"
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="7" />
-              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-            </svg>
-          }
         />
       </div>
 
       {/* Main Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(["julius-caesar", "poems", "prose"] as MainTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => { setMainTab(tab); capture("english_tab_changed", { tab }); }}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer"
-            style={{
-              background:
-                mainTab === tab ? "var(--primary)" : "var(--bg-card)",
-              color: mainTab === tab ? "#fff" : "var(--text-secondary)",
-              border: `1px solid ${
-                mainTab === tab ? "transparent" : "var(--border)"
-              }`,
-            }}
+            aria-pressed={mainTab === tab}
+            className={pillClass(mainTab === tab)}
+            style={{ border: "2px solid var(--outline)" }}
           >
             {tab === "julius-caesar" ? "Julius Caesar" : tab === "poems" ? "Poems" : "Prose"}
           </button>
@@ -110,27 +99,16 @@ export default function EnglishPage() {
 
       {/* Julius Caesar */}
       {mainTab === "julius-caesar" && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {/* Sub-tabs */}
           <div className="flex flex-wrap gap-2">
             {JC_SUB_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => { setJcSubTab(tab.id); capture("jc_sub_tab_changed", { sub_tab: tab.id }); }}
-                className="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
-                style={{
-                  background:
-                    jcSubTab === tab.id
-                      ? "rgba(123,97,255,0.15)"
-                      : "var(--bg-card)",
-                  color:
-                    jcSubTab === tab.id ? "#7b61ff" : "var(--text-secondary)",
-                  border: `1px solid ${
-                    jcSubTab === tab.id
-                      ? "rgba(123,97,255,0.3)"
-                      : "var(--border)"
-                  }`,
-                }}
+                aria-pressed={jcSubTab === tab.id}
+                className={pillClass(jcSubTab === tab.id)}
+                style={{ border: "2px solid var(--outline)" }}
               >
                 {tab.label}
               </button>

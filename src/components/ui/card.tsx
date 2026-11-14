@@ -8,13 +8,14 @@ interface CardProps {
   style?: React.CSSProperties;
 }
 
+/** Sticker card: white paper with a 2px black outline. No shadow; the outline does the work */
 export function Card({ children, className = "", style }: CardProps) {
   return (
     <div
-      className={`rounded-xl p-5 ${className}`}
+      className={`rounded-[20px] p-5 ${className}`}
       style={{
         background: "var(--bg-card)",
-        border: "1px solid var(--border)",
+        border: "2px solid var(--outline)",
         ...style,
       }}
     >

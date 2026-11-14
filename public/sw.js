@@ -1,5 +1,5 @@
 // Service Worker for ICSE Boards Grind PWA
-const CACHE_NAME = "icse-grind-v3";
+const CACHE_NAME = "icse-grind-v4"; // v4: new logo and icons
 const OFFLINE_URL = "/offline.html";
 
 // Install event - cache essential files

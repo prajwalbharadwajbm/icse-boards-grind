@@ -1,15 +1,25 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
-import { Card } from "@/components/ui/card";
+import { FlameSticker } from "@/components/brand/sticker";
 import { StatChip } from "@/components/ui/stat-chip";
-import { ProgressBar } from "@/components/ui/progress-bar";
-import { getExams, getSubjectColors, getSubjectLabels, MOTIVATIONAL_QUOTES } from "@/lib/constants";
-import { today, daysBetween, formatDate, formatTime24, timeToMin } from "@/lib/utils";
+import {
+  getExams,
+  getSubjectColors,
+  getSubjectLabels,
+  MOTIVATIONAL_QUOTES,
+  TIMETABLE,
+  EXAM_YEAR,
+  examStart,
+  examEnd,
+} from "@/lib/constants";
+import { today, daysBetween, dateStr, timeToMin } from "@/lib/utils";
+import { clock, paperName, plural, signed } from "@/lib/exam-format";
+import { HallTicket } from "@/components/exam/hall-ticket";
+import { TimetableCard } from "@/components/exam/timetable-card";
 import { getDayPlan, getRevisionDueChapters } from "@/lib/algorithms";
 
 export default function DashboardPage() {
@@ -23,7 +33,7 @@ export default function DashboardPage() {
   const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
   const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
 
-  // F5: Auto-refresh every second for live countdown
+  // Live countdown ticks every second
   useEffect(() => {
     capture("dashboard_viewed");
     const interval = setInterval(() => setNow(new Date()), 1000);
@@ -49,78 +59,70 @@ export default function DashboardPage() {
     return count;
   }, [data.subjects]);
 
-  // Next exam countdown — skip exams whose end time (11AM + duration) has passed
-  const nextExam = useMemo(() => {
-    return exams.find((e) => {
-      const durationHrs = parseFloat(e.duration) || 2;
-      const examEnd = new Date(e.date + "T11:00:00");
-      examEnd.setHours(examEnd.getHours() + durationHrs);
-      return examEnd.getTime() > now.getTime();
-    });
-  }, [exams, now]);
+  // Next paper: the first one whose writing time hasn't finished yet
+  const nextExam = useMemo(
+    () => exams.find((e) => examEnd(e).getTime() > now.getTime()),
+    [exams, now]
+  );
+  const nextIndex = nextExam ? exams.indexOf(nextExam) : -1;
   const examDays = nextExam ? daysBetween(td, nextExam.date) : null;
 
-  // F5: Live countdown computation
   const countdown = useMemo(() => {
     if (!nextExam) return null;
-    const examDate = new Date(nextExam.date + "T11:00:00");
-    const diff = examDate.getTime() - now.getTime();
+    const diff = examStart(nextExam.date).getTime() - now.getTime();
     if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-    return { days, hours, minutes, seconds };
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
   }, [nextExam, now]);
 
   // Today's plan
   const plan = useMemo(() => getDayPlan(td, data), [td, data]);
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  // Upcoming exams
-  const upcomingExams = exams.filter((e) => e.date >= td).slice(0, 4);
-
-  // F1: Streak Recovery
+  // Streak recovery
   const streakRecoveryAvailable = data.streakRecoveryAvailable;
   const streakBeforeReset = data.streakBeforeReset;
   const recoveryTarget = target * 2;
   const recoveryProgress = Math.min(100, (hoursToday / recoveryTarget) * 100);
 
-  // F7: Weekly Summary
+  // This week vs last week, Monday to Sunday, local dates
   const weeklySummary = useMemo(() => {
     const getMonday = (d: Date) => {
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
       return new Date(d.getFullYear(), d.getMonth(), diff);
     };
-    const nowDate = new Date();
-    const thisMonday = getMonday(nowDate);
+    const thisMonday = getMonday(new Date());
     const lastMonday = new Date(thisMonday);
     lastMonday.setDate(lastMonday.getDate() - 7);
 
     let thisHours = 0, thisSessions = 0, bestDay = "", bestHours = 0;
     let lastHours = 0, lastSessions = 0;
+    const days: { key: string; label: string; hours: number }[] = [];
 
     for (let i = 0; i < 7; i++) {
-      // This week
       const d1 = new Date(thisMonday);
       d1.setDate(d1.getDate() + i);
-      const key1 = d1.toISOString().split("T")[0];
+      const key1 = dateStr(d1);
       const log1 = (data.studyLog || {})[key1];
+      const label = d1.toLocaleDateString("en-IN", { weekday: "short" });
+      days.push({ key: key1, label, hours: log1?.hours || 0 });
       if (log1) {
         thisHours += log1.hours;
         thisSessions += log1.sessions;
         if (log1.hours > bestHours) {
           bestHours = log1.hours;
-          bestDay = d1.toLocaleDateString("en-IN", { weekday: "short" });
+          bestDay = label;
         }
       }
 
-      // Last week
       const d2 = new Date(lastMonday);
       d2.setDate(d2.getDate() + i);
-      const key2 = d2.toISOString().split("T")[0];
-      const log2 = (data.studyLog || {})[key2];
+      const log2 = (data.studyLog || {})[dateStr(d2)];
       if (log2) {
         lastHours += log2.hours;
         lastSessions += log2.sessions;
@@ -128,6 +130,7 @@ export default function DashboardPage() {
     }
 
     return {
+      days,
       thisHours, thisSessions, bestDay: bestDay || "—", bestHours,
       lastHours, lastSessions,
       hoursDiff: thisHours - lastHours,
@@ -135,13 +138,12 @@ export default function DashboardPage() {
     };
   }, [data.studyLog]);
 
-  // F4: Smart Recommendations
+  // Smart recommendations
   const smartRecs = useMemo(() => {
     const weak: { subject: string; color: string; detail: string; key: string }[] = [];
     const grammarWeak: { category: string; accuracy: number }[] = [];
     const revisionDue = getRevisionDueChapters(td, data.subjects);
 
-    // Weak subjects
     Object.keys(subjectLabels).forEach((key) => {
       const rating = (data.subjectRatings || {})[key] || "medium";
       const exam = exams.find((e) => e.key === key);
@@ -151,20 +153,19 @@ export default function DashboardPage() {
         weak.push({
           subject: subjectLabels[key],
           color: subjectColors[key],
-          detail: `${daysBetween(td, exam.date)}d to exam, ${incomplete} chapters left`,
+          detail: chapters.length > 0
+            ? `${plural(daysBetween(td, exam.date), "day")} to the paper, ${plural(incomplete, "chapter")} left`
+            : `${plural(daysBetween(td, exam.date), "day")} to the paper`,
           key,
         });
       }
     });
 
-    // Grammar weak spots
     if (data.grammarDrillStats) {
       Object.entries(data.grammarDrillStats).forEach(([cat, stats]) => {
         if (stats.attempted >= 3) {
           const accuracy = (stats.correct / stats.attempted) * 100;
-          if (accuracy < 60) {
-            grammarWeak.push({ category: cat, accuracy: Math.round(accuracy) });
-          }
+          if (accuracy < 60) grammarWeak.push({ category: cat, accuracy: Math.round(accuracy) });
         }
       });
     }
@@ -174,285 +175,311 @@ export default function DashboardPage() {
 
   const hasSmartRecs = smartRecs.weak.length > 0 || smartRecs.grammarWeak.length > 0 || smartRecs.revisionDue.length > 0;
 
-  // Motivation quote
+  // Motivation line, changes every minute
   const quote = MOTIVATIONAL_QUOTES[Math.floor(Date.now() / 60000) % MOTIVATIONAL_QUOTES.length];
 
+  const firstExam = exams[0];
+  const lastExam = exams[exams.length - 1];
+  const pageTitle = new Date(td + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+
+  // Today's plan from the current block onwards
+  const upcomingBlocks = plan.filter((b) => timeToMin(b.end) > nowMin).slice(0, 6);
+  const hoursPct = Math.min(100, (hoursToday / target) * 100);
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Motivation Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl p-4"
-        style={{ background: "var(--primary-light)" }}
-      >
-        <p className="text-sm" style={{ color: "var(--text)" }}>{quote}</p>
-      </motion.div>
+    <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+      {/* Page header: the day, then where it sits in the exam season */}
+      <header className="flex flex-col gap-2 pb-1">
+        <h1 className="font-display text-[34px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: "var(--text)" }}>
+          {pageTitle}
+        </h1>
+        <p className="text-base" style={{ color: "var(--text-secondary)" }}>
+          {nextExam && examDays !== null
+            ? examDays === 0
+              ? `${paperName(nextExam.subject)} is today. Be seated by ${clock(TIMETABLE.seatedBy)}`
+              : `Your ${plural(exams.length, "paper")} for ICSE ${EXAM_YEAR} run from ${new Date(firstExam.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "long" })} to ${new Date(lastExam.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "long" })}`
+            : `Your ICSE ${EXAM_YEAR} papers are done`}
+        </p>
+        <p className="text-sm max-w-[64ch]" style={{ color: "var(--text-muted)" }}>{quote}</p>
+      </header>
 
-      {/* F1: Streak Recovery Banner */}
+      {/* Streak recovery */}
       {streakRecoveryAvailable && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl p-4"
-          style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff" }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-            <span className="font-semibold text-sm">Streak Recovery Available!</span>
+        <div className="rounded-[20px] p-5 flex flex-col gap-3" style={{ background: "var(--sun-soft)", border: "2px solid var(--outline)" }}>
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <h2 className="font-display text-xl font-extrabold" style={{ color: "var(--text)" }}>
+              Save your {plural(streakBeforeReset, "day")} streak
+            </h2>
+            <span className="text-sm font-bold tabular-nums" style={{ color: "var(--text)" }}>
+              {hoursToday.toFixed(1)}h of {recoveryTarget.toFixed(1)}h
+            </span>
           </div>
-          <p className="text-sm opacity-90 mb-3">
-            You missed a day! Study {recoveryTarget.toFixed(1)}h today to recover your {streakBeforeReset}-day streak.
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            You missed a day. Study {recoveryTarget.toFixed(1)}h today and the streak stays
           </p>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-2 rounded-full bg-white/30 overflow-hidden">
-              <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${recoveryProgress}%` }} />
-            </div>
-            <span className="text-xs font-semibold whitespace-nowrap">{hoursToday.toFixed(1)}h / {recoveryTarget.toFixed(1)}h</span>
-          </div>
-        </motion.div>
+          <OutlinedBar pct={recoveryProgress} fill="var(--sun)" />
+        </div>
       )}
 
-      {/* F5: Enhanced Exam Countdown */}
-      {nextExam && countdown && (
-        <Card
-          className="!p-0 overflow-hidden"
-          style={{
-            background: examDays !== null && examDays <= 1
-              ? "linear-gradient(135deg, #ef4444, #f97316)"
-              : examDays !== null && examDays <= 3
-              ? "linear-gradient(135deg, #f59e0b, #ef4444)"
-              : undefined,
-          }}
-        >
-          <div className="p-5">
-            <p className="text-sm font-medium" style={{ color: examDays !== null && examDays <= 3 ? "#fff" : "var(--text-secondary)" }}>Next Exam</p>
-            <p className="text-xl font-bold mt-1" style={{ color: examDays !== null && examDays <= 3 ? "#fff" : "var(--text)" }}>{nextExam.subject}</p>
-            <div className="flex items-center gap-3 mt-3">
-              {[
-                { value: countdown.days, label: "days" },
-                { value: countdown.hours, label: "hrs" },
-                { value: countdown.minutes, label: "min" },
-                { value: countdown.seconds, label: "sec" },
-              ].map((unit) => (
-                <div key={unit.label} className="text-center">
-                  <div
-                    className="text-2xl font-extrabold font-mono px-2.5 py-1 rounded-lg"
-                    style={{
-                      color: examDays !== null && examDays <= 3 ? "#fff" : "var(--primary)",
-                      background: examDays !== null && examDays <= 3 ? "rgba(255,255,255,0.15)" : "var(--primary-light)",
-                    }}
-                  >
-                    {String(unit.value).padStart(2, "0")}
-                  </div>
-                  <span
-                    className="text-xs mt-1 block"
-                    style={{ color: examDays !== null && examDays <= 3 ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}
-                  >
-                    {unit.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm mt-2" style={{ color: examDays !== null && examDays <= 3 ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}>
-              {formatDate(nextExam.date)} · {nextExam.duration}
-            </p>
-          </div>
-        </Card>
-      )}
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatChip
-          label="Hours Today"
-          value={`${hoursToday.toFixed(1)}h`}
-          icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
-        />
-        <StatChip
-          label="Chapters Done"
-          value={`${chapsDone}/${totalChapters}`}
-          icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>}
-          color="var(--success)"
-        />
-        <StatChip
-          label="Day Streak"
-          value={data.streak || 0}
-          icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>}
-          color="var(--warning)"
-        />
-        <StatChip
-          label="Sessions"
-          value={sessionsToday}
-          icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>}
-          color="#7b61ff"
-        />
+      {/* Row 1: the countdown sticker card and the week */}
+      <div className="flex flex-wrap gap-6 items-stretch">
+        <div className="flex-[2_1_520px] min-w-0 flex flex-col">
+          <HallTicket exam={nextExam} index={nextIndex} total={exams.length} examDays={examDays} countdown={countdown} />
+        </div>
+        <div className="flex-[1_1_300px] min-w-0 flex flex-col">
+          <WeekCard summary={weeklySummary} target={target} td={td} />
+        </div>
       </div>
 
-      {/* Hours Progress */}
-      <Card>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium" style={{ color: "var(--text)" }}>Study Progress Today</span>
-          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{hoursToday.toFixed(1)}h / {target}h</span>
+      {/* Row 2: today in numbers */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+        <StatChip label="Studied today" value={`${hoursToday.toFixed(1)}h`} sub={`of a ${target}h target`}>
+          <OutlinedBar pct={hoursPct} fill="var(--mint)" />
+        </StatChip>
+        <StatChip label="Chapters done" value={chapsDone} sub={`of ${totalChapters} chapters`} />
+        <StatChip
+          label="Streak"
+          value={`${data.streak || 0} ${(data.streak || 0) === 1 ? "day" : "days"}`}
+          sub="in a row"
+          tone="sun"
+          sticker={(data.streak || 0) > 0 ? <FlameSticker size={56} /> : undefined}
+        />
+        <StatChip label="Sessions today" value={sessionsToday} sub={`${weeklySummary.thisSessions} this week`} />
+      </div>
+
+      {/* Row 3: the papers as tickets, then today's plan and what to work on */}
+      <div className="flex flex-wrap gap-6 items-start">
+        <div className="flex-[1_1_380px] min-w-0">
+          <TimetableCard exams={exams} nextIndex={nextIndex} td={td} subjectColors={subjectColors} />
         </div>
-        <ProgressBar value={(hoursToday / target) * 100} />
-      </Card>
 
-      {/* F7: Weekly Summary */}
-      <Card>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>This Week</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{weeklySummary.thisHours.toFixed(1)}h</p>
-            <div className="flex items-center gap-1">
-              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Hours</span>
-              {weeklySummary.hoursDiff !== 0 && (
-                <span className="text-xs font-semibold" style={{ color: weeklySummary.hoursDiff > 0 ? "var(--success)" : "var(--danger)" }}>
-                  {weeklySummary.hoursDiff > 0 ? "\u2191" : "\u2193"}{Math.abs(weeklySummary.hoursDiff).toFixed(1)}
-                </span>
-              )}
+        <div className="flex-[1_1_340px] min-w-0 flex flex-col gap-6">
+          <section className="flex flex-col gap-2.5" aria-label="Today's plan">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Today&apos;s plan</h2>
+              <Link href="/dashboard/planner" className="text-sm font-bold underline underline-offset-4 decoration-2" style={{ color: "var(--text)" }}>
+                Open planner
+              </Link>
             </div>
-          </div>
-          <div>
-            <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{weeklySummary.thisSessions}</p>
-            <div className="flex items-center gap-1">
-              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Sessions</span>
-              {weeklySummary.sessionsDiff !== 0 && (
-                <span className="text-xs font-semibold" style={{ color: weeklySummary.sessionsDiff > 0 ? "var(--success)" : "var(--danger)" }}>
-                  {weeklySummary.sessionsDiff > 0 ? "\u2191" : "\u2193"}{Math.abs(weeklySummary.sessionsDiff)}
-                </span>
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{weeklySummary.bestDay}</p>
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Best day ({weeklySummary.bestHours.toFixed(1)}h)</p>
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Schedule */}
-        <Card>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Today&apos;s Schedule</h3>
-          <div className="space-y-1">
-            {plan.slice(0, 10).map((block, i) => {
-              const blockStart = timeToMin(block.start);
-              const blockEnd = timeToMin(block.end);
-              const isCurrent = nowMin >= blockStart && nowMin < blockEnd;
-              const isPast = nowMin >= blockEnd;
-              const dotColor = block.type === "study" && block.subjectKey ? subjectColors[block.subjectKey] : undefined;
-              return (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 py-1.5 px-2 rounded-lg text-sm ${isCurrent ? "ring-1 ring-[var(--primary)]" : ""}`}
-                  style={{
-                    opacity: isPast ? 0.5 : 1,
-                    background: isCurrent ? "var(--primary-light)" : "transparent",
-                  }}
-                >
-                  <span className="text-xs font-mono w-16 shrink-0" style={{ color: "var(--text-secondary)" }}>
-                    {formatTime24(block.start)}
-                  </span>
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ background: dotColor || "var(--border)" }}
-                  />
-                  <span style={{ color: "var(--text)" }}>{block.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* Upcoming Exams */}
-          <Card>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Upcoming Exams</h3>
-            <div className="space-y-3">
-              {upcomingExams.map((exam) => {
-                const days = daysBetween(td, exam.date);
-                return (
-                  <div key={exam.key} className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[exam.key] }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{exam.subject}</p>
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{formatDate(exam.date)} · {exam.duration}</p>
-                    </div>
-                    <span
-                      className="text-sm font-bold"
-                      style={{ color: days <= 3 ? "var(--danger)" : "var(--text-secondary)" }}
-                    >
-                      {days === 0 ? "TODAY" : `${days}d`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* F4: Smart Recommendations (replaces Focus Areas) */}
-          <Card>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Smart Recommendations</h3>
-            {!hasSmartRecs ? (
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>No focus areas right now. Keep up the good work!</p>
+            {upcomingBlocks.length === 0 ? (
+              <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
+                {plan.length === 0 ? "No study blocks planned. Set your daily routine in Settings to get a plan" : "That's today's plan done. Rest up for tomorrow"}
+              </p>
             ) : (
-              <div className="space-y-3">
-                {/* Weak Subjects */}
+              <ol className="flex flex-col gap-2">
+                {upcomingBlocks.map((block, i) => {
+                  const isCurrent = nowMin >= timeToMin(block.start) && nowMin < timeToMin(block.end);
+                  const dotColor = block.type === "study" && block.subjectKey ? subjectColors[block.subjectKey] : undefined;
+                  return (
+                    <li
+                      key={`${block.start}-${i}`}
+                      className="flex items-center gap-3 min-h-[52px] rounded-2xl px-4"
+                      style={{ border: "2px solid var(--outline)", background: isCurrent ? "var(--primary-light)" : "var(--bg-card)" }}
+                      aria-current={isCurrent ? "time" : undefined}
+                    >
+                      <span className={`w-[68px] shrink-0 text-[13px] tabular-nums ${isCurrent ? "font-bold" : ""}`} style={{ color: isCurrent ? "var(--text)" : "var(--text-muted)" }}>
+                        {isCurrent ? "Now" : clock(block.start)}
+                      </span>
+                      {dotColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />}
+                      <span className={`text-[15px] truncate ${isCurrent ? "font-bold" : ""}`} style={{ color: "var(--text)" }}>{block.label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-2.5" aria-label="Recommendations">
+            <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Work on next</h2>
+            {!hasSmartRecs ? (
+              <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
+                Nothing needs attention right now. Weak subjects, grammar slips and revisions that fall due show up here
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
                 {smartRecs.weak.map((item, i) => (
-                  <Link
+                  <RecRow
                     key={`weak-${i}`}
                     href="/dashboard/timer"
                     onClick={() => capture("weak_area_clicked", { type: "weak_subject", subject: item.key })}
-                    className="flex items-center gap-3 group"
-                  >
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.subject}</p>
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{item.detail}</p>
-                    </div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fef2f2", color: "var(--danger)" }}>weak</span>
-                  </Link>
+                    color={item.color}
+                    title={item.subject}
+                    detail={item.detail}
+                    tag="Weak subject"
+                    tagColor="var(--danger)"
+                  />
                 ))}
-
-                {/* Grammar Weak Spots */}
                 {smartRecs.grammarWeak.map((item, i) => (
-                  <Link
+                  <RecRow
                     key={`grammar-${i}`}
                     href="/dashboard/english"
                     onClick={() => capture("weak_area_clicked", { type: "grammar", category: item.category })}
-                    className="flex items-center gap-3 group"
-                  >
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#7b61ff" }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>Grammar: {item.category}</p>
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{item.accuracy}% accuracy — needs practice</p>
-                    </div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fef2f2", color: "var(--danger)" }}>drill</span>
-                  </Link>
+                    color={subjectColors.english_lang}
+                    title={`Grammar: ${item.category}`}
+                    detail={`${item.accuracy}% correct so far`}
+                    tag="Drill"
+                    tagColor="var(--danger)"
+                  />
                 ))}
-
-                {/* Revision Due */}
                 {smartRecs.revisionDue.map((item, i) => (
-                  <Link
+                  <RecRow
                     key={`rev-${i}`}
                     href="/dashboard/timer"
                     onClick={() => capture("weak_area_clicked", { type: "revision", subject: item.subjectKey })}
-                    className="flex items-center gap-3 group"
-                  >
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: subjectColors[item.subjectKey] || "var(--warning)" }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{subjectLabels[item.subjectKey] || item.subjectKey}</p>
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{item.chapterName} — revision due</p>
-                    </div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fffbeb", color: "var(--warning)" }}>revision</span>
-                  </Link>
+                    color={subjectColors[item.subjectKey] || "var(--warning)"}
+                    title={subjectLabels[item.subjectKey] || item.subjectKey}
+                    detail={item.chapterName}
+                    tag="Revision due"
+                    tagColor="var(--warning)"
+                  />
                 ))}
-              </div>
+              </ul>
             )}
-          </Card>
+          </section>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── An outlined progress bar, filled with a sticker colour ── */
+
+function OutlinedBar({ pct, fill }: { pct: number; fill: string }) {
+  const value = Math.max(0, Math.min(100, pct));
+  return (
+    <div
+      className="h-3.5 rounded-full overflow-hidden mt-1"
+      style={{ border: "2px solid var(--outline)", background: "var(--bg-card)" }}
+      role="progressbar"
+      aria-valuenow={Math.round(value)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className="h-full origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ width: "100%", transform: `scaleX(${value / 100})`, background: fill, boxShadow: value > 0 && value < 100 ? "inset -2px 0 0 var(--outline)" : undefined }}
+      />
+    </div>
+  );
+}
+
+/* ── This week: chunky outlined bars, today in tomato ── */
+
+function WeekCard({
+  summary,
+  target,
+  td,
+}: {
+  summary: {
+    days: { key: string; label: string; hours: number }[];
+    thisHours: number;
+    thisSessions: number;
+    bestDay: string;
+    bestHours: number;
+    hoursDiff: number;
+    sessionsDiff: number;
+  };
+  target: number;
+  td: string;
+}) {
+  const max = Math.max(target, ...summary.days.map((d) => d.hours), 1) * 1.15;
+  const chartH = 124;
+  const targetY = chartH - (target / max) * chartH;
+  const diff = summary.hoursDiff;
+  const diffText = diff === 0 ? "Same as last week" : `${Math.abs(diff).toFixed(1)}h ${diff > 0 ? "more" : "less"} than last week`;
+
+  return (
+    <section className="h-full rounded-[28px] p-6 flex flex-col gap-4" style={{ background: "var(--bg-card)", border: "2px solid var(--outline)" }} aria-label="This week">
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>This week</h2>
+        <span className="text-[13px] font-medium" style={{ color: "var(--text-muted)" }}>Hours per day</span>
+      </div>
+
+      <div className="relative" style={{ height: chartH + 22 }}>
+        <div className="absolute left-0 right-0 border-t-2 border-dashed" style={{ top: targetY, borderColor: "var(--divider)" }} />
+        <span className="absolute left-0 text-[11px] font-medium -translate-y-full pb-0.5 tabular-nums" style={{ top: targetY, color: "var(--text-muted)" }}>
+          {target}h target
+        </span>
+        <div className="absolute inset-x-0 top-0 grid grid-cols-7 gap-2 items-end" style={{ height: chartH }}>
+          {summary.days.map((d) => {
+            const isToday = d.key === td;
+            const isFuture = d.key > td;
+            const h = (d.hours / max) * chartH;
+            return (
+              <div key={d.key} className="flex justify-center h-full items-end" title={`${d.label}: ${d.hours.toFixed(1)}h`}>
+                {isFuture || d.hours === 0 ? (
+                  <div className="w-full max-w-9 border-t-2 border-dashed" style={{ borderColor: "var(--outline)", opacity: 0.35 }} />
+                ) : (
+                  <div
+                    className="w-full max-w-9"
+                    style={{
+                      height: Math.max(8, h),
+                      background: isToday ? "var(--tomato)" : "var(--paper)",
+                      border: "2px solid var(--outline)",
+                      borderRadius: "8px 8px 4px 4px",
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 grid grid-cols-7 gap-2">
+          {summary.days.map((d) => (
+            <span key={d.key} className={`text-center text-xs ${d.key === td ? "font-bold" : ""}`} style={{ color: d.key === td ? "var(--text)" : "var(--text-muted)" }}>
+              {d.label.slice(0, 1)}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-display text-[30px] font-extrabold tracking-[-0.02em] tabular-nums" style={{ color: "var(--text)" }}>
+          {summary.thisHours.toFixed(1)}h
+        </span>
+        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{diffText}</span>
+      </div>
+      <p className="text-[13px] -mt-2 tabular-nums" style={{ color: "var(--text-muted)" }}>
+        {summary.thisSessions} sessions, {signed(summary.sessionsDiff)} vs last week. Best day {summary.bestDay}
+      </p>
+    </section>
+  );
+}
+
+/* ── One recommendation, as an outlined row ── */
+
+function RecRow({
+  href,
+  onClick,
+  color,
+  title,
+  detail,
+  tag,
+  tagColor,
+}: {
+  href: string;
+  onClick: () => void;
+  color: string;
+  title: string;
+  detail: string;
+  tag: string;
+  tagColor: string;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        onClick={onClick}
+        className="grid grid-cols-[8px_1fr_auto] items-center gap-3 px-4 py-3 rounded-2xl transition-colors duration-150 hover:bg-[var(--paper)]"
+        style={{ border: "2px solid var(--outline)" }}
+      >
+        <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+        <span className="min-w-0">
+          <span className="block text-[15px] font-bold truncate" style={{ color: "var(--text)" }}>{title}</span>
+          <span className="block text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{detail}</span>
+        </span>
+        <span className="text-xs font-bold whitespace-nowrap" style={{ color: tagColor }}>{tag}</span>
+      </Link>
+    </li>
   );
 }

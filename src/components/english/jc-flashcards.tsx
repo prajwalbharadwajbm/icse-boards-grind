@@ -69,15 +69,15 @@ export function JCFlashcards() {
   ).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Progress */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium tabular-nums" style={{ color: "var(--text)" }}>
           Card {currentIndex + 1} of {total}
         </span>
         <span
-          className="text-xs px-2 py-0.5 rounded-full"
-          style={{ background: "rgba(52,168,83,0.12)", color: "#34a853" }}
+          className="text-xs font-bold tabular-nums"
+          style={{ color: "var(--text-muted)" }}
         >
           {confidentCount}/{total} confident
         </span>
@@ -96,35 +96,26 @@ export function JCFlashcards() {
             minHeight: 280,
           }}
           animate={{ rotateY: flipped ? 180 : 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Front */}
           <div
-            className="absolute inset-0 rounded-xl p-6 flex flex-col items-center justify-center text-center"
+            className="absolute inset-0 rounded-[24px] p-6 flex flex-col items-center justify-center text-center"
             style={{
               background: "var(--bg-card)",
-              border: `1px solid ${
-                status === "needs_review"
-                  ? "rgba(234,67,53,0.4)"
-                  : status === "confident"
-                  ? "rgba(52,168,83,0.4)"
-                  : "var(--border)"
-              }`,
+              border: "2px solid var(--outline)",
+              boxShadow: "4px 4px 0 var(--outline)",
               backfaceVisibility: "hidden",
             }}
           >
             {status && (
               <span
-                className="absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                className="absolute top-4 right-5 text-xs font-bold"
                 style={{
-                  background:
-                    status === "needs_review"
-                      ? "rgba(234,67,53,0.1)"
-                      : "rgba(52,168,83,0.1)",
-                  color: status === "needs_review" ? "#ea4335" : "#34a853",
+                  color: status === "needs_review" ? "var(--danger)" : "var(--success)",
                 }}
               >
-                {status === "needs_review" ? "Needs Review" : "Confident"}
+                {status === "needs_review" ? "Needs review" : "Confident"}
               </span>
             )}
             <p
@@ -133,17 +124,18 @@ export function JCFlashcards() {
             >
               &ldquo;{card.quote}&rdquo;
             </p>
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
               Tap to reveal
             </p>
           </div>
 
           {/* Back */}
           <div
-            className="absolute inset-0 rounded-xl p-6 flex flex-col justify-center"
+            className="absolute inset-0 rounded-[24px] p-6 flex flex-col justify-center"
             style={{
               background: "var(--bg-card)",
-              border: "1px solid var(--primary)",
+              border: "2px solid var(--outline)",
+              boxShadow: "4px 4px 0 var(--outline)",
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
             }}
@@ -151,33 +143,33 @@ export function JCFlashcards() {
             <div className="space-y-3">
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Speaker
                 </span>
                 <p
-                  className="text-base font-semibold"
-                  style={{ color: "var(--primary)" }}
+                  className="font-display text-lg font-extrabold tracking-[-0.01em] leading-tight"
+                  style={{ color: "var(--text)" }}
                 >
                   {card.speaker}
                 </p>
               </div>
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Location
                 </span>
-                <p className="text-sm" style={{ color: "var(--text)" }}>
+                <p className="text-sm font-bold" style={{ color: "var(--text)" }}>
                   Act {card.act}, Scene {card.scene}
                 </p>
               </div>
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Context
                 </span>
@@ -187,8 +179,8 @@ export function JCFlashcards() {
               </div>
               <div>
                 <span
-                  className="text-xs font-semibold uppercase"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Significance
                 </span>
@@ -202,33 +194,38 @@ export function JCFlashcards() {
       </div>
 
       {/* Review buttons */}
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2">
         <button
           onClick={() => toggleStatus("needs_review")}
-          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+          aria-pressed={status === "needs_review"}
+          className={`h-9 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+            status === "needs_review" ? "font-bold" : "font-medium bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+          }`}
           style={{
-            background:
-              status === "needs_review" ? "rgba(234,67,53,0.15)" : "transparent",
-            color: status === "needs_review" ? "#ea4335" : "var(--text-secondary)",
-            border: `1px solid ${
-              status === "needs_review" ? "rgba(234,67,53,0.3)" : "var(--border)"
-            }`,
+            background: status === "needs_review" ? "var(--danger-soft)" : undefined,
+            color: "var(--text)",
+            border: "2px solid var(--outline)",
           }}
         >
-          Needs Review
+          Needs review
         </button>
         <button
           onClick={() => toggleStatus("confident")}
-          className="px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+          aria-pressed={status === "confident"}
+          className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+            status === "confident" ? "font-bold" : "font-medium bg-[var(--bg-card)] hover:bg-[var(--paper)]"
+          }`}
           style={{
-            background:
-              status === "confident" ? "rgba(52,168,83,0.15)" : "transparent",
-            color: status === "confident" ? "#34a853" : "var(--text-secondary)",
-            border: `1px solid ${
-              status === "confident" ? "rgba(52,168,83,0.3)" : "var(--border)"
-            }`,
+            background: status === "confident" ? "var(--success-soft)" : undefined,
+            color: "var(--text)",
+            border: "2px solid var(--outline)",
           }}
         >
+          {status === "confident" && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
           Confident
         </button>
       </div>
@@ -237,36 +234,33 @@ export function JCFlashcards() {
       <div className="flex items-center justify-center gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
+          aria-label="Previous card"
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-[var(--bg-card)] transition-colors duration-150 cursor-pointer hover:bg-[var(--paper)]"
+          style={{ border: "2px solid var(--outline)" }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <div className="flex gap-1">
+        <div className="flex flex-wrap justify-center gap-1">
           {JC_FLASHCARDS.map((c, i) => {
             const dotStatus = jcFlashcardReviewStatus[c.id];
             return (
               <div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full transition-all"
+                className="w-1.5 h-1.5 rounded-full transition-colors"
                 style={{
                   background:
                     i === currentIndex
                       ? "var(--primary)"
                       : dotStatus === "confident"
-                      ? "#34a853"
+                      ? "var(--success)"
                       : dotStatus === "needs_review"
-                      ? "#ea4335"
+                      ? "var(--danger)"
                       : jcFlashcardsReviewed.includes(c.id)
-                      ? "var(--text-secondary)"
-                      : "var(--border)",
-                  transform: i === currentIndex ? "scale(1.4)" : "scale(1)",
+                      ? "var(--text-muted)"
+                      : "var(--divider)",
                 }}
               />
             );
@@ -275,13 +269,11 @@ export function JCFlashcards() {
 
         <button
           onClick={() => navigate(1)}
-          className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
+          aria-label="Next card"
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-[var(--bg-card)] transition-colors duration-150 cursor-pointer hover:bg-[var(--paper)]"
+          style={{ border: "2px solid var(--outline)" }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>

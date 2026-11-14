@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { getExams, getSubjectColors, type Exam } from "@/lib/constants";
 import { useStore } from "@/store/use-store";
 import { today, dateStr, daysBetween } from "@/lib/utils";
@@ -91,20 +90,20 @@ export function CalendarGrid({ month, year, studyLog, onDayClick, selectedDate }
   return (
     <div>
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1">
         {DAY_HEADERS.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-semibold py-2"
-            style={{ color: "var(--text-secondary)" }}
+            className="text-center text-xs font-medium py-2"
+            style={{ color: "var(--text-muted)" }}
           >
             {day}
           </div>
         ))}
       </div>
 
-      {/* Calendar cells */}
-      <div className="grid grid-cols-7 gap-1">
+      {/* Calendar cells: today ringed in cobalt, exam days outlined, the selected day on primary-light */}
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
           if (!cell.isCurrentMonth) {
             return <div key={`empty-${i}`} className="aspect-square" />;
@@ -113,37 +112,28 @@ export function CalendarGrid({ month, year, studyLog, onDayClick, selectedDate }
           const isSelected = selectedDate === cell.dateString;
 
           return (
-            <motion.button
+            <button
               key={cell.dateString}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.008, duration: 0.15 }}
               onClick={() => onDayClick(cell.dateString)}
-              className="aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all relative"
+              className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-colors duration-150 relative cursor-pointer ${
+                isSelected ? "bg-[var(--primary-light)]" : "bg-transparent hover:bg-[var(--paper)]"
+              }`}
               style={{
-                background: isSelected
-                  ? "var(--primary-light)"
-                  : cell.isExamDay
-                  ? `${cell.examColor}15`
-                  : cell.isRevisionDay
-                  ? "var(--primary-light)"
-                  : "transparent",
                 border: cell.isToday
                   ? "2px solid var(--primary)"
                   : isSelected
-                  ? "2px solid var(--primary)"
-                  : "1px solid transparent",
-                cursor: "pointer",
+                  ? "2px solid var(--outline)"
+                  : cell.isExamDay
+                  ? "2px solid var(--outline)"
+                  : "2px solid transparent",
               }}
+              aria-current={cell.isToday ? "date" : undefined}
+              aria-pressed={isSelected}
             >
               <span
-                className="text-sm font-medium"
+                className={`text-sm tabular-nums ${cell.isToday || cell.isExamDay || isSelected ? "font-bold" : ""}`}
                 style={{
-                  color: cell.isExamDay
-                    ? cell.examColor || "var(--danger)"
-                    : cell.isToday
-                    ? "var(--primary)"
-                    : "var(--text)",
+                  color: cell.isToday ? "var(--primary)" : "var(--text)",
                 }}
               >
                 {cell.day}
@@ -160,38 +150,40 @@ export function CalendarGrid({ month, year, studyLog, onDayClick, selectedDate }
                 {cell.isRevisionDay && (
                   <span
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: "var(--warning, #f59e0b)" }}
+                    style={{ background: "var(--warning)" }}
                   />
                 )}
                 {cell.hasStudy && (
                   <span
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: "var(--success, #22c55e)" }}
+                    style={{ background: "var(--success)" }}
                   />
                 )}
               </div>
-            </motion.button>
+            </button>
           );
         })}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: "var(--primary)" }} />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Today</span>
+      <div className="flex items-center justify-center gap-x-5 gap-y-2 mt-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-[5px]" style={{ border: "2px solid var(--primary)" }} />
+          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Today</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: "var(--danger, #ef4444)" }} />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Exam</span>
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-[5px] flex items-center justify-center" style={{ border: "2px solid var(--outline)" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--danger)" }} />
+          </span>
+          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Exam</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: "var(--warning, #f59e0b)" }} />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Revision</span>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: "var(--warning)" }} />
+          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Revision</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: "var(--success, #22c55e)" }} />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Studied</span>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: "var(--success)" }} />
+          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Studied</span>
         </div>
       </div>
     </div>

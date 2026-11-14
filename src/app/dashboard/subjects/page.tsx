@@ -17,27 +17,15 @@ export default function SubjectsPage() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-3">
-      <div style={{ marginBottom: 8 }}>
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: "var(--text)",
-            marginBottom: 4,
-          }}
-        >
+    <div className="max-w-5xl mx-auto flex flex-col gap-3">
+      <header className="flex flex-col gap-2 pb-3">
+        <h2 className="font-display text-[30px] sm:text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: "var(--text)" }}>
           Subjects
         </h2>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--text-secondary)",
-          }}
-        >
+        <p className="text-base" style={{ color: "var(--text-secondary)" }}>
           Track your chapters and revision status across all subjects.
         </p>
-      </div>
+      </header>
 
       {subjectKeys.map((key) => (
         <SubjectCard key={key} subjectKey={key} />

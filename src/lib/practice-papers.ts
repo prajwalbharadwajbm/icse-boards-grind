@@ -12,120 +12,134 @@ const BASE = "https://www.respaper.com";
 const CISCE = "https://cisceboard.org/pdf/ICSE-Class-X-Specimen-Question-Papers-2017";
 
 export const PRACTICE_PAPERS: PracticePaper[] = [
+  // Only verified papers: uploads by ResPaper's official "icse" account, or board papers featured in its
+  // ICSE section (Board Exam / Board Specimen lists). User uploads titled "Board Exam" were often school
+  // prelims or other subjects, so they are not used. Re-checked 14 Nov 2026; labels come from each page.
   // ── Mathematics ──
-  { id: "math_2026_board_1", subject: "math", year: 2026, type: "board", title: "Mathematics Board Exam 2026", url: `${BASE}/diana210110/6095-pdf.html`, source: "respaper" },
-  { id: "math_2026_board_2", subject: "math", year: 2026, type: "board", title: "Mathematics Board Exam 2026 (Set 2)", url: `${BASE}/abhijeet2771/2772-pdf.html`, source: "respaper" },
-  { id: "math_2026_board_3", subject: "math", year: 2026, type: "board", title: "Mathematics Board Exam 2026 (Set 3)", url: `${BASE}/hema73/1401-pdf.html`, source: "respaper" },
-  { id: "math_2025_specimen_1", subject: "math", year: 2025, type: "specimen", title: "Mathematics Specimen Paper 2025", url: `${BASE}/yashsmsslg/7844-pdf.html`, source: "respaper" },
-  { id: "math_2025_specimen_2", subject: "math", year: 2025, type: "specimen", title: "Mathematics Specimen Paper 2025 (Set 2)", url: `${BASE}/bhaskargupta/9270-pdf.html`, source: "respaper" },
-  { id: "math_2025_practice_1", subject: "math", year: 2025, type: "practice", title: "Mathematics Practice Paper 2025", url: `${BASE}/maitybiswajit884/9211-pdf.html`, source: "respaper" },
-  { id: "math_2024_board_1", subject: "math", year: 2024, type: "board", title: "Mathematics Board Exam 2024", url: `${BASE}/qwerty1272768/3817-pdf.html`, source: "respaper" },
-  { id: "math_2024_board_2", subject: "math", year: 2024, type: "board", title: "Mathematics Board Exam 2024 (Set 2)", url: `${BASE}/maxi99/947-pdf.html`, source: "respaper" },
-  { id: "math_2024_specimen_1", subject: "math", year: 2024, type: "specimen", title: "Mathematics Specimen Paper 2024", url: `${BASE}/dkp2023/5666-pdf.html`, source: "respaper" },
+  { id: "math_2026_board_r1", subject: "math", year: 2026, type: "board", title: "Mathematics Board Exam 2026", url: `${BASE}/nybnrj/9614-pdf.html`, source: "respaper" },
+  { id: "math_2025_board_r1", subject: "math", year: 2025, type: "board", title: "Mathematics Board Exam 2025", url: `${BASE}/abhijeet2771/2772-pdf.html`, source: "respaper" },
+  { id: "math_2025_specimen_r1", subject: "math", year: 2025, type: "specimen", title: "Mathematics Specimen Paper 2025", url: `${BASE}/icse/159/2912-pdf.html`, source: "respaper" },
+  { id: "math_2024_specimen_r1", subject: "math", year: 2024, type: "specimen", title: "Mathematics Specimen Paper 2024", url: `${BASE}/icse/159/4925-pdf.html`, source: "respaper" },
   { id: "math_2023_board_1", subject: "math", year: 2023, type: "board", title: "Mathematics Board Exam 2023", url: `${BASE}/apurvsoni/3514-pdf.html`, source: "respaper" },
-  { id: "math_2023_board_2", subject: "math", year: 2023, type: "board", title: "Mathematics Board Exam 2023 (Set 2)", url: `${BASE}/theakshatgypta/9265-pdf.html`, source: "respaper" },
-  { id: "math_2023_specimen_1", subject: "math", year: 2023, type: "specimen", title: "Mathematics Specimen Paper 2023", url: `${BASE}/shatr/4273-pdf.html`, source: "respaper" },
-
+  { id: "math_2023_specimen_r1", subject: "math", year: 2023, type: "specimen", title: "Mathematics Specimen Paper 2023", url: `${BASE}/icse/159/2768-pdf.html`, source: "respaper" },
   // ── Physics ──
-  { id: "physics_2026_board_1", subject: "physics", year: 2026, type: "board", title: "Physics Board Exam 2026", url: `${BASE}/hsgah/6094-pdf.html`, source: "respaper" },
-  { id: "physics_2026_board_2", subject: "physics", year: 2026, type: "board", title: "Physics Board Exam 2026 (Set 2)", url: `${BASE}/divya139/4465-pdf.html`, source: "respaper" },
   { id: "physics_2026_specimen_1", subject: "physics", year: 2026, type: "specimen", title: "Physics Specimen Paper 2026", url: `${BASE}/ujaan/730-pdf.html`, source: "respaper" },
-  { id: "physics_2025_board_1", subject: "physics", year: 2025, type: "board", title: "Physics Board Exam 2025", url: `${BASE}/wxrst_brutus/7765-pdf.html`, source: "respaper" },
-  { id: "physics_2025_board_2", subject: "physics", year: 2025, type: "board", title: "Physics Board Exam 2025 (Set 2)", url: `${BASE}/lunamashiyong/3828-pdf.html`, source: "respaper" },
-  { id: "physics_2025_specimen_1", subject: "physics", year: 2025, type: "specimen", title: "Physics Specimen Paper 2025", url: `${BASE}/anany19/9428-pdf.html`, source: "respaper" },
-  { id: "physics_2024_board_1", subject: "physics", year: 2024, type: "board", title: "Physics Board Exam 2024", url: `${BASE}/surajit1968/7895-pdf.html`, source: "respaper" },
-  { id: "physics_2024_board_2", subject: "physics", year: 2024, type: "board", title: "Physics Board Exam 2024 (Set 2)", url: `${BASE}/sagnik2008/6651-pdf.html`, source: "respaper" },
-  { id: "physics_2024_specimen_1", subject: "physics", year: 2024, type: "specimen", title: "Physics Specimen Paper 2024", url: `${BASE}/dtfyfhgdr/9183-pdf.html`, source: "respaper" },
-  { id: "physics_2023_board_1", subject: "physics", year: 2023, type: "board", title: "Physics Board Exam 2023", url: `${BASE}/sayanchandra/7767-pdf.html`, source: "respaper" },
-  { id: "physics_2023_board_2", subject: "physics", year: 2023, type: "board", title: "Physics Board Exam 2023 (Set 2)", url: `${BASE}/apostle/6466-pdf.html`, source: "respaper" },
-
+  { id: "physics_2025_specimen_r1", subject: "physics", year: 2025, type: "specimen", title: "Physics Specimen Paper 2025", url: `${BASE}/icse/159/6086-pdf.html`, source: "respaper" },
+  { id: "physics_2024_board_2", subject: "physics", year: 2024, type: "board", title: "Physics Board Exam 2024", url: `${BASE}/sagnik2008/6651-pdf.html`, source: "respaper" },
+  { id: "physics_2024_specimen_r1", subject: "physics", year: 2024, type: "specimen", title: "Physics Specimen Paper 2024", url: `${BASE}/icse/159/9112-pdf.html`, source: "respaper" },
+  { id: "physics_2023_specimen_r1", subject: "physics", year: 2023, type: "specimen", title: "Physics Specimen Paper 2023", url: `${BASE}/icse/159/7552-pdf.html`, source: "respaper" },
   // ── Chemistry ──
-  { id: "chemistry_2026_board_1", subject: "chemistry", year: 2026, type: "board", title: "Chemistry Board Exam 2026", url: `${BASE}/gurnoor42/8164-pdf.html`, source: "respaper" },
-  { id: "chemistry_2026_board_2", subject: "chemistry", year: 2026, type: "board", title: "Chemistry Board Exam 2026 (Set 2)", url: `${BASE}/hemashree228/1885-pdf.html`, source: "respaper" },
-  { id: "chemistry_2025_board_1", subject: "chemistry", year: 2025, type: "board", title: "Chemistry Board Exam 2025", url: `${BASE}/lunamashiyong/8479-pdf.html`, source: "respaper" },
-  { id: "chemistry_2025_board_2", subject: "chemistry", year: 2025, type: "board", title: "Chemistry Board Exam 2025 (Set 2)", url: `${BASE}/koustav002/6094-pdf.html`, source: "respaper" },
-  { id: "chemistry_2025_practice_1", subject: "chemistry", year: 2025, type: "practice", title: "Chemistry Competency Practice 2025", url: `${BASE}/riyakumar/1004-pdf.html`, source: "respaper" },
+  { id: "chemistry_2025_specimen_r1", subject: "chemistry", year: 2025, type: "specimen", title: "Chemistry Specimen Paper 2025", url: `${BASE}/icse/159/3723-pdf.html`, source: "respaper" },
   { id: "chemistry_2024_board_1", subject: "chemistry", year: 2024, type: "board", title: "Chemistry Board Exam 2024", url: `${BASE}/surajit1968/7871-pdf.html`, source: "respaper" },
-  { id: "chemistry_2024_board_2", subject: "chemistry", year: 2024, type: "board", title: "Chemistry Board Exam 2024 (Set 2)", url: `${BASE}/aarush_2608/9165-pdf.html`, source: "respaper" },
-  { id: "chemistry_2023_board_1", subject: "chemistry", year: 2023, type: "board", title: "Chemistry Board Exam 2023", url: `${BASE}/yolo4/6928-pdf.html`, source: "respaper" },
-  { id: "chemistry_2023_specimen_1", subject: "chemistry", year: 2023, type: "specimen", title: "Chemistry Specimen Paper 2023", url: `${BASE}/comebackkid/7414-pdf.html`, source: "respaper" },
-
+  { id: "chemistry_2024_specimen_r1", subject: "chemistry", year: 2024, type: "specimen", title: "Chemistry Specimen Paper 2024", url: `${BASE}/icse/159/8279-pdf.html`, source: "respaper" },
+  { id: "chemistry_2023_specimen_r1", subject: "chemistry", year: 2023, type: "specimen", title: "Chemistry Specimen Paper 2023", url: `${BASE}/icse/159/6296-pdf.html`, source: "respaper" },
   // ── Biology ──
-  { id: "biology_2026_board_1", subject: "biology", year: 2026, type: "board", title: "Biology Board Exam 2026", url: `${BASE}/ruthekthamminedi/6283-pdf.html`, source: "respaper" },
-  { id: "biology_2026_board_2", subject: "biology", year: 2026, type: "board", title: "Biology Board Exam 2026 (Set 2)", url: `${BASE}/gurnoor42/8163-pdf.html`, source: "respaper" },
-  { id: "biology_2026_board_3", subject: "biology", year: 2026, type: "board", title: "Biology Board Exam 2026 (Set 3)", url: `${BASE}/hema73/1402-pdf.html`, source: "respaper" },
-  { id: "biology_2025_board_1", subject: "biology", year: 2025, type: "board", title: "Biology Board Exam 2025", url: `${BASE}/hemashree228/1884-pdf.html`, source: "respaper" },
-  { id: "biology_2025_board_2", subject: "biology", year: 2025, type: "board", title: "Biology Board Exam 2025 (Set 2)", url: `${BASE}/amit2911/5110-pdf.html`, source: "respaper" },
-  { id: "biology_2025_practice_1", subject: "biology", year: 2025, type: "practice", title: "Biology Practice Paper 2025", url: `${BASE}/ayushmaancho/5970-pdf.html`, source: "respaper" },
-  { id: "biology_2025_board_3", subject: "biology", year: 2025, type: "board", title: "Biology Board Exam 2025 (Set 3)", url: `${BASE}/mahir_shah/9650-pdf.html`, source: "respaper" },
+  { id: "biology_2025_board_2", subject: "biology", year: 2025, type: "board", title: "Biology Board Exam 2025", url: `${BASE}/amit2911/5110-pdf.html`, source: "respaper" },
+  { id: "biology_2025_specimen_r1", subject: "biology", year: 2025, type: "specimen", title: "Biology Specimen Paper 2025", url: `${BASE}/icse/159/5230-pdf.html`, source: "respaper" },
+  { id: "biology_2024_board_r1", subject: "biology", year: 2024, type: "board", title: "Biology Board Exam 2024", url: `${BASE}/surajit1968/2002-pdf.html`, source: "respaper" },
+  { id: "biology_2024_specimen_r1", subject: "biology", year: 2024, type: "specimen", title: "Biology Specimen Paper 2024", url: `${BASE}/icse/159/5869-pdf.html`, source: "respaper" },
   { id: "biology_2023_board_1", subject: "biology", year: 2023, type: "board", title: "Biology Board Exam 2023", url: `${BASE}/hardik5425/5806-pdf.html`, source: "respaper" },
-  { id: "biology_2023_specimen_1", subject: "biology", year: 2023, type: "specimen", title: "Biology Specimen Paper 2023", url: `${BASE}/jyotsana9/5514-pdf.html`, source: "respaper" },
-
+  { id: "biology_2023_specimen_r1", subject: "biology", year: 2023, type: "specimen", title: "Biology Specimen Paper 2023", url: `${BASE}/icse/159/263-pdf.html`, source: "respaper" },
   // ── History & Civics ──
-  { id: "history_2026_board_1", subject: "history", year: 2026, type: "board", title: "History & Civics Board Exam 2026", url: `${BASE}/hema73/1403-pdf.html`, source: "respaper" },
-  { id: "history_2026_board_2", subject: "history", year: 2026, type: "board", title: "History & Civics Board Exam 2026 (Set 2)", url: `${BASE}/aarav49/7601-pdf.html`, source: "respaper" },
   { id: "history_2025_board_1", subject: "history", year: 2025, type: "board", title: "History & Civics Board Exam 2025", url: `${BASE}/devik_10/6395-pdf.html`, source: "respaper" },
-  { id: "history_2024_board_1", subject: "history", year: 2024, type: "board", title: "History & Civics Board Exam 2024", url: `${BASE}/surajit1968/4754-pdf.html`, source: "respaper" },
-  { id: "history_2024_board_2", subject: "history", year: 2024, type: "board", title: "History & Civics Board Exam 2024 (Set 2)", url: `${BASE}/ayushsaha12/368-pdf.html`, source: "respaper" },
-  { id: "history_2024_specimen_1", subject: "history", year: 2024, type: "specimen", title: "History & Civics Specimen Paper 2024", url: `${BASE}/punith21/7933-pdf.html`, source: "respaper" },
-  { id: "history_2023_board_1", subject: "history", year: 2023, type: "board", title: "History & Civics Board Exam 2023", url: `${BASE}/sirdksaraf/2072-pdf.html`, source: "respaper" },
-  { id: "history_2023_board_2", subject: "history", year: 2023, type: "board", title: "History & Civics Board Exam 2023 (Set 2)", url: `${BASE}/aryan_7/5417-pdf.html`, source: "respaper" },
-
+  { id: "history_2025_specimen_r1", subject: "history", year: 2025, type: "specimen", title: "History & Civics Specimen Paper 2025", url: `${BASE}/icse/159/4887-pdf.html`, source: "respaper" },
+  { id: "history_2024_board_r1", subject: "history", year: 2024, type: "board", title: "History & Civics Board Exam 2024", url: `${BASE}/logiuse5677/768/5129-pdf.html`, source: "respaper" },
+  { id: "history_2024_specimen_r1", subject: "history", year: 2024, type: "specimen", title: "History & Civics Specimen Paper 2024", url: `${BASE}/icse/159/9125-pdf.html`, source: "respaper" },
+  { id: "history_2023_board_2", subject: "history", year: 2023, type: "board", title: "History & Civics Board Exam 2023", url: `${BASE}/aryan_7/5417-pdf.html`, source: "respaper" },
+  { id: "history_2023_specimen_r1", subject: "history", year: 2023, type: "specimen", title: "History & Civics Specimen Paper 2023", url: `${BASE}/icse/159/1489-pdf.html`, source: "respaper" },
   // ── Geography ──
-  { id: "geography_2026_board_1", subject: "geography", year: 2026, type: "board", title: "Geography Board Exam 2026", url: `${BASE}/matke1234/3956-pdf.html`, source: "respaper" },
-  { id: "geography_2025_board_1", subject: "geography", year: 2025, type: "board", title: "Geography Board Exam 2025", url: `${BASE}/aslitopper/8280-pdf.html`, source: "respaper" },
-  { id: "geography_2025_board_2", subject: "geography", year: 2025, type: "board", title: "Geography Board Exam 2025 (Set 2)", url: `${BASE}/mithun10/993-pdf.html`, source: "respaper" },
-  { id: "geography_2025_specimen_1", subject: "geography", year: 2025, type: "specimen", title: "Geography Specimen Paper 2025", url: `${BASE}/advay2610/829-pdf.html`, source: "respaper" },
+  { id: "geography_2025_board_r1", subject: "geography", year: 2025, type: "board", title: "Geography Board Exam 2025", url: `${BASE}/matke1234/3956-pdf.html`, source: "respaper" },
+  { id: "geography_2025_specimen_r1", subject: "geography", year: 2025, type: "specimen", title: "Geography Specimen Paper 2025", url: `${BASE}/icse/159/5669-pdf.html`, source: "respaper" },
   { id: "geography_2024_board_1", subject: "geography", year: 2024, type: "board", title: "Geography Board Exam 2024", url: `${BASE}/anikam/9132-pdf.html`, source: "respaper" },
-  { id: "geography_2024_board_2", subject: "geography", year: 2024, type: "board", title: "Geography Board Exam 2024 (Set 2)", url: `${BASE}/meghattay/6783-pdf.html`, source: "respaper" },
-  { id: "geography_2024_specimen_1", subject: "geography", year: 2024, type: "specimen", title: "Geography Specimen Paper 2024", url: `${BASE}/unknownperson1234442131/8446-pdf.html`, source: "respaper" },
+  { id: "geography_2024_specimen_r1", subject: "geography", year: 2024, type: "specimen", title: "Geography Specimen Paper 2024", url: `${BASE}/icse/159/6101-pdf.html`, source: "respaper" },
   { id: "geography_2023_board_1", subject: "geography", year: 2023, type: "board", title: "Geography Board Exam 2023", url: `${BASE}/sirdksaraf/3112-pdf.html`, source: "respaper" },
-  { id: "geography_2023_board_2", subject: "geography", year: 2023, type: "board", title: "Geography Board Exam 2023 (Set 2)", url: `${BASE}/nakul85/2956-pdf.html`, source: "respaper" },
-
+  { id: "geography_2023_specimen_r1", subject: "geography", year: 2023, type: "specimen", title: "Geography Specimen Paper 2023", url: `${BASE}/icse/159/7832-pdf.html`, source: "respaper" },
   // ── English Language ──
-  { id: "english_lang_2026_board_1", subject: "english_lang", year: 2026, type: "board", title: "English Language Board Exam 2026", url: `${BASE}/nitinkaria/2252-pdf.html`, source: "respaper" },
-  { id: "english_lang_2025_board_1", subject: "english_lang", year: 2025, type: "board", title: "English Language Board Exam 2025", url: `${BASE}/resaccpract/6781-pdf.html`, source: "respaper" },
-  { id: "english_lang_2024_board_1", subject: "english_lang", year: 2024, type: "board", title: "English Language Board Exam 2024", url: `${BASE}/ewar45607/1689-pdf.html`, source: "respaper" },
-  { id: "english_lang_2023_board_1", subject: "english_lang", year: 2023, type: "board", title: "English Language Board Exam 2023", url: `${BASE}/apostle/6466-pdf.html`, source: "respaper" },
-
+  { id: "english_lang_2025_board_r1", subject: "english_lang", year: 2025, type: "board", title: "English Language Board Exam 2025", url: `${BASE}/iyla/4720-pdf.html`, source: "respaper" },
+  { id: "english_lang_2025_specimen_r1", subject: "english_lang", year: 2025, type: "specimen", title: "English Language Specimen Paper 2025", url: `${BASE}/icse/159/4965-pdf.html`, source: "respaper" },
+  { id: "english_lang_2024_board_r1", subject: "english_lang", year: 2024, type: "board", title: "English Language Board Exam 2024", url: `${BASE}/divv60/9132-pdf.html`, source: "respaper" },
+  { id: "english_lang_2024_specimen_r1", subject: "english_lang", year: 2024, type: "specimen", title: "English Language Specimen Paper 2024", url: `${BASE}/icse/159/2327-pdf.html`, source: "respaper" },
+  { id: "english_lang_2023_board_r1", subject: "english_lang", year: 2023, type: "board", title: "English Language Board Exam 2023", url: `${BASE}/gargimunjal/2510-pdf.html`, source: "respaper" },
+  { id: "english_lang_2023_specimen_r1", subject: "english_lang", year: 2023, type: "specimen", title: "English Language Specimen Paper 2023", url: `${BASE}/icse/916/7256-pdf.html`, source: "respaper" },
   // ── English Literature ──
-  { id: "english_lit_2026_board_1", subject: "english_lit", year: 2026, type: "board", title: "English Literature Board Exam 2026", url: `${BASE}/abirsengupta/1884-pdf.html`, source: "respaper" },
-  { id: "english_lit_2025_board_1", subject: "english_lit", year: 2025, type: "board", title: "English Literature Board Exam 2025", url: `${BASE}/abcd3236/6042-pdf.html`, source: "respaper" },
-  { id: "english_lit_2025_specimen_1", subject: "english_lit", year: 2025, type: "specimen", title: "English Literature Specimen Paper 2025", url: `${BASE}/dhivya1983/7975-pdf.html`, source: "respaper" },
-  { id: "english_lit_2024_board_1", subject: "english_lit", year: 2024, type: "board", title: "English Literature Board Exam 2024", url: `${BASE}/logiuse5677/768/4253-pdf.html`, source: "respaper" },
-  { id: "english_lit_2023_board_1", subject: "english_lit", year: 2023, type: "board", title: "English Literature Board Exam 2023", url: `${BASE}/sayanchandra/7767-pdf.html`, source: "respaper" },
-
+  { id: "english_lit_2026_board_r1", subject: "english_lit", year: 2026, type: "board", title: "English Literature Board Exam 2026", url: `${BASE}/hackor1421/727-pdf.html`, source: "respaper" },
+  { id: "english_lit_2025_board_r1", subject: "english_lit", year: 2025, type: "board", title: "English Literature Board Exam 2025", url: `${BASE}/raeed/2911-pdf.html`, source: "respaper" },
+  { id: "english_lit_2025_specimen_r1", subject: "english_lit", year: 2025, type: "specimen", title: "English Literature Specimen Paper 2025", url: `${BASE}/icse/159/9709-pdf.html`, source: "respaper" },
+  { id: "english_lit_2024_board_r1", subject: "english_lit", year: 2024, type: "board", title: "English Literature Board Exam 2024", url: `${BASE}/logiuse5677/768/7352-pdf.html`, source: "respaper" },
+  { id: "english_lit_2024_specimen_r1", subject: "english_lit", year: 2024, type: "specimen", title: "English Literature Specimen Paper 2024", url: `${BASE}/icse/159/9837-pdf.html`, source: "respaper" },
+  { id: "english_lit_2023_board_r1", subject: "english_lit", year: 2023, type: "board", title: "English Literature Board Exam 2023", url: `${BASE}/gargimunjal/2785-pdf.html`, source: "respaper" },
+  { id: "english_lit_2023_specimen_r1", subject: "english_lit", year: 2023, type: "specimen", title: "English Literature Specimen Paper 2023", url: `${BASE}/icse/159/5378-pdf.html`, source: "respaper" },
   // ── Hindi ──
   { id: "hindi_2025_board_1", subject: "hindi", year: 2025, type: "board", title: "Hindi Board Exam 2025", url: `${BASE}/dishes4u/9091-pdf.html`, source: "respaper" },
-  { id: "hindi_2024_board_1", subject: "hindi", year: 2024, type: "board", title: "Hindi Board Exam 2024", url: `${BASE}/abhaybro9693/3121-pdf.html`, source: "respaper" },
-  { id: "hindi_2023_board_1", subject: "hindi", year: 2023, type: "board", title: "Hindi Board Exam 2023", url: `${BASE}/livotneyuueh/1002-pdf.html`, source: "respaper" },
-
+  { id: "hindi_2023_specimen_r1", subject: "hindi", year: 2023, type: "specimen", title: "Hindi Specimen Paper 2023", url: `${BASE}/icse/159/4875-pdf.html`, source: "respaper" },
+  // ── Kannada ──
+  { id: "kannada_2023_specimen_r1", subject: "kannada", year: 2023, type: "specimen", title: "Kannada Specimen Paper 2023", url: `${BASE}/icse/159/3738-pdf.html`, source: "respaper" },
+  // ── Tamil ──
+  { id: "tamil_2023_board_r1", subject: "tamil", year: 2023, type: "board", title: "Tamil Board Exam 2023", url: `${BASE}/papersexchange/4895-pdf.html`, source: "respaper" },
+  { id: "tamil_2023_specimen_r1", subject: "tamil", year: 2023, type: "specimen", title: "Tamil Specimen Paper 2023", url: `${BASE}/icse/159/8645-pdf.html`, source: "respaper" },
+  // ── Telugu ──
+  { id: "telugu_2023_specimen_r1", subject: "telugu", year: 2023, type: "specimen", title: "Telugu Specimen Paper 2023", url: `${BASE}/icse/159/6765-pdf.html`, source: "respaper" },
+  // ── Bengali ──
+  { id: "bengali_2024_board_r1", subject: "bengali", year: 2024, type: "board", title: "Bengali Board Exam 2024", url: `${BASE}/h4unter65434/6227-pdf.html`, source: "respaper" },
+  { id: "bengali_2023_board_r1", subject: "bengali", year: 2023, type: "board", title: "Bengali Board Exam 2023", url: `${BASE}/shubhadeep385/24/9773-pdf.html`, source: "respaper" },
+  // ── Malayalam ──
+  { id: "malayalam_2023_specimen_r1", subject: "malayalam", year: 2023, type: "specimen", title: "Malayalam Specimen Paper 2023", url: `${BASE}/icse/159/6327-pdf.html`, source: "respaper" },
+  // ── Marathi ──
+  { id: "marathi_2025_board_r1", subject: "marathi", year: 2025, type: "board", title: "Marathi Board Exam 2025", url: `${BASE}/anonymoususer123/2705-zip.html`, source: "respaper" },
+  { id: "marathi_2023_specimen_r1", subject: "marathi", year: 2023, type: "specimen", title: "Marathi Specimen Paper 2023", url: `${BASE}/icse/159/9472-pdf.html`, source: "respaper" },
+  // ── Punjabi ──
+  { id: "punjabi_2023_specimen_r1", subject: "punjabi", year: 2023, type: "specimen", title: "Punjabi Specimen Paper 2023", url: `${BASE}/icse/159/2435-pdf.html`, source: "respaper" },
+  // ── Sanskrit ──
+  { id: "sanskrit_2023_specimen_r1", subject: "sanskrit", year: 2023, type: "specimen", title: "Sanskrit Specimen Paper 2023", url: `${BASE}/icse/159/5112-pdf.html`, source: "respaper" },
+  // ── French ──
+  { id: "french_2023_specimen_r1", subject: "french", year: 2023, type: "specimen", title: "French Specimen Paper 2023", url: `${BASE}/icse/159/2848-pdf.html`, source: "respaper" },
+  // ── German ──
+  { id: "german_2023_specimen_r1", subject: "german", year: 2023, type: "specimen", title: "German Specimen Paper 2023", url: `${BASE}/icse/159/8950-pdf.html`, source: "respaper" },
   // ── Computer Applications ──
-  { id: "computer_2026_board_1", subject: "computer", year: 2026, type: "board", title: "Computer Applications Board Exam 2026", url: `${BASE}/kounil/4377-pdf.html`, source: "respaper" },
-  { id: "computer_2025_board_1", subject: "computer", year: 2025, type: "board", title: "Computer Applications Board Exam 2025", url: `${BASE}/dev_009/835-pdf.html`, source: "respaper" },
-  { id: "computer_2025_specimen_1", subject: "computer", year: 2025, type: "specimen", title: "Computer Applications Specimen 2025", url: `${BASE}/promaicse/6190-pdf.html`, source: "respaper" },
-  { id: "computer_2025_practice_1", subject: "computer", year: 2025, type: "practice", title: "Computer Applications Practice 2025", url: `${BASE}/sweta12379/777-pdf.html`, source: "respaper" },
-  { id: "computer_2024_board_1", subject: "computer", year: 2024, type: "board", title: "Computer Applications Board Exam 2024", url: `${BASE}/aarush_2608/9166-pdf.html`, source: "respaper" },
-  { id: "computer_2024_specimen_1", subject: "computer", year: 2024, type: "specimen", title: "Computer Applications Specimen 2024", url: `${BASE}/breh57/1307-pdf.html`, source: "respaper" },
+  { id: "computer_2025_specimen_1", subject: "computer", year: 2025, type: "specimen", title: "Computer Applications Specimen Paper 2025", url: `${BASE}/promaicse/6190-pdf.html`, source: "respaper" },
+  { id: "computer_2024_specimen_r1", subject: "computer", year: 2024, type: "specimen", title: "Computer Applications Specimen Paper 2024", url: `${BASE}/icse/159/3785-pdf.html`, source: "respaper" },
   { id: "computer_2023_board_1", subject: "computer", year: 2023, type: "board", title: "Computer Applications Board Exam 2023", url: `${BASE}/shubhadeep385/27/7568-pdf.html`, source: "respaper" },
-  { id: "computer_2023_specimen_1", subject: "computer", year: 2023, type: "specimen", title: "Computer Applications Specimen 2023", url: `${BASE}/jwiiick88/6348-pdf.html`, source: "respaper" },
-
+  { id: "computer_2023_specimen_1", subject: "computer", year: 2023, type: "specimen", title: "Computer Applications Specimen Paper 2023", url: `${BASE}/jwiiick88/6348-pdf.html`, source: "respaper" },
   // ── Commercial Studies ──
-  { id: "commercial_2026_board_1", subject: "commercial", year: 2026, type: "board", title: "Commercial Studies Board Exam 2026", url: `${BASE}/kiunil/1524-pdf.html`, source: "respaper" },
-  { id: "commercial_2025_board_1", subject: "commercial", year: 2025, type: "board", title: "Commercial Studies Board Exam 2025", url: `${BASE}/prince_paulthelearner/5641-pdf.html`, source: "respaper" },
-  { id: "commercial_2023_board_1", subject: "commercial", year: 2023, type: "board", title: "Commercial Studies Board Exam 2023", url: `${BASE}/sirdksaraf/7899-pdf.html`, source: "respaper" },
-
+  { id: "commercial_2025_specimen_r1", subject: "commercial", year: 2025, type: "specimen", title: "Commercial Studies Specimen Paper 2025", url: `${BASE}/icse/159/3352-pdf.html`, source: "respaper" },
+  { id: "commercial_2024_specimen_r1", subject: "commercial", year: 2024, type: "specimen", title: "Commercial Studies Specimen Paper 2024", url: `${BASE}/icse/159/8113-pdf.html`, source: "respaper" },
+  { id: "commercial_2023_specimen_r1", subject: "commercial", year: 2023, type: "specimen", title: "Commercial Studies Specimen Paper 2023", url: `${BASE}/icse/159/7077-pdf.html`, source: "respaper" },
   // ── Economics ──
-  { id: "economics_2024_board_1", subject: "economics", year: 2024, type: "board", title: "Economics Board Exam 2024", url: `${BASE}/logiuse5677/768/5129-pdf.html`, source: "respaper" },
-  { id: "economics_2023_board_1", subject: "economics", year: 2023, type: "board", title: "Economics Board Exam 2023", url: `${BASE}/sirdksaraf/2072-pdf.html`, source: "respaper" },
-
+  { id: "economics_2025_specimen_r1", subject: "economics", year: 2025, type: "specimen", title: "Economics Specimen Paper 2025", url: `${BASE}/icse/159/4293-pdf.html`, source: "respaper" },
+  { id: "economics_2024_specimen_r1", subject: "economics", year: 2024, type: "specimen", title: "Economics Specimen Paper 2024", url: `${BASE}/icse/159/1138-pdf.html`, source: "respaper" },
   // ── Environmental Science ──
-  { id: "env_science_2024_board_1", subject: "env_science", year: 2024, type: "board", title: "Environmental Science Board Exam 2024", url: `${BASE}/meghattay/9344-pdf.html`, source: "respaper" },
-
+  { id: "env_science_2025_specimen_r1", subject: "env_science", year: 2025, type: "specimen", title: "Environmental Science Specimen Paper 2025", url: `${BASE}/icse/159/9784-pdf.html`, source: "respaper" },
+  { id: "env_science_2024_specimen_r1", subject: "env_science", year: 2024, type: "specimen", title: "Environmental Science Specimen Paper 2024", url: `${BASE}/icse/159/5727-pdf.html`, source: "respaper" },
+  { id: "env_science_2023_specimen_r1", subject: "env_science", year: 2023, type: "specimen", title: "Environmental Science Specimen Paper 2023", url: `${BASE}/icse/159/2026-pdf.html`, source: "respaper" },
   // ── Physical Education ──
-  { id: "physical_ed_2024_board_1", subject: "physical_ed", year: 2024, type: "board", title: "Physical Education Board Exam 2024", url: `${BASE}/samriddh2909/7716-pdf.html`, source: "respaper" },
-
-  // ── CISCE Specimen Papers 2017 ──
+  { id: "physical_ed_2025_specimen_r1", subject: "physical_ed", year: 2025, type: "specimen", title: "Physical Education Specimen Paper 2025", url: `${BASE}/icse/159/5276-pdf.html`, source: "respaper" },
+  { id: "physical_ed_2024_specimen_r1", subject: "physical_ed", year: 2024, type: "specimen", title: "Physical Education Specimen Paper 2024", url: `${BASE}/icse/159/3679-pdf.html`, source: "respaper" },
+  { id: "physical_ed_2023_specimen_r1", subject: "physical_ed", year: 2023, type: "specimen", title: "Physical Education Specimen Paper 2023", url: `${BASE}/icse/159/9612-pdf.html`, source: "respaper" },
+  // ── Economic Applications ──
+  { id: "economic_app_2025_specimen_r1", subject: "economic_app", year: 2025, type: "specimen", title: "Economic Applications Specimen Paper 2025", url: `${BASE}/icse/159/7045-pdf.html`, source: "respaper" },
+  { id: "economic_app_2024_specimen_r1", subject: "economic_app", year: 2024, type: "specimen", title: "Economic Applications Specimen Paper 2024", url: `${BASE}/icse/159/4086-pdf.html`, source: "respaper" },
+  { id: "economic_app_2023_board_r1", subject: "economic_app", year: 2023, type: "board", title: "Economic Applications Board Exam 2023", url: `${BASE}/topper18/3406-zip.html`, source: "respaper" },
+  { id: "economic_app_2023_specimen_r1", subject: "economic_app", year: 2023, type: "specimen", title: "Economic Applications Specimen Paper 2023", url: `${BASE}/icse/159/2109-pdf.html`, source: "respaper" },
+  // ── Commercial Applications ──
+  { id: "commercial_app_2025_specimen_r1", subject: "commercial_app", year: 2025, type: "specimen", title: "Commercial Applications Specimen Paper 2025", url: `${BASE}/icse/159/6776-pdf.html`, source: "respaper" },
+  { id: "commercial_app_2024_specimen_r1", subject: "commercial_app", year: 2024, type: "specimen", title: "Commercial Applications Specimen Paper 2024", url: `${BASE}/icse/159/2808-pdf.html`, source: "respaper" },
+  { id: "commercial_app_2023_specimen_r1", subject: "commercial_app", year: 2023, type: "specimen", title: "Commercial Applications Specimen Paper 2023", url: `${BASE}/icse/159/9527-pdf.html`, source: "respaper" },
+  // ── Home Science ──
+  { id: "home_science_2025_specimen_r1", subject: "home_science", year: 2025, type: "specimen", title: "Home Science Specimen Paper 2025", url: `${BASE}/icse/159/6436-pdf.html`, source: "respaper" },
+  { id: "home_science_2024_specimen_r1", subject: "home_science", year: 2024, type: "specimen", title: "Home Science Specimen Paper 2024", url: `${BASE}/icse/159/2552-pdf.html`, source: "respaper" },
+  { id: "home_science_2023_specimen_r1", subject: "home_science", year: 2023, type: "specimen", title: "Home Science Specimen Paper 2023", url: `${BASE}/icse/159/8404-pdf.html`, source: "respaper" },
+  // ── Fashion Designing ──
+  { id: "fashion_2025_board_r1", subject: "fashion", year: 2025, type: "board", title: "Fashion Designing Board Exam 2025", url: `${BASE}/abhijeet2771/2773-pdf.html`, source: "respaper" },
+  { id: "fashion_2025_specimen_r1", subject: "fashion", year: 2025, type: "specimen", title: "Fashion Designing Specimen Paper 2025", url: `${BASE}/icse/159/1530-pdf.html`, source: "respaper" },
+  { id: "fashion_2024_specimen_r1", subject: "fashion", year: 2024, type: "specimen", title: "Fashion Designing Specimen Paper 2024", url: `${BASE}/icse/159/2404-pdf.html`, source: "respaper" },
+  { id: "fashion_2023_specimen_r1", subject: "fashion", year: 2023, type: "specimen", title: "Fashion Designing Specimen Paper 2023", url: `${BASE}/icse/159/4978-pdf.html`, source: "respaper" },
+  // ── Cookery ──
+  { id: "cookery_2025_specimen_r1", subject: "cookery", year: 2025, type: "specimen", title: "Cookery Specimen Paper 2025", url: `${BASE}/icse/159/1189-pdf.html`, source: "respaper" },
+  { id: "cookery_2024_specimen_r1", subject: "cookery", year: 2024, type: "specimen", title: "Cookery Specimen Paper 2024", url: `${BASE}/icse/159/7546-pdf.html`, source: "respaper" },
+  { id: "cookery_2023_specimen_r1", subject: "cookery", year: 2023, type: "specimen", title: "Cookery Specimen Paper 2023", url: `${BASE}/icse/159/7964-pdf.html`, source: "respaper" },
+  // ── Robotics & AI ──
+  { id: "robotics_ai_2025_specimen_r1", subject: "robotics_ai", year: 2025, type: "specimen", title: "Robotics & AI Specimen Paper 2025", url: `${BASE}/icse/159/8492-pdf.html`, source: "respaper" },
+  // ── CISCE specimen papers (2017, older syllabus) ──
   { id: "english_lang_2017_specimen_1", subject: "english_lang", year: 2017, type: "specimen", title: "English Language Specimen Paper 2017", url: `${CISCE}/English%20Language%20(English%20Paper%20-%201).pdf`, source: "cisce" },
   { id: "english_lit_2017_specimen_1", subject: "english_lit", year: 2017, type: "specimen", title: "English Literature Specimen Paper 2017", url: `${CISCE}/Literature%20in%20English%20(English%20Paper%20-%202).pdf`, source: "cisce" },
   { id: "hindi_2017_specimen_1", subject: "hindi", year: 2017, type: "specimen", title: "Hindi Specimen Paper 2017", url: `${CISCE}/Hindi.pdf`, source: "cisce" },

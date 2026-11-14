@@ -11,22 +11,21 @@ export default function CoachPage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Free trial banner */}
       <div
-        className="rounded-xl p-4 flex items-start gap-3"
+        className="rounded-2xl px-4 py-3.5"
         style={{
-          background: "linear-gradient(135deg, rgba(123,97,255,0.12), rgba(26,115,232,0.12))",
-          border: "1px solid rgba(123,97,255,0.25)",
+          background: "var(--paper)",
+          border: "2px solid var(--outline)",
         }}
       >
-        <span className="text-lg mt-0.5">&#9889;</span>
         <div>
-          <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-            AI Coach is free to try right now!
+          <p className="text-[15px] font-bold" style={{ color: "var(--text)" }}>
+            The AI coach is free to try right now
           </p>
-          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-            We&apos;re making this feature even better in the next 2-3 days. Try it out and let us know what you think!
+          <p className="text-[13px] mt-1" style={{ color: "var(--text-secondary)" }}>
+            We&apos;re improving this feature over the next 2-3 days. Try it out and let us know what you think.
           </p>
         </div>
       </div>

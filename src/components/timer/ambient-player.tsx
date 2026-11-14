@@ -10,7 +10,7 @@ type SoundType = "rain" | "cafe" | "whitenoise";
 const SOUND_OPTIONS: { value: SoundType; label: string }[] = [
   { value: "rain", label: "Rain" },
   { value: "cafe", label: "Cafe" },
-  { value: "whitenoise", label: "White Noise" },
+  { value: "whitenoise", label: "White noise" },
 ];
 
 const BUFFER_SIZE = 4096;
@@ -203,12 +203,12 @@ export function AmbientPlayer() {
   return (
     <Card>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-          Ambient Sound
+        <h3 className="font-display text-lg font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>
+          Ambient sound
         </h3>
         <Button
           size="sm"
-          variant={playing ? "secondary" : "primary"}
+          variant="secondary"
           onClick={handleToggle}
         >
           <span className="flex items-center gap-1.5">
@@ -237,7 +237,7 @@ export function AmbientPlayer() {
         </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         {/* Sound Type Selector */}
         <Select
           options={SOUND_OPTIONS}
@@ -255,8 +255,8 @@ export function AmbientPlayer() {
               Volume
             </label>
             <span
-              className="text-xs"
-              style={{ color: "var(--text-secondary)" }}
+              className="text-xs font-bold tabular-nums"
+              style={{ color: "var(--text-muted)" }}
             >
               {volume}%
             </span>
@@ -267,10 +267,9 @@ export function AmbientPlayer() {
             max={100}
             value={volume}
             onChange={(e) => setVolume(parseInt(e.target.value))}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-            style={{
-              background: `linear-gradient(to right, var(--primary) ${volume}%, var(--border) ${volume}%)`,
-            }}
+            aria-label="Volume"
+            className="w-full cursor-pointer"
+            style={{ accentColor: "var(--primary)" }}
           />
         </div>
       </div>

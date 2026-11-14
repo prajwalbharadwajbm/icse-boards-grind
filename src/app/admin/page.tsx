@@ -4,8 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
 import { useRouter } from "next/navigation";
-import { getDbInstance } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, increment } from "firebase/firestore";
+import { apiJson } from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -69,11 +68,7 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const snap = await getDocs(collection(getDbInstance(), "users"));
-      const list: AdminUser[] = snap.docs.map((d) => ({
-        uid: d.id,
-        ...d.data(),
-      })) as AdminUser[];
+      const { users: list } = await apiJson<{ users: AdminUser[] }>("/api/admin/users");
       setUsers(list);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to fetch users");
@@ -92,14 +87,12 @@ export default function AdminPage() {
     setGranting(true);
     setGrantMsg("");
     try {
-      const db = getDbInstance();
-      const promises = targets.map((u) =>
-        updateDoc(doc(db, "users", u.uid), {
-          credits: mode === "set" ? amount : increment(amount),
-        })
-      );
-      await Promise.all(promises);
-      setGrantMsg(`Done: ${actionLabel}`);
+      // Credits change only on the server, which checks ADMIN_EMAILS and writes a ledger entry
+      const { failed } = await apiJson<{ updated: number; failed: string[] }>("/api/admin/credits", {
+        method: "POST",
+        body: JSON.stringify({ target: targetUid, mode, amount }),
+      });
+      setGrantMsg(failed.length ? `Done for most students. ${failed.length} failed: ${failed.join(", ")}` : `Done: ${actionLabel}`);
       setCreditModalOpen(false);
       fetchUsers();
     } catch (e: unknown) {
