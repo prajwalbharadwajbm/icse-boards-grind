@@ -26,6 +26,7 @@ import LeaderboardPage from "@/app/dashboard/leaderboard/page";
 import ParentReportPage from "@/app/dashboard/parent-report/page";
 import SettingsPage from "@/app/dashboard/settings/page";
 import EnglishPage from "@/app/dashboard/english/page";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 /** Map slug to page component */
 const PAGE_MAP: Record<string, ComponentType> = {
@@ -203,6 +204,8 @@ function PreviewContent() {
 
   // Resolve which page to render: /preview → "", /preview/subjects → "subjects"
   const slug = pathname.replace(/^\/preview\/?/, "").split("/")[0] || "";
+  // Onboarding is full screen, without the dashboard shell
+  if (slug === "onboarding") return <OnboardingFlow preview />;
   const PageComponent = PAGE_MAP[slug] || DashboardPage;
 
   return (
