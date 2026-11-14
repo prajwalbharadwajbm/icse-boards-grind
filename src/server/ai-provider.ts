@@ -1,0 +1,50 @@
+import { getAIConfig } from "@/lib/ai-provider-config";
+import { ApiError } from "./errors";
+import type { AIChatMessage } from "./ai-request";
+
+/**
+ * Server-held AI keys, comma-separated in AI_API_KEYS (never NEXT_PUBLIC_*).
+ * Keys starting with gsk_ go to Groq, others to xAI. Tries the next key on rate limits and outages.
+ */
+function serverKeys(): string[] {
+  const keys = (process.env.AI_API_KEYS || "").split(",").map((k) => k.trim()).filter(Boolean);
+  if (keys.length === 0) {
+    console.error("[ai] AI_API_KEYS is not set");
+    throw new ApiError(503, "ai_not_configured", "The AI coach isn't available right now. Try again later");
+  }
+  // Shuffle so load spreads across keys
+  return keys.map((k) => [Math.random(), k] as const).sort((a, b) => a[0] - b[0]).map(([, k]) => k);
+}
+
+export async function callAIProvider(opts: {
+  messages: AIChatMessage[];
+  maxTokens: number;
+  stream: boolean;
+  signal?: AbortSignal;
+}): Promise<Response> {
+  let lastStatus = 0;
+  for (const key of serverKeys()) {
+    const { url, model } = getAIConfig(key);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, messages: opts.messages, stream: opts.stream, max_tokens: opts.maxTokens, temperature: 0.7 }),
+        signal: opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(55_000)]) : AbortSignal.timeout(55_000),
+      });
+      if (res.ok) return res;
+      lastStatus = res.status;
+      const body = await res.text().catch(() => "");
+      console.error(`[ai] provider ${new URL(url).host} returned ${res.status}: ${body.slice(0, 300)}`);
+      if (res.status !== 429 && res.status < 500) break; // a request problem, another key won't help
+    } catch (err) {
+      if (opts.signal?.aborted) throw new ApiError(499, "cancelled", "Request cancelled");
+      console.error("[ai] provider request failed", err);
+    }
+  }
+  throw new ApiError(
+    503,
+    "ai_unavailable",
+    lastStatus === 429 ? "The AI coach is busy right now. Try again in a minute" : "The AI coach couldn't answer just now. Try again"
+  );
+}

@@ -46,7 +46,7 @@ export function GrammarDrill() {
         const effectiveKey = getEffectiveAIKey(grokApiKey);
         const response = await sendChatCompletionSync(effectiveKey, [
           { role: "user", content: prompt },
-        ]);
+        ], "grammar");
         const parsed = parseGrammarResponse(response);
         if (!parsed) {
           setError("Could not parse AI response. Try again.");

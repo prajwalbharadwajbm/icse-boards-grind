@@ -1,6 +1,6 @@
 "use client";
 
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import { useStore, type StoreState } from "./use-store";
 import { DEFAULT_CREDITS } from "@/lib/credits";
@@ -79,12 +79,9 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
       if (cloudData.leaderboardOptIn === false || cloudData.leaderboardOptIn === undefined) {
         cloudData.leaderboardOptIn = true;
       }
-      // Initialize credits for existing cloud users — persist to Firestore
+      // Credits are server-managed: the balance is set by /api/credits (refreshCredits), never written here
       if (cloudData.credits == null) {
         cloudData.credits = DEFAULT_CREDITS;
-        updateDoc(doc(getDbInstance(), "users", uid), { credits: DEFAULT_CREDITS }).catch((e) =>
-          console.error("Credit init failed:", e)
-        );
       }
       useStore.getState().setAll(cloudData);
       // Ensure leaderboard data is pushed on load

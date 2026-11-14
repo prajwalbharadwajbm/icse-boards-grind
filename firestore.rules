@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Firestore rules for ICSE Boards Grind.
+// Deploy with: firebase deploy --only firestore:rules
+//
+// The browser may only read and write its own study data. Credits, the credit ledger
+// and AI usage counters are changed only by the server (Admin SDK, which bypasses these
+// rules) through /api/credits, /api/ai and /api/admin/*. The public parent report and the
+// admin dashboard also read through the server, so no client ever reads another
+// student's document.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Fields on users/{uid} that only the server may set
+    function serverOnlyFields() {
+      return ['credits'];
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny(serverOnlyFields());
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(serverOnlyFields());
+      allow delete: if isOwner(uid);
+
+      match /creditLedger/{entryId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // Weekly leaderboard: names are anonymised before they are written
+    match /leaderboard/{uid} {
+      allow read: if signedIn();
+      allow write: if isOwner(uid);
+    }
+
+    // Server-only
+    match /aiUsage/{uid} {
+      allow read, write: if false;
+    }
+  }
+}

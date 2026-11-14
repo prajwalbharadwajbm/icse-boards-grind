@@ -6,6 +6,7 @@ import { auth, getDbInstance } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { loadFromCloud, setCurrentUid, startSyncListener, stopSyncListener } from "@/store/firebase-sync";
 import { useStore } from "@/store/use-store";
+import { refreshCredits } from "@/hooks/use-credits";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -36,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         setCurrentUid(firebaseUser.uid);
         await loadFromCloud(firebaseUser.uid);
+        // Server is the source of truth for credits; also gives new students their starting balance
+        void refreshCredits();
         startSyncListener();
         if (firebaseUser.email) {
           setDoc(doc(getDbInstance(), "users", firebaseUser.uid), { email: firebaseUser.email }, { merge: true }).catch(() => {});

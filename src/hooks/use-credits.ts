@@ -1,14 +1,25 @@
 "use client";
 
-import { doc, updateDoc } from "firebase/firestore";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
-import { getAuthInstance, getDbInstance } from "@/lib/firebase";
+import { apiJson, ApiClientError } from "@/lib/api-client";
 import {
   getCost as _getCost,
   canAfford as _canAfford,
   type CreditActivity,
 } from "@/lib/credits";
+
+/** Fetch the balance from the server (new students get their starting credits here) */
+export async function refreshCredits(): Promise<number | null> {
+  try {
+    const { credits } = await apiJson<{ credits: number }>("/api/credits");
+    useStore.getState().setField("credits", credits);
+    return credits;
+  } catch (err) {
+    console.error("Credit refresh failed:", err);
+    return null;
+  }
+}
 
 export function useCredits() {
   const credits = useStore((s) => s.credits);
@@ -18,38 +29,36 @@ export function useCredits() {
   }
 
   /**
-   * Deduct credits by writing directly to Firestore.
-   * Security rules enforce that credits can only decrease by valid cost amounts.
-   * Optimistic local update with rollback on failure.
+   * Spend credits through the server, which checks the balance in a transaction and
+   * records a ledger entry. The balance updates optimistically and is replaced by the
+   * server's figure (or rolled back) when the response arrives.
    */
   async function deduct(activity: CreditActivity, count = 1): Promise<boolean> {
     const state = useStore.getState();
     const cost = _getCost(activity, count);
     if (state.credits < cost) {
-      capture("out_of_credits", {
-        activity,
-        cost,
-        credits_remaining: state.credits,
-      });
+      capture("out_of_credits", { activity, cost, credits_remaining: state.credits });
       return false;
     }
 
-    const uid = getAuthInstance().currentUser?.uid;
-    if (!uid) return false;
-
     const previousCredits = state.credits;
-    const newCredits = previousCredits - cost;
-
-    // Optimistic local deduction for instant UI feedback
-    useStore.getState().setField("credits", newCredits);
+    useStore.getState().setField("credits", previousCredits - cost);
 
     try {
-      // Write to Firestore — security rules reject if not a valid decrement
-      await updateDoc(doc(getDbInstance(), "users", uid), { credits: newCredits });
+      const { credits: balance } = await apiJson<{ credits: number }>("/api/credits", {
+        method: "POST",
+        body: JSON.stringify({ activity, count }),
+      });
+      useStore.getState().setField("credits", balance);
       return true;
     } catch (err) {
-      console.error("Credit deduction failed:", err);
-      useStore.getState().setField("credits", previousCredits);
+      if (err instanceof ApiClientError && err.code === "insufficient_credits" && typeof err.body.credits === "number") {
+        useStore.getState().setField("credits", err.body.credits as number);
+        capture("out_of_credits", { activity, cost, credits_remaining: err.body.credits as number });
+      } else {
+        useStore.getState().setField("credits", previousCredits);
+        console.error("Credit deduction failed:", err);
+      }
       return false;
     }
   }
