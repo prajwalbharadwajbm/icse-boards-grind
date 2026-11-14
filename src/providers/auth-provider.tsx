@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, type User } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo, signOut, type User } from "firebase/auth";
 import { auth, getDbInstance } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { loadFromCloud, setCurrentUid, startSyncListener, stopSyncListener } from "@/store/firebase-sync";
 import { useStore } from "@/store/use-store";
+import { capture, INTERNAL_EMAILS } from "@/lib/analytics";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -57,14 +58,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const email = result.user.email;
+    if (getAdditionalUserInfo(result)?.isNewUser && !(email && INTERNAL_EMAILS.includes(email))) {
+      capture("user_signed_up", { method: "google" });
+    }
   };
 
   const register = async (email: string, password: string) => {
     await createUserWithEmailAndPassword(auth, email, password);
+    if (!INTERNAL_EMAILS.includes(email)) capture("user_signed_up", { method: "email" });
   };
 
   const logout = async () => {
+    capture("user_logged_out");
     await signOut(auth);
   };
 

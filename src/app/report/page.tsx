@@ -8,6 +8,7 @@ import { getDbInstance } from "@/lib/firebase";
 import { getExams, getSubjectLabels, getSubjectColors } from "@/lib/constants";
 import { today, daysBetween, formatDate } from "@/lib/utils";
 import type { StoreState } from "@/store/use-store";
+import { capture } from "@/lib/analytics";
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -18,6 +19,7 @@ function ReportContent() {
 
   useEffect(() => {
     if (!uid) {
+      capture("parent_report_opened", { status: "missing_uid" });
       setError("No student ID provided.");
       setLoading(false);
       return;
@@ -26,16 +28,20 @@ function ReportContent() {
       try {
         const snap = await getDoc(doc(getDbInstance(), "users", uid));
         if (!snap.exists()) {
+          capture("parent_report_opened", { status: "not_found" });
           setError("Report not found.");
           return;
         }
         const d = snap.data() as Partial<StoreState>;
         if (!d.shareReportEnabled) {
+          capture("parent_report_opened", { status: "not_shared" });
           setError("This report is not shared.");
           return;
         }
+        capture("parent_report_opened", { status: "ok" });
         setData(d);
       } catch {
+        capture("parent_report_opened", { status: "error" });
         setError("Failed to load report.");
       } finally {
         setLoading(false);

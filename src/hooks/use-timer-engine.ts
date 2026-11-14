@@ -26,10 +26,16 @@ export function useTimerEngine() {
           const msg = getTimerWorkDoneMessage(state.workMinutes);
           sendNotification(msg.title, msg.body, "timer-work-done");
           logStudyTime(state.subject, state.chapter, state.workMinutes);
+          const study = useStore.getState();
+          const sessionNumber = study.timerSessions.length;
           capture("timer_completed", {
             subject: state.subject || "general",
             chapter: state.chapter || "",
             duration_minutes: state.workMinutes,
+            session_number: sessionNumber,
+            is_first_session: sessionNumber === 1,
+            streak: study.streak,
+            hours_today: Math.round((study.studyLog[today()]?.hours ?? 0) * 100) / 100,
           });
         } else if (result === "break_done") {
           playBeep();

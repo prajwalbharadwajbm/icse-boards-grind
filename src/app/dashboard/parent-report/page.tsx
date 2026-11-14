@@ -24,6 +24,7 @@ export default function ParentReportPage() {
   const copyLink = () => {
     if (!reportUrl) return;
     navigator.clipboard.writeText(reportUrl);
+    capture("parent_report_shared", { method: "copy_link" });
   };
 
   const shareViaWhatsApp = () => {

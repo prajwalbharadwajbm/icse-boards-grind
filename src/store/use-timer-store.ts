@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { capture } from "@/lib/analytics";
 
 type TimerPhase = "work" | "break";
 type Preset = "pomodoro" | "deep" | "custom";
@@ -89,10 +90,15 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   setChapter: (chapter) => set({ chapter }),
 
   start: () => set({ running: true }),
-  pause: () => set({ running: false }),
+  pause: () => {
+    const { running, phase, seconds, totalSeconds } = get();
+    if (running) capture("timer_paused", { phase, seconds_left: seconds, total_seconds: totalSeconds });
+    set({ running: false });
+  },
 
   reset: () => {
-    const { workMinutes } = get();
+    const { workMinutes, phase, seconds, totalSeconds } = get();
+    if (seconds !== totalSeconds) capture("timer_reset", { phase, seconds_left: seconds, total_seconds: totalSeconds });
     set({
       running: false,
       phase: "work",

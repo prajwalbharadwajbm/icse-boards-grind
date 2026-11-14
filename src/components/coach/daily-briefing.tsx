@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { sendChatCompletionSync } from "@/lib/ai-service";
 import { buildDailyBriefingPrompt } from "@/lib/coach-prompts";
 import { today, getEffectiveAIKey } from "@/lib/utils";
+import { capture } from "@/lib/analytics";
 
 export function DailyBriefing() {
   const data = useStore();
@@ -16,8 +17,9 @@ export function DailyBriefing() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchBriefing = async () => {
+  const loadBriefing = async (trigger: "auto" | "refresh") => {
     const apiKey = getEffectiveAIKey(data.grokApiKey);
+    const startedAt = Date.now();
     setLoading(true);
     setError("");
     try {
@@ -27,6 +29,7 @@ export function DailyBriefing() {
         { role: "user", content: "Give me my daily briefing." },
       ]);
       setContent(result);
+      capture("coach_briefing_loaded", { trigger, duration_ms: Date.now() - startedAt });
       useStore.getState().update((s) => ({
         dailyBriefingCache: {
           ...s.dailyBriefingCache,
@@ -34,15 +37,18 @@ export function DailyBriefing() {
         },
       }));
     } catch (err) {
+      capture("coach_briefing_failed", { trigger, error: (err as Error).message.slice(0, 200) });
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchBriefing = () => loadBriefing("refresh");
+
   useEffect(() => {
     if (!content) {
-      fetchBriefing();
+      loadBriefing("auto");
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

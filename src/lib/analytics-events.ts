@@ -6,11 +6,17 @@
 
 export interface AnalyticsEventMap {
   // ── Auth ──────────────────────────────────────────────────────────────
+  login_page_viewed: Record<string, never>;
+  login_started: { method: string };
   user_logged_in: { method: string };
+  /** Fired once, the first time a Firebase account is created. */
+  user_signed_up: { method: string };
   login_failed: { method: string; error: string };
+  user_logged_out: Record<string, never>;
 
   // ── Onboarding ────────────────────────────────────────────────────────
-  onboarding_step_completed: { step: number };
+  onboarding_started: Record<string, never>;
+  onboarding_step_completed: { step: number; step_name: string; total_steps: number };
   onboarding_completed: {
     language: string;
     elective: string;
@@ -106,7 +112,9 @@ export interface AnalyticsEventMap {
 
   // ── Parent Report ─────────────────────────────────────────────────────
   parent_report_page_viewed: Record<string, never>;
-  parent_report_shared: { method: string };
+  parent_report_shared: { method: "whatsapp" | "email" | "copy_link" };
+  /** Public /report page, usually opened by a parent from a shared link. */
+  parent_report_opened: { status: "ok" | "not_shared" | "not_found" | "missing_uid" | "error" };
 
   // ── Credits ───────────────────────────────────────────────────────────
   out_of_credits: { activity: string; cost: number; credits_remaining: number };
@@ -115,6 +123,11 @@ export interface AnalyticsEventMap {
   coach_page_viewed: Record<string, never>;
   coach_banner_clicked: { page: string };
   coach_message_sent: { source: string; message_content: string; message_length: number; is_quick_prompt: boolean };
+  coach_response_received: { response_length: number; plan_change_count: number; duration_ms: number };
+  coach_response_failed: { error: string; duration_ms: number };
+  coach_plan_changes_applied: { change_count: number };
+  coach_briefing_loaded: { trigger: "auto" | "refresh"; duration_ms: number };
+  coach_briefing_failed: { trigger: "auto" | "refresh"; error: string };
 
   // ── What's New ────────────────────────────────────────────────────────
   whats_new_dismissed: { updates_shown: number };
@@ -124,6 +137,8 @@ export interface AnalyticsEventMap {
   papers_show_all_toggled: { show_all: boolean };
   paper_solved: { paper_id: string; subject?: string; year?: number; type?: string };
   paper_unsolved: { paper_id: string; subject?: string; year?: number; type?: string };
+  /** Outbound click on a paper's title (opens the PDF source in a new tab). */
+  paper_opened: { paper_id: string; subject: string; year: number; type: string; source: string };
 
   // ── Pageview (PostHog built-in) ───────────────────────────────────────
   $pageview: { $current_url: string };
@@ -133,13 +148,38 @@ export interface AnalyticsEventMap {
 
   // ── Timer (engine) ────────────────────────────────────────────────────
   timer_started: { subject: string; chapter: string; duration_minutes: number; preset: string };
-  timer_completed: { subject: string; chapter: string; duration_minutes: number };
+  timer_completed: {
+    subject: string;
+    chapter: string;
+    duration_minutes: number;
+    /** 1 for the student's first ever completed session: the activation moment. */
+    session_number: number;
+    is_first_session: boolean;
+    streak: number;
+    hours_today: number;
+  };
+  timer_paused: { phase: string; seconds_left: number; total_seconds: number };
+  timer_reset: { phase: string; seconds_left: number; total_seconds: number };
 
   // ── Milestones ────────────────────────────────────────────────────────
   milestone_celebrated: { type: string; subject?: string; chapter?: string; value?: number; category?: string };
 
   // ── Streak ────────────────────────────────────────────────────────────
   streak_recovered: { restored_streak: number };
+
+  // ── Notifications ─────────────────────────────────────────────────────
+  notification_permission_result: { result: string; source: "auto_prompt" | "settings" };
+  notification_shown: { type: string };
+  notification_clicked: { type: string; via: "page" | "service_worker" };
+  notification_prefs_saved: {
+    study_reminders: boolean;
+    exam_alerts: boolean;
+    revision_due: boolean;
+    break_reminders: boolean;
+    milestones: boolean;
+    daily_goal_alerts: boolean;
+    reminder_minutes: number;
+  };
 }
 
 /** Union of all event names */

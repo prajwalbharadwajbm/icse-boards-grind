@@ -29,6 +29,10 @@ export default function LoginPage() {
     }
   }, [user, onboarded, router]);
 
+  useEffect(() => {
+    capture("login_page_viewed");
+  }, []);
+
   if (user) {
     return null;
   }
@@ -67,6 +71,7 @@ export default function LoginPage() {
             onClick={async () => {
               setError("");
               setSubmitting(true);
+              capture("login_started", { method: "google" });
               try {
                 await loginWithGoogle();
                 capture("user_logged_in", { method: "google" });

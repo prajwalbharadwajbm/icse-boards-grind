@@ -377,6 +377,7 @@ function PaperCard({
         href={paper.url}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => capture("paper_opened", { paper_id: paper.id, subject: paper.subject, year: paper.year, type: paper.type, source: paper.source })}
         className="block text-sm font-medium mb-2 hover:underline"
         style={{ color: "var(--text)" }}
       >

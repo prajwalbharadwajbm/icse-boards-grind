@@ -10,6 +10,7 @@ import { SECOND_LANGUAGES, ELECTIVES, getSubjectLabels, getSubjectColors } from 
 import { Button } from "@/components/ui/button";
 
 const TOTAL_STEPS = 9;
+const STEP_NAMES = ["name", "language", "elective", "learning_style", "study_hours", "subject_confidence", "target_percent", "prep_level", "routine"];
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -21,6 +22,10 @@ export default function OnboardingPage() {
   useEffect(() => {
     setField("theme", "dark");
   }, [setField]);
+
+  useEffect(() => {
+    if (user) capture("onboarding_started");
+  }, [user]);
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -57,9 +62,10 @@ export default function OnboardingPage() {
   const handleNext = () => {
     if (step === 1 && !name.trim()) return;
     if (step < TOTAL_STEPS) {
-      capture("onboarding_step_completed", { step });
+      capture("onboarding_step_completed", { step, step_name: STEP_NAMES[step - 1], total_steps: TOTAL_STEPS });
       setStep(step + 1);
     } else {
+      capture("onboarding_step_completed", { step, step_name: STEP_NAMES[step - 1], total_steps: TOTAL_STEPS });
       // Save all data
       update((s) => ({
         ...s,

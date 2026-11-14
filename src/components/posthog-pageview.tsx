@@ -16,6 +16,14 @@ export function PostHogPageview() {
         url += "?" + params;
       }
       capture("$pageview", { $current_url: url });
+
+      // The service worker opens notification links with ?from=notification (see showNotification)
+      if (searchParams.get("from") === "notification") {
+        capture("notification_clicked", {
+          type: searchParams.get("notification_type") || "unknown",
+          via: "service_worker",
+        });
+      }
     }
   }, [pathname, searchParams]);
 

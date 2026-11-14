@@ -22,6 +22,7 @@ import {
   getStreakRiskMessage,
 } from "@/lib/notification-messages";
 import { canSendNotification } from "@/lib/notification-throttle";
+import { capture, trackNotification } from "@/lib/analytics";
 
 export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">(() => {
@@ -48,6 +49,7 @@ export function usePushNotifications() {
 
       if (getNotificationPermission() === "default") {
         const result = await requestNotificationPermission();
+        capture("notification_permission_result", { result, source: "auto_prompt" });
         setPermission(result);
       }
 
@@ -176,11 +178,11 @@ function scheduleEveningNudge() {
     // Use direct notification instead of scheduled (we're already at the right time)
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
       try {
-        new Notification(msg.title, {
+        trackNotification("evening_nudge", new Notification(msg.title, {
           body: msg.body,
           tag: `evening-nudge-${td}`,
           icon: "/icon1.png",
-        });
+        }));
       } catch {
         /* silent */
       }
@@ -211,11 +213,11 @@ function scheduleStreakRisk() {
 
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
       try {
-        new Notification(msg.title, {
+        trackNotification("streak_risk", new Notification(msg.title, {
           body: msg.body,
           tag: `streak-risk-${td}`,
           icon: "/icon1.png",
-        });
+        }));
       } catch {
         /* silent */
       }

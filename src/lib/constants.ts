@@ -37,6 +37,9 @@ export interface Elective {
   group: string;
 }
 
+/** The board exam year the app is preparing students for. */
+export const EXAM_YEAR = 2026;
+
 // 8 core subjects (fixed for all ICSE students)
 export const CORE_EXAMS: Exam[] = [
   { date: "2026-02-17", subject: "English Language Paper 1", key: "english_lang", duration: "2hrs" },

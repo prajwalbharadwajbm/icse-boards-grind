@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { capture } from "@/lib/analytics";
 import {
   isPushSupported,
   getNotificationPermission,
@@ -81,6 +82,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     
     // Request permission
     const perm = await requestNotificationPermission();
+    capture("notification_permission_result", { result: perm, source: "settings" });
     setPermission(perm);
     
     if (perm === "granted") {
@@ -121,6 +123,15 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
   const handleSavePrefs = () => {
     localStorage.setItem("notification-prefs", JSON.stringify(prefs));
+    capture("notification_prefs_saved", {
+      study_reminders: prefs.studyReminders,
+      exam_alerts: prefs.examAlerts,
+      revision_due: prefs.revisionDue,
+      break_reminders: prefs.breakReminders,
+      milestones: prefs.milestones,
+      daily_goal_alerts: prefs.dailyGoalAlerts,
+      reminder_minutes: prefs.reminderMinutes,
+    });
     onClose?.();
   };
 

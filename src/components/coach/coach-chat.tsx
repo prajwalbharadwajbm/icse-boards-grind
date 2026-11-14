@@ -81,6 +81,7 @@ export function CoachChat() {
     ];
 
     let fullResponse = "";
+    const startedAt = ts;
 
     await sendChatCompletion(
       apiKey,
@@ -91,6 +92,11 @@ export function CoachChat() {
       },
       () => {
         const planChanges = parsePlanChanges(fullResponse);
+        capture("coach_response_received", {
+          response_length: fullResponse.length,
+          plan_change_count: planChanges.length,
+          duration_ms: Date.now() - startedAt,
+        });
         const assistantMsg: CoachMessage = {
           role: "assistant",
           content: fullResponse,
@@ -102,6 +108,7 @@ export function CoachChat() {
         setStreamText("");
       },
       (error) => {
+        capture("coach_response_failed", { error: String(error).slice(0, 200), duration_ms: Date.now() - startedAt });
         addMessage({
           role: "assistant",
           content: `Sorry, I encountered an error: ${error}`,
@@ -115,6 +122,7 @@ export function CoachChat() {
 
   const handleApplyChanges = (msg: CoachMessage) => {
     if (!msg.planChanges) return;
+    capture("coach_plan_changes_applied", { change_count: msg.planChanges.length });
     const currentPlan = getDayPlan(td, data);
     const newPlan = applyPlanChanges(currentPlan, msg.planChanges);
     useStore.getState().update((s) => ({
