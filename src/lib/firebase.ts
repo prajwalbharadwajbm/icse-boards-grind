@@ -15,7 +15,10 @@ function getApp(): FirebaseApp {
   return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 }
 
-// Lazy initialization getters
+// Created on first use, in the browser, so the static build never initialises Firebase.
+// Always pass these real instances to Firebase functions. A Proxy stand-in breaks sign-in:
+// Firebase writes the signed-in user onto whatever object it was given, so the real instance
+// never learns about it and onAuthStateChanged doesn't fire until the page reloads.
 let _auth: Auth | undefined;
 let _db: Firestore | undefined;
 
@@ -28,18 +31,3 @@ export function getDbInstance(): Firestore {
   if (!_db) _db = getFirestore(getApp());
   return _db;
 }
-
-// For backward compatibility - these will be initialized on first access
-export const auth: Auth = new Proxy({} as Auth, {
-  get(_, prop) {
-    const instance = getAuthInstance();
-    return (instance as never)[prop];
-  },
-});
-
-export const db: Firestore = new Proxy({} as Firestore, {
-  get(_, prop) {
-    const instance = getDbInstance();
-    return (instance as never)[prop];
-  },
-});
