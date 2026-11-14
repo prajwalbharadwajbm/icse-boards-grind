@@ -3,8 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { getDbInstance } from "@/lib/firebase";
 import { getExams, getSubjectLabels, getSubjectColors } from "@/lib/constants";
 import { today, daysBetween, formatDate } from "@/lib/utils";
 import type { StoreState } from "@/store/use-store";
@@ -24,17 +22,19 @@ function ReportContent() {
     }
     (async () => {
       try {
-        const snap = await getDoc(doc(getDbInstance(), "users", uid));
-        if (!snap.exists()) {
+        // Served by /api/report, which returns only the report fields and only while sharing is on
+        const res = await fetch(`/api/report/${encodeURIComponent(uid)}`, { cache: "no-store" });
+        if (res.status === 404) {
           setError("Report not found.");
           return;
         }
-        const d = snap.data() as Partial<StoreState>;
-        if (!d.shareReportEnabled) {
+        if (res.status === 403) {
           setError("This report is not shared.");
           return;
         }
-        setData(d);
+        if (!res.ok) throw new Error(`Report request failed: ${res.status}`);
+        const { report } = (await res.json()) as { report: Partial<StoreState> };
+        setData(report);
       } catch {
         setError("Failed to load report.");
       } finally {
