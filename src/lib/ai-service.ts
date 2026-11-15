@@ -1,4 +1,4 @@
-import { getAIConfig } from "./ai-provider-config";
+import { chatCompletionRequest } from "./ai-provider-config";
 import { apiFetch } from "./api-client";
 import type { AIPurpose } from "./ai-policy";
 
@@ -52,11 +52,11 @@ export async function sendChatCompletionSync(
 
 /** Direct call with the student's own key */
 async function providerRequest(apiKey: string, messages: ChatMessage[], opts: { stream: boolean; maxTokens: number }): Promise<Response> {
-  const config = getAIConfig(apiKey);
-  const response = await fetch(config.url, {
+  const { url, body } = chatCompletionRequest(apiKey, { messages, ...opts });
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: config.model, messages, stream: opts.stream, max_tokens: opts.maxTokens, temperature: 0.7 }),
+    body,
   });
   if (!response.ok) {
     if (response.status === 401) throw new Error("Your API key was rejected. Check it in Settings");
