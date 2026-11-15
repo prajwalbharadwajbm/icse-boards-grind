@@ -1,4 +1,4 @@
-import { getAIConfig } from "@/lib/ai-provider-config";
+import { chatCompletionRequest } from "@/lib/ai-provider-config";
 import { ApiError } from "./errors";
 import type { AIChatMessage } from "./ai-request";
 
@@ -24,12 +24,12 @@ export async function callAIProvider(opts: {
 }): Promise<Response> {
   let lastStatus = 0;
   for (const key of serverKeys()) {
-    const { url, model } = getAIConfig(key);
+    const { url, body: requestBody } = chatCompletionRequest(key, opts);
     try {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model, messages: opts.messages, stream: opts.stream, max_tokens: opts.maxTokens, temperature: 0.7 }),
+        body: requestBody,
         signal: opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(55_000)]) : AbortSignal.timeout(55_000),
       });
       if (res.ok) return res;
