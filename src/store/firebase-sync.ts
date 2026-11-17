@@ -86,15 +86,22 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
       if (cloudData.credits == null) {
         cloudData.credits = DEFAULT_CREDITS;
       }
-      // Older accounts never got chapter lists for their chosen language or elective
+      // Older accounts are missing chapter lists (or saved them empty) for some subjects
+      let filledSubjects = false;
       if (cloudData.onboarded) {
+        const saved = cloudData.subjects || {};
         cloudData.subjects = withSubjectKeys(
-          cloudData.subjects,
+          saved,
           cloudData.selectedLanguage || "kannada",
           cloudData.selectedElective || "computer"
         );
+        filledSubjects = Object.entries(cloudData.subjects).some(
+          ([key, chapters]) => !(key in saved) || chapters.length !== saved[key].length
+        );
       }
       useStore.getState().setAll(cloudData);
+      // Save filled-in chapter lists now, so parent reports and admin see them without waiting for the student's next change
+      if (filledSubjects) schedulCloudSync();
       // Ensure leaderboard data is pushed on load
       pushLeaderboardData();
       return true;
