@@ -70,8 +70,8 @@ describe("loadFromCloud", () => {
   });
 });
 
-/** Every subject saved with chapters, except the second language and elective, which have no defaults */
+/** Every subject the student takes, including their second language and elective, saved with chapters */
 function fullySaved(): Record<string, Chapter[]> {
-  const keys = ["english_lang", "english_lit", "math", "physics", "chemistry", "biology", "history", "geography"];
-  return { ...Object.fromEntries(keys.map((k) => [k, [ch(`${k} chapter`)]])), hindi: [], computer: [] };
+  const keys = ["english_lang", "english_lit", "math", "physics", "chemistry", "biology", "history", "geography", "hindi", "computer"];
+  return Object.fromEntries(keys.map((k) => [k, [ch(`${k} chapter`)]]));
 }
