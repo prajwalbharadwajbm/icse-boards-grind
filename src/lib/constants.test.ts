@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDefaultChapters, withSubjectKeys, type Chapter } from "./constants";
+import { ELECTIVES, SECOND_LANGUAGES, getDefaultChapters, withSubjectKeys, type Chapter } from "./constants";
 
 const ch = (name: string, status: Chapter["status"] = "not_started"): Chapter => ({ name, status, difficulty: 3 });
 
@@ -24,10 +24,20 @@ describe("withSubjectKeys", () => {
     expect(next.physics).toBe(physics);
   });
 
-  it("keeps the second language and elective as empty lists, since they have no defaults", () => {
-    const next = withSubjectKeys({ hindi: [] }, "hindi", "computer");
-    expect(next.hindi).toEqual([]);
-    expect(next.computer).toEqual([]);
+  it("fills the student's second language and elective saved as empty lists", () => {
+    const next = withSubjectKeys({ hindi: [], computer: [] }, "hindi", "computer");
+    expect(next.hindi.map((c) => c.name).slice(0, 5)).toEqual([
+      "Composition",
+      "Letter",
+      "Comprehension",
+      "Grammar",
+      "Sahitya Sagar - Bade Ghar Ki Beti",
+    ]);
+    expect(next.computer[0].name).toBe("Revision of Class IX Syllabus");
+  });
+
+  it("keeps an elective with no published syllabus as an empty list", () => {
+    expect(withSubjectKeys({}, "hindi", "robotics_ai").robotics_ai).toEqual([]);
   });
 
   it("does not change the saved subjects it was given", () => {
@@ -48,9 +58,33 @@ describe("getDefaultChapters", () => {
     }
   });
 
+  const withSyllabus = [...SECOND_LANGUAGES, ...ELECTIVES].map((s) => s.key).filter((k) => k !== "robotics_ai");
+
+  it.each(withSyllabus)("gives %s a list with unique names and difficulty 1-5", (key) => {
+    const isLanguage = SECOND_LANGUAGES.some((l) => l.key === key);
+    const chapters = getDefaultChapters(isLanguage ? key : "hindi", isLanguage ? "computer" : key)[key];
+    expect(chapters.length).toBeGreaterThan(0);
+    expect(new Set(chapters.map((c) => c.name)).size).toBe(chapters.length);
+    for (const c of chapters) {
+      expect(c.status).toBe("not_started");
+      expect(Number.isInteger(c.difficulty) && c.difficulty >= 1 && c.difficulty <= 5).toBe(true);
+    }
+  });
+
+  it("starts every Indian language with the four Section A units", () => {
+    const indian = SECOND_LANGUAGES.map((l) => l.key).filter((k) => k !== "french" && k !== "german");
+    for (const key of indian) {
+      const names = getDefaultChapters(key, "computer")[key].map((c) => c.name);
+      expect(names.slice(0, 4), key).toEqual(["Composition", "Letter", "Comprehension", "Grammar"]);
+    }
+  });
+
   it("returns fresh chapter objects each time, so marking one student's chapter can't leak into another's", () => {
     const a = getDefaultChapters("hindi", "computer");
     a.math[0].status = "completed";
-    expect(getDefaultChapters("hindi", "computer").math[0].status).toBe("not_started");
+    a.hindi[0].status = "completed";
+    const b = getDefaultChapters("hindi", "computer");
+    expect(b.math[0].status).toBe("not_started");
+    expect(b.hindi[0].status).toBe("not_started");
   });
 });
