@@ -4,7 +4,9 @@ import { useState, useMemo, useEffect } from "react";
 import { capture } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { useStore } from "@/store/use-store";
+import Link from "next/link";
 import { getSubjectLabels } from "@/lib/constants";
+import { chapterOptions } from "@/lib/timer-options";
 import { today } from "@/lib/utils";
 import { getDayPlan } from "@/lib/algorithms";
 import { Select } from "@/components/ui/select";
@@ -35,15 +37,10 @@ export default function TimerPage() {
   }, [SUBJECT_LABELS]);
 
   // Build chapter options based on selected subject
-  const chapterOptions = useMemo(() => {
-    const opts = [{ value: "", label: "Select chapter" }];
-    if (selectedSubject && data.subjects[selectedSubject]) {
-      data.subjects[selectedSubject].forEach((ch) => {
-        opts.push({ value: ch.name, label: ch.name });
-      });
-    }
-    return opts;
-  }, [selectedSubject, data.subjects]);
+  const { options: chapterSelectOptions, noChapters } = useMemo(
+    () => chapterOptions(selectedSubject, data.subjects || {}),
+    [selectedSubject, data.subjects]
+  );
 
   // Auto-suggest current study block from day plan
   useEffect(() => {
@@ -124,13 +121,28 @@ export default function TimerPage() {
           value={selectedSubject}
           onChange={(e) => handleSubjectChange(e.target.value)}
         />
-        <Select
-          label="Chapter"
-          options={chapterOptions}
-          value={selectedChapter}
-          onChange={(e) => setSelectedChapter(e.target.value)}
-          disabled={!selectedSubject}
-        />
+        <div>
+          <Select
+            label="Chapter"
+            options={chapterSelectOptions}
+            value={selectedChapter}
+            onChange={(e) => setSelectedChapter(e.target.value)}
+            disabled={!selectedSubject || noChapters}
+          />
+          {noChapters && (
+            <p className="mt-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+              You can still start the timer.{" "}
+              <Link
+                href="/dashboard/subjects"
+                onClick={() => capture("timer_add_chapters_clicked", { subject: selectedSubject })}
+                className="font-bold underline underline-offset-4 decoration-2"
+                style={{ color: "var(--text)" }}
+              >
+                Add your own chapters
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Two-column layout */}

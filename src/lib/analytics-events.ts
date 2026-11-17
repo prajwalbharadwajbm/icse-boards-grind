@@ -166,6 +166,7 @@ export interface AnalyticsEventMap {
   };
   timer_paused: { phase: string; seconds_left: number; total_seconds: number };
   timer_reset: { phase: string; seconds_left: number; total_seconds: number };
+  timer_add_chapters_clicked: { subject: string };
 
   // ── Milestones ────────────────────────────────────────────────────────
   milestone_celebrated: { type: string; subject?: string; chapter?: string; value?: number; category?: string };
