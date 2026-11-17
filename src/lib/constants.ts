@@ -353,10 +353,89 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
       { name: "Conventional Energy", status: "not_started", difficulty: 2 },
       { name: "Non-Conventional Energy", status: "not_started", difficulty: 2 },
     ],
-    english_lang: [],
-    english_lit: [],
-    math: [],
-    history: [],
+    // Units and set texts below follow the CISCE ICSE 2027 (Class X) syllabus PDFs, in syllabus order
+    english_lang: [
+      { name: "Composition", status: "not_started", difficulty: 3 },
+      { name: "Letter - Formal", status: "not_started", difficulty: 2 },
+      { name: "Letter - Friendly", status: "not_started", difficulty: 2 },
+      { name: "Notice", status: "not_started", difficulty: 2 },
+      { name: "E-mail", status: "not_started", difficulty: 2 },
+      { name: "Comprehension - Unseen Passage", status: "not_started", difficulty: 3 },
+      { name: "Summary", status: "not_started", difficulty: 3 },
+      { name: "Grammar - Prepositions", status: "not_started", difficulty: 2 },
+      { name: "Grammar - Conjunctions", status: "not_started", difficulty: 2 },
+      { name: "Grammar - Verbs", status: "not_started", difficulty: 3 },
+      { name: "Grammar - Structure of Sentences", status: "not_started", difficulty: 4 },
+    ],
+    english_lit: [
+      { name: "Julius Caesar - Act III", status: "not_started", difficulty: 4 },
+      { name: "Julius Caesar - Act IV", status: "not_started", difficulty: 3 },
+      { name: "Julius Caesar - Act V", status: "not_started", difficulty: 3 },
+      { name: "With the Photographer", status: "not_started", difficulty: 2 },
+      { name: "The Elevator", status: "not_started", difficulty: 2 },
+      { name: "The Girl Who Can", status: "not_started", difficulty: 2 },
+      { name: "The Pedestrian", status: "not_started", difficulty: 3 },
+      { name: "The Last Lesson", status: "not_started", difficulty: 2 },
+      { name: "Haunted Houses", status: "not_started", difficulty: 3 },
+      { name: "The Glove and the Lions", status: "not_started", difficulty: 2 },
+      { name: "When Great Trees Fall", status: "not_started", difficulty: 3 },
+      { name: "A Considerable Speck", status: "not_started", difficulty: 3 },
+      { name: "The Power of Music", status: "not_started", difficulty: 2 },
+    ],
+    math: [
+      { name: "Goods and Services Tax (GST)", status: "not_started", difficulty: 2 },
+      { name: "Banking", status: "not_started", difficulty: 2 },
+      { name: "Shares and Dividends", status: "not_started", difficulty: 3 },
+      { name: "Linear Inequations", status: "not_started", difficulty: 2 },
+      { name: "Quadratic Equations in One Variable", status: "not_started", difficulty: 3 },
+      { name: "Ratio and Proportion", status: "not_started", difficulty: 3 },
+      { name: "Factorisation of Polynomials", status: "not_started", difficulty: 3 },
+      { name: "Matrices", status: "not_started", difficulty: 3 },
+      { name: "Arithmetic and Geometric Progression", status: "not_started", difficulty: 4 },
+      { name: "Co-ordinate Geometry - Reflection", status: "not_started", difficulty: 2 },
+      { name: "Co-ordinate Geometry - Section and Mid-point Formula", status: "not_started", difficulty: 3 },
+      { name: "Co-ordinate Geometry - Equation of a Line", status: "not_started", difficulty: 4 },
+      { name: "Similarity", status: "not_started", difficulty: 3 },
+      { name: "Loci", status: "not_started", difficulty: 3 },
+      { name: "Circles - Angle Properties", status: "not_started", difficulty: 3 },
+      { name: "Circles - Cyclic Properties", status: "not_started", difficulty: 3 },
+      { name: "Circles - Tangent and Secant Properties", status: "not_started", difficulty: 4 },
+      { name: "Constructions", status: "not_started", difficulty: 3 },
+      { name: "Mensuration - Cylinder, Cone and Sphere", status: "not_started", difficulty: 4 },
+      { name: "Trigonometry - Identities", status: "not_started", difficulty: 4 },
+      { name: "Trigonometry - Heights and Distances", status: "not_started", difficulty: 4 },
+      { name: "Statistics - Measures of Central Tendency", status: "not_started", difficulty: 3 },
+      { name: "Statistics - Histograms and Ogive", status: "not_started", difficulty: 3 },
+      { name: "Probability", status: "not_started", difficulty: 2 },
+    ],
+    history: [
+      // Section A: Civics
+      { name: "Lok Sabha", status: "not_started", difficulty: 3 },
+      { name: "Rajya Sabha", status: "not_started", difficulty: 2 },
+      { name: "The President", status: "not_started", difficulty: 3 },
+      { name: "The Vice-President", status: "not_started", difficulty: 2 },
+      { name: "Prime Minister and Council of Ministers", status: "not_started", difficulty: 3 },
+      { name: "The Supreme Court", status: "not_started", difficulty: 3 },
+      { name: "The High Courts", status: "not_started", difficulty: 2 },
+      { name: "Subordinate Courts", status: "not_started", difficulty: 2 },
+      // Section B: History
+      { name: "The First War of Independence, 1857", status: "not_started", difficulty: 3 },
+      { name: "Factors Leading to the Growth of Nationalism", status: "not_started", difficulty: 3 },
+      { name: "Foundation of the Indian National Congress", status: "not_started", difficulty: 2 },
+      { name: "First Phase of the Indian National Movement (1885-1907)", status: "not_started", difficulty: 3 },
+      { name: "Second Phase of the Indian National Movement (1905-1916)", status: "not_started", difficulty: 3 },
+      { name: "The Muslim League and the Lucknow Pact", status: "not_started", difficulty: 2 },
+      { name: "Non-Cooperation Movement", status: "not_started", difficulty: 3 },
+      { name: "Civil Disobedience Movement", status: "not_started", difficulty: 3 },
+      { name: "Quit India Movement", status: "not_started", difficulty: 3 },
+      { name: "Forward Bloc and INA", status: "not_started", difficulty: 2 },
+      { name: "Independence and Partition of India", status: "not_started", difficulty: 4 },
+      { name: "The First World War", status: "not_started", difficulty: 3 },
+      { name: "Rise of Dictatorships", status: "not_started", difficulty: 3 },
+      { name: "The Second World War", status: "not_started", difficulty: 3 },
+      { name: "United Nations", status: "not_started", difficulty: 3 },
+      { name: "Non-Aligned Movement", status: "not_started", difficulty: 2 },
+    ],
   };
 
   // Add empty chapters for selected language and elective
@@ -367,9 +446,10 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
 }
 
 /**
- * Make sure every subject the student takes has a chapter list, adding an empty or default
- * list for any that is missing (e.g. after choosing Hindi, or switching elective).
- * Existing lists are never replaced.
+ * Make sure every subject the student takes has a chapter list, adding the default list for any
+ * that is missing or saved empty (e.g. after choosing Hindi, or for students who signed up before
+ * Maths, History & Civics and English had default chapters).
+ * A non-empty saved list is never replaced.
  */
 export function withSubjectKeys(
   subjects: Record<string, Chapter[]> | undefined,
@@ -378,7 +458,7 @@ export function withSubjectKeys(
 ): Record<string, Chapter[]> {
   const next = { ...(subjects || {}) };
   for (const [key, chapters] of Object.entries(getDefaultChapters(languageKey, electiveKey))) {
-    if (!next[key]) next[key] = chapters;
+    if (!next[key]?.length) next[key] = chapters;
   }
   return next;
 }
