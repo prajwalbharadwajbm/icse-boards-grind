@@ -1,3 +1,5 @@
+import { syllabusChapters } from "./syllabus-chapters";
+
 export interface Chapter {
   name: string;
   status: "not_started" | "in_progress" | "completed" | "needs_revision";
@@ -438,9 +440,9 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
     ],
   };
 
-  // Add empty chapters for selected language and elective
-  chapters[languageKey] = [];
-  chapters[electiveKey] = [];
+  // Second language and elective, from their CISCE 2027 syllabus (see syllabus-chapters.ts)
+  chapters[languageKey] = syllabusChapters(languageKey);
+  chapters[electiveKey] = syllabusChapters(electiveKey);
 
   return chapters;
 }
