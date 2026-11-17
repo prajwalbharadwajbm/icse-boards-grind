@@ -151,6 +151,7 @@ english_page_viewed
 | `timer_started` | `subject`, `chapter`, `duration_minutes`, `preset` (fires on every Start on the timer page, including resuming) |
 | `timer_paused` | `phase`, `seconds_left`, `total_seconds` (timer page or sidebar mini timer) |
 | `timer_reset` | `phase`, `seconds_left`, `total_seconds` (only when the timer had run) |
+| `timer_add_chapters_clicked` | `subject` (the "Add your own chapters" link under an empty Chapter list) |
 | `timer_completed` | `subject`, `chapter`, `duration_minutes`, `session_number`, `is_first_session`, `streak`, `hours_today` |
 | `chapter_status_changed` | `subject`, `chapter`, `from_status`, `to_status` |
 | `milestone_celebrated` | `type`, `subject?`, `chapter?`, `value?`, `category?` |
