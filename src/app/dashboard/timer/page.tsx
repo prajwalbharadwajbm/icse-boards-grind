@@ -49,6 +49,19 @@ export default function TimerPage() {
   useEffect(() => {
     if (selectedSubject) return; // Don't override manual selection
 
+    // A link can preset the subject and chapter: /dashboard/timer?subject=physics&chapter=Light
+    const params = new URLSearchParams(window.location.search);
+    const linkedSubject = params.get("subject");
+    if (linkedSubject && SUBJECT_LABELS[linkedSubject]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init from the link
+      setSelectedSubject(linkedSubject);
+      const linkedChapter = params.get("chapter");
+      if (linkedChapter && (data.subjects[linkedSubject] || []).some((c) => c.name === linkedChapter)) {
+        setSelectedChapter(linkedChapter);
+      }
+      return;
+    }
+
     const plan = getDayPlan(td, data);
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -63,7 +76,6 @@ export default function TimerPage() {
     });
 
     if (currentBlock?.subjectKey) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init from planner
       setSelectedSubject(currentBlock.subjectKey);
       // Try to pick the first incomplete chapter for this subject
       const chapters = data.subjects[currentBlock.subjectKey] || [];

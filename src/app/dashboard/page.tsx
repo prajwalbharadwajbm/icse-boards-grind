@@ -21,6 +21,9 @@ import { clock, paperName, plural, signed } from "@/lib/exam-format";
 import { HallTicket } from "@/components/exam/hall-ticket";
 import { TimetableCard } from "@/components/exam/timetable-card";
 import { getDayPlan, getRevisionDueChapters } from "@/lib/algorithms";
+import { isNewStudent, pickFirstSession } from "@/lib/first-session";
+import { useTimerStore } from "@/store/use-timer-store";
+import { FirstSessionCard } from "@/components/dashboard/first-session-card";
 
 export default function DashboardPage() {
   const data = useStore();
@@ -186,6 +189,102 @@ export default function DashboardPage() {
   const upcomingBlocks = plan.filter((b) => timeToMin(b.end) > nowMin).slice(0, 6);
   const hoursPct = Math.min(100, (hoursToday / target) * 100);
 
+  // A student who hasn't logged study time or marked a chapter done yet
+  const workMinutes = useTimerStore((s) => s.workMinutes);
+  const newStudent = isNewStudent(data);
+  const firstSession = useMemo(
+    () => (newStudent ? pickFirstSession({ plan, nowMin, subjects: data.subjects || {}, subjectRatings: data.subjectRatings, exams, td }) : null),
+    [newStudent, plan, nowMin, data.subjects, data.subjectRatings, exams, td]
+  );
+
+  // Today's plan and what to work on: first for new students, beside the timetable for everyone else
+  const planAndNext = (
+    <>
+      <section className="flex flex-col gap-2.5" aria-label="Today's plan">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Today&apos;s plan</h2>
+          <Link href="/dashboard/planner" className="text-sm font-bold underline underline-offset-4 decoration-2" style={{ color: "var(--text)" }}>
+            Open planner
+          </Link>
+        </div>
+        {upcomingBlocks.length === 0 ? (
+          <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
+            {plan.length === 0 ? "No study blocks planned. Set your daily routine in Settings to get a plan" : "That's today's plan done. Rest up for tomorrow"}
+          </p>
+        ) : (
+          <ol className="flex flex-col gap-2">
+            {upcomingBlocks.map((block, i) => {
+              const isCurrent = nowMin >= timeToMin(block.start) && nowMin < timeToMin(block.end);
+              const dotColor = block.type === "study" && block.subjectKey ? subjectColors[block.subjectKey] : undefined;
+              return (
+                <li
+                  key={`${block.start}-${i}`}
+                  className="flex items-center gap-3 min-h-[52px] rounded-2xl px-4"
+                  style={{ border: "2px solid var(--outline)", background: isCurrent ? "var(--primary-light)" : "var(--bg-card)" }}
+                  aria-current={isCurrent ? "time" : undefined}
+                >
+                  <span className={`w-[68px] shrink-0 text-[13px] tabular-nums ${isCurrent ? "font-bold" : ""}`} style={{ color: isCurrent ? "var(--text)" : "var(--text-muted)" }}>
+                    {isCurrent ? "Now" : clock(block.start)}
+                  </span>
+                  {dotColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />}
+                  <span className={`text-[15px] truncate ${isCurrent ? "font-bold" : ""}`} style={{ color: "var(--text)" }}>{block.label}</span>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2.5" aria-label="Recommendations">
+        <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Work on next</h2>
+        {!hasSmartRecs ? (
+          <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
+            Nothing needs attention right now. Weak subjects, grammar slips and revisions that fall due show up here
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {smartRecs.weak.map((item, i) => (
+              <RecRow
+                key={`weak-${i}`}
+                href="/dashboard/timer"
+                onClick={() => capture("weak_area_clicked", { type: "weak_subject", subject: item.key })}
+                color={item.color}
+                title={item.subject}
+                detail={item.detail}
+                tag="Weak subject"
+                tagColor="var(--danger)"
+              />
+            ))}
+            {smartRecs.grammarWeak.map((item, i) => (
+              <RecRow
+                key={`grammar-${i}`}
+                href="/dashboard/english"
+                onClick={() => capture("weak_area_clicked", { type: "grammar", category: item.category })}
+                color={subjectColors.english_lang}
+                title={`Grammar: ${item.category}`}
+                detail={`${item.accuracy}% correct so far`}
+                tag="Drill"
+                tagColor="var(--danger)"
+              />
+            ))}
+            {smartRecs.revisionDue.map((item, i) => (
+              <RecRow
+                key={`rev-${i}`}
+                href="/dashboard/timer"
+                onClick={() => capture("weak_area_clicked", { type: "revision", subject: item.subjectKey })}
+                color={subjectColors[item.subjectKey] || "var(--warning)"}
+                title={subjectLabels[item.subjectKey] || item.subjectKey}
+                detail={item.chapterName}
+                tag="Revision due"
+                tagColor="var(--warning)"
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
+  );
+
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
       {/* Page header: the day, then where it sits in the exam season */}
@@ -221,31 +320,45 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* New students: one thing to do, then today's plan, before the countdown */}
+      {newStudent && firstSession && (
+        <FirstSessionCard
+          session={firstSession}
+          subjectLabel={subjectLabels[firstSession.subjectKey] || firstSession.subjectKey}
+          minutes={workMinutes}
+        />
+      )}
+      {newStudent && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">{planAndNext}</div>}
+
       {/* Row 1: the countdown sticker card and the week */}
       <div className="flex flex-wrap gap-6 items-stretch">
         <div className="flex-[2_1_520px] min-w-0 flex flex-col">
           <HallTicket exam={nextExam} index={nextIndex} total={exams.length} examDays={examDays} countdown={countdown} />
         </div>
-        <div className="flex-[1_1_300px] min-w-0 flex flex-col">
-          <WeekCard summary={weeklySummary} target={target} td={td} />
-        </div>
+        {!newStudent && (
+          <div className="flex-[1_1_300px] min-w-0 flex flex-col">
+            <WeekCard summary={weeklySummary} target={target} td={td} />
+          </div>
+        )}
       </div>
 
-      {/* Row 2: today in numbers */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-        <StatChip label="Studied today" value={`${hoursToday.toFixed(1)}h`} sub={`of a ${target}h target`}>
-          <OutlinedBar pct={hoursPct} fill="var(--mint)" />
-        </StatChip>
-        <StatChip label="Chapters done" value={chapsDone} sub={`of ${totalChapters} chapters`} />
-        <StatChip
-          label="Streak"
-          value={`${data.streak || 0} ${(data.streak || 0) === 1 ? "day" : "days"}`}
-          sub="in a row"
-          tone="sun"
-          sticker={(data.streak || 0) > 0 ? <FlameSticker size={56} /> : undefined}
-        />
-        <StatChip label="Sessions today" value={sessionsToday} sub={`${weeklySummary.thisSessions} this week`} />
-      </div>
+      {/* Row 2: today in numbers, once there are numbers */}
+      {!newStudent && (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+          <StatChip label="Studied today" value={`${hoursToday.toFixed(1)}h`} sub={`of a ${target}h target`}>
+            <OutlinedBar pct={hoursPct} fill="var(--mint)" />
+          </StatChip>
+          <StatChip label="Chapters done" value={chapsDone} sub={`of ${totalChapters} chapters`} />
+          <StatChip
+            label="Streak"
+            value={`${data.streak || 0} ${(data.streak || 0) === 1 ? "day" : "days"}`}
+            sub="in a row"
+            tone="sun"
+            sticker={(data.streak || 0) > 0 ? <FlameSticker size={56} /> : undefined}
+          />
+          <StatChip label="Sessions today" value={sessionsToday} sub={`${weeklySummary.thisSessions} this week`} />
+        </div>
+      )}
 
       {/* Row 3: the papers as tickets, then today's plan and what to work on */}
       <div className="flex flex-wrap gap-6 items-start">
@@ -253,90 +366,7 @@ export default function DashboardPage() {
           <TimetableCard exams={exams} nextIndex={nextIndex} td={td} subjectColors={subjectColors} />
         </div>
 
-        <div className="flex-[1_1_340px] min-w-0 flex flex-col gap-6">
-          <section className="flex flex-col gap-2.5" aria-label="Today's plan">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Today&apos;s plan</h2>
-              <Link href="/dashboard/planner" className="text-sm font-bold underline underline-offset-4 decoration-2" style={{ color: "var(--text)" }}>
-                Open planner
-              </Link>
-            </div>
-            {upcomingBlocks.length === 0 ? (
-              <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
-                {plan.length === 0 ? "No study blocks planned. Set your daily routine in Settings to get a plan" : "That's today's plan done. Rest up for tomorrow"}
-              </p>
-            ) : (
-              <ol className="flex flex-col gap-2">
-                {upcomingBlocks.map((block, i) => {
-                  const isCurrent = nowMin >= timeToMin(block.start) && nowMin < timeToMin(block.end);
-                  const dotColor = block.type === "study" && block.subjectKey ? subjectColors[block.subjectKey] : undefined;
-                  return (
-                    <li
-                      key={`${block.start}-${i}`}
-                      className="flex items-center gap-3 min-h-[52px] rounded-2xl px-4"
-                      style={{ border: "2px solid var(--outline)", background: isCurrent ? "var(--primary-light)" : "var(--bg-card)" }}
-                      aria-current={isCurrent ? "time" : undefined}
-                    >
-                      <span className={`w-[68px] shrink-0 text-[13px] tabular-nums ${isCurrent ? "font-bold" : ""}`} style={{ color: isCurrent ? "var(--text)" : "var(--text-muted)" }}>
-                        {isCurrent ? "Now" : clock(block.start)}
-                      </span>
-                      {dotColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />}
-                      <span className={`text-[15px] truncate ${isCurrent ? "font-bold" : ""}`} style={{ color: "var(--text)" }}>{block.label}</span>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-          </section>
-
-          <section className="flex flex-col gap-2.5" aria-label="Recommendations">
-            <h2 className="font-display text-[22px] font-extrabold tracking-[-0.01em]" style={{ color: "var(--text)" }}>Work on next</h2>
-            {!hasSmartRecs ? (
-              <p className="rounded-2xl px-4 py-4 text-sm" style={{ border: "2px solid var(--outline)", color: "var(--text-secondary)" }}>
-                Nothing needs attention right now. Weak subjects, grammar slips and revisions that fall due show up here
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {smartRecs.weak.map((item, i) => (
-                  <RecRow
-                    key={`weak-${i}`}
-                    href="/dashboard/timer"
-                    onClick={() => capture("weak_area_clicked", { type: "weak_subject", subject: item.key })}
-                    color={item.color}
-                    title={item.subject}
-                    detail={item.detail}
-                    tag="Weak subject"
-                    tagColor="var(--danger)"
-                  />
-                ))}
-                {smartRecs.grammarWeak.map((item, i) => (
-                  <RecRow
-                    key={`grammar-${i}`}
-                    href="/dashboard/english"
-                    onClick={() => capture("weak_area_clicked", { type: "grammar", category: item.category })}
-                    color={subjectColors.english_lang}
-                    title={`Grammar: ${item.category}`}
-                    detail={`${item.accuracy}% correct so far`}
-                    tag="Drill"
-                    tagColor="var(--danger)"
-                  />
-                ))}
-                {smartRecs.revisionDue.map((item, i) => (
-                  <RecRow
-                    key={`rev-${i}`}
-                    href="/dashboard/timer"
-                    onClick={() => capture("weak_area_clicked", { type: "revision", subject: item.subjectKey })}
-                    color={subjectColors[item.subjectKey] || "var(--warning)"}
-                    title={subjectLabels[item.subjectKey] || item.subjectKey}
-                    detail={item.chapterName}
-                    tag="Revision due"
-                    tagColor="var(--warning)"
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
+        {!newStudent && <div className="flex-[1_1_340px] min-w-0 flex flex-col gap-6">{planAndNext}</div>}
       </div>
     </div>
   );

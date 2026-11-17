@@ -32,6 +32,8 @@ export interface AnalyticsEventMap {
 
   // ── Dashboard ─────────────────────────────────────────────────────────
   dashboard_viewed: Record<string, never>;
+  first_session_card_viewed: { subject: string; reason: "plan_now" | "plan_next" | "weak" | "next_paper" };
+  first_session_card_clicked: { action: "timer" | "chapters"; subject: string; reason: "plan_now" | "plan_next" | "weak" | "next_paper" };
   weak_area_clicked: { type: string; subject?: string; category?: string; subjectKey?: string };
 
   // ── Subjects ──────────────────────────────────────────────────────────

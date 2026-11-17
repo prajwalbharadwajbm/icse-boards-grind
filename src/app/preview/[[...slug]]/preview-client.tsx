@@ -139,10 +139,25 @@ function buildDemoData(): Partial<StoreState> {
   };
 }
 
+/** A student who has just finished onboarding: same profile, nothing studied yet (/preview?uid=demo&fresh=1) */
+function buildNewStudentData(): Partial<StoreState> {
+  const demo = buildDemoData();
+  return {
+    ...demo,
+    name: "Diya",
+    avatar: "frog",
+    streak: 0,
+    lastStudyDate: "",
+    studyLog: {},
+    subjects: getDefaultChapters(demo.selectedLanguage || "kannada", demo.selectedElective || "computer"),
+  };
+}
+
 function PreviewContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const uid = searchParams.get("uid");
+  const fresh = searchParams.get("fresh") === "1";
   const [ready, setReady] = useState(false);
   const cleanupRef = useRef(false);
   // AuthProvider resets the store once Firebase reports a signed-out visitor,
@@ -153,7 +168,7 @@ function PreviewContent() {
     if (!uid || authLoading) return;
 
     const store = useStore.getState();
-    store.setAll(buildDemoData());
+    store.setAll(fresh ? buildNewStudentData() : buildDemoData());
     store.markHydrated();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time init after store hydration
     setReady(true);
@@ -164,7 +179,7 @@ function PreviewContent() {
         useStore.getState().resetStore();
       }
     };
-  }, [uid, authLoading]);
+  }, [uid, fresh, authLoading]);
 
   useEffect(() => {
     if (!ready) return;
