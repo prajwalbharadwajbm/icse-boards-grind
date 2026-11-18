@@ -21,6 +21,7 @@ describe("callAIProvider", () => {
     process.env.AI_API_KEYS = "gsk_test";
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {

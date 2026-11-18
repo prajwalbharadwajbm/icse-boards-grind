@@ -39,12 +39,15 @@ export async function callAIProvider(opts: {
       if (res.ok) return res;
       lastStatus = res.status;
       const body = await res.text().catch(() => "");
-      console.error(`[ai] provider ${new URL(url).host} returned ${res.status}: ${body.slice(0, 300)}`);
+      const detail = `[ai] provider ${new URL(url).host} returned ${res.status}: ${body.slice(0, 300)}`;
       if (res.status === 413 && !shrunk) {
+        // A warning, not an error: the smaller retry usually succeeds
+        console.warn(`${detail} (retrying with a shorter chat)`);
         shrunk = true;
         k--; // same key, smaller request
         continue;
       }
+      console.error(detail);
       if (res.status !== 429 && res.status < 500) break; // a request problem, another key won't help
     } catch (err) {
       if (opts.signal?.aborted) throw new ApiError(499, "cancelled", "Request cancelled");
