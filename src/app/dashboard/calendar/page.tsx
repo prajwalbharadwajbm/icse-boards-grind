@@ -22,9 +22,10 @@ export default function CalendarPage() {
 
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
-  const EXAMS = useMemo(() => getExams(lang, elective), [lang, elective]);
-  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
+  const groupTwo = data.groupTwo;
+  const EXAMS = useMemo(() => getExams(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   const now = new Date();
   const [calMonth, setCalMonth] = useState(now.getMonth());

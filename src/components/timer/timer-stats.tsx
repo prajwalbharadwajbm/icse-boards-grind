@@ -10,8 +10,8 @@ import { today } from "@/lib/utils";
 export function TimerStats() {
   const data = useStore();
   const td = today();
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
-  const SUBJECT_COLORS = useMemo(() => getSubjectColors(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo), [data.selectedLanguage, data.selectedElective, data.groupTwo]);
+  const SUBJECT_COLORS = useMemo(() => getSubjectColors(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo), [data.selectedLanguage, data.selectedElective, data.groupTwo]);
 
   const todayLog = (data.studyLog || {})[td];
   const hoursToday = todayLog ? todayLog.hours : 0;

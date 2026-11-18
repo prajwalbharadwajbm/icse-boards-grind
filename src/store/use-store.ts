@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_CHAPTERS, type Chapter, type Block } from "@/lib/constants";
+import { DEFAULT_CHAPTERS, DEFAULT_GROUP_TWO, type Chapter, type Block } from "@/lib/constants";
 import { DEFAULT_CREDITS } from "@/lib/credits";
 
 export interface SchoolHours {
@@ -87,6 +87,8 @@ export interface StoreState {
   lastExamNotification: string | null;
   selectedLanguage: string;
   selectedElective: string;
+  /** ICSE Group II subjects (any two or three); Maths + Science unless the student chose otherwise */
+  groupTwo: string[];
   coachMessages: Record<string, CoachMessage[]>;
   dailyBriefingCache: Record<string, { content: string; timestamp: number }>;
   solvedPapers: string[];
@@ -151,6 +153,7 @@ const defaultState: StoreState = {
   lastExamNotification: null,
   selectedLanguage: "kannada",
   selectedElective: "computer",
+  groupTwo: [...DEFAULT_GROUP_TWO],
   coachMessages: {},
   dailyBriefingCache: {},
   solvedPapers: [],

@@ -5,12 +5,12 @@ import type { StoreState } from "@/store/use-store";
 
 /* ── helpers ── */
 
-function storeExams(data: Pick<StoreState, "selectedLanguage" | "selectedElective">) {
-  return getExams(data.selectedLanguage || "kannada", data.selectedElective || "computer");
+function storeExams(data: Pick<StoreState, "selectedLanguage" | "selectedElective" | "groupTwo">) {
+  return getExams(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo);
 }
 
-function storeLabels(data: Pick<StoreState, "selectedLanguage" | "selectedElective">) {
-  return getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer");
+function storeLabels(data: Pick<StoreState, "selectedLanguage" | "selectedElective" | "groupTwo">) {
+  return getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo);
 }
 
 /* ── Study session constants ── */
@@ -76,7 +76,7 @@ export function getSubjectPriority(
   targetDate: string,
   data: Pick<
     StoreState,
-    "subjects" | "subjectRatings" | "selectedLanguage" | "selectedElective"
+    "subjects" | "subjectRatings" | "selectedLanguage" | "selectedElective" | "groupTwo"
   >
 ): number {
   const exams = storeExams(data);

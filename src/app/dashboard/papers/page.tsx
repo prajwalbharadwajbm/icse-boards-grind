@@ -25,11 +25,12 @@ const TYPE_LABELS: Record<string, string> = {
 export default function PapersPage() {
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
+  const groupTwo = useStore((s) => s.groupTwo);
   const solvedPapers = useStore((s) => s.solvedPapers) || [];
   const update = useStore((s) => s.update);
 
-  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
-  const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
   const fullSubjectLabels = useMemo(() => ({ ...ALL_SUBJECT_LABELS, ...subjectLabels }), [subjectLabels]);
   const fullSubjectColors = useMemo(() => ({ ...ALL_SUBJECT_COLORS, ...subjectColors }), [subjectColors]);
   const subjectKeys = useMemo(() => Object.keys(subjectLabels), [subjectLabels]);

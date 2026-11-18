@@ -138,7 +138,7 @@ english_page_viewed
 | --- | --- |
 | `onboarding_started` | |
 | `onboarding_step_completed` | `step` (1-9), `step_name` (`name`, `language`, `elective`, `learning_style`, `study_hours`, `subject_confidence`, `target_percent`, `prep_level`, `routine`), `total_steps` |
-| `onboarding_completed` | `language`, `elective`, `learning_style`, `study_hours`, `target_percent`, `prep_level` |
+| `onboarding_completed` | `language`, `elective`, `group_two` (sorted, comma-separated Group II keys, e.g. `economics,commercial`), `learning_style`, `study_hours`, `target_percent`, `prep_level` |
 
 ### Page views
 
@@ -206,7 +206,7 @@ english_page_viewed
 
 ### Settings, leaderboard, what's new
 
-`settings_saved` (`study_hours`, `target_percent`, `has_grok_key`), `language_changed` (`new_language`), `elective_changed` (`new_elective`), `data_exported`, `data_imported` (`mode`), `leaderboard_toggle` (`enabled`), `leaderboard_opted_in`, `whats_new_dismissed` (`updates_shown`).
+`settings_saved` (`study_hours`, `target_percent`, `has_grok_key`), `language_changed` (`new_language`), `elective_changed` (`new_elective`), `group_two_changed` (`group_two`: sorted, comma-separated Group II keys), `data_exported`, `data_imported` (`mode`), `leaderboard_toggle` (`enabled`), `leaderboard_opted_in`, `whats_new_dismissed` (`updates_shown`).
 
 ## Querying with Claude (PostHog MCP)
 

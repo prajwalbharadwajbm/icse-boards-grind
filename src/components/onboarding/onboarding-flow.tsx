@@ -4,12 +4,13 @@ import { useState, useEffect, useMemo } from "react";
 import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
 import { DEFAULT_SCHOOL_HOURS } from "@/lib/school-hours";
 import type { Routine } from "@/store/use-store";
+import { GroupTwoPicker } from "@/components/subjects/group-two-picker";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
-import { SECOND_LANGUAGES, ELECTIVES, getSubjectLabels, getSubjectColors, withSubjectKeys } from "@/lib/constants";
+import { SECOND_LANGUAGES, GROUP_THREE, DEFAULT_GROUP_TWO, isValidGroupTwo, getSubjectLabels, getSubjectColors, withSubjectKeys } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { StickerMark, StarSticker } from "@/components/brand/sticker";
 import { StickerAvatar } from "@/components/brand/avatars";
@@ -37,6 +38,7 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
   const [studyVibe, setStudyVibe] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("kannada");
   const [selectedElective, setSelectedElective] = useState("computer");
+  const [groupTwo, setGroupTwo] = useState<string[]>([...DEFAULT_GROUP_TWO]);
   const [learningStyle, setLearningStyle] = useState("mixed");
   const [studyHours, setStudyHours] = useState(8);
   const [ratings, setRatings] = useState<Record<string, string>>({});
@@ -48,8 +50,8 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
     school: DEFAULT_SCHOOL_HOURS,
   });
   // Compute dynamic labels/colors based on selections
-  const subjectLabels = useMemo(() => getSubjectLabels(selectedLanguage, selectedElective), [selectedLanguage, selectedElective]);
-  const subjectColors = useMemo(() => getSubjectColors(selectedLanguage, selectedElective), [selectedLanguage, selectedElective]);
+  const subjectLabels = useMemo(() => getSubjectLabels(selectedLanguage, selectedElective, groupTwo), [selectedLanguage, selectedElective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(selectedLanguage, selectedElective, groupTwo), [selectedLanguage, selectedElective, groupTwo]);
 
   // Initialize ratings when labels change
   useEffect(() => {
@@ -88,6 +90,7 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
         name: name.trim(),
         selectedLanguage,
         selectedElective,
+        groupTwo,
         learningStyle: learningStyle as "visual" | "reading" | "practice" | "mixed",
         studyHours,
         subjectRatings: ratings as Record<string, "weak" | "medium" | "strong">,
@@ -97,12 +100,13 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
         avatar: shownAvatar,
         studyVibe,
         // Seed chapter lists for the chosen language and elective
-        subjects: withSubjectKeys(s.subjects, selectedLanguage, selectedElective),
+        subjects: withSubjectKeys(s.subjects, selectedLanguage, selectedElective, groupTwo),
         onboarded: true,
       }));
       capture("onboarding_completed", {
         language: selectedLanguage,
         elective: selectedElective,
+        group_two: [...groupTwo].sort().join(","),
         learning_style: learningStyle,
         study_hours: studyHours,
         target_percent: targetPercent,
@@ -280,10 +284,14 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
               {/* Step 4: Elective */}
               {step === 4 && (
                 <div>
-                  <h2 className={`${TITLE_CLASS} text-center`} style={{ color: "var(--text)" }}>Choose your elective</h2>
-                  <p className={`${SUB_CLASS} mb-5 text-center`} style={{ color: "var(--text-secondary)" }}>Select your Group II / III elective subject</p>
+                  <h2 className={`${TITLE_CLASS} text-center`} style={{ color: "var(--text)" }}>Your subjects</h2>
+                  <p className={`${SUB_CLASS} mb-5 text-center`} style={{ color: "var(--text-secondary)" }}>English, your second language, History &amp; Civics and Geography are compulsory. Pick the rest</p>
+                  <div className="mb-5">
+                    <GroupTwoPicker value={groupTwo} onChange={setGroupTwo} />
+                  </div>
+                  <p className="text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Group III elective</p>
                   <div className="flex flex-col gap-2 max-h-72 overflow-y-auto p-0.5 pr-1">
-                    {ELECTIVES.map((elective) => {
+                    {GROUP_THREE.map((elective) => {
                       const selected = selectedElective === elective.key;
                       return (
                         <button
@@ -472,7 +480,7 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
               Back
             </Button>
           )}
-          <Button onClick={handleNext} className="flex-1" size="lg" disabled={step === 2 && !studyVibe}>
+          <Button onClick={handleNext} className="flex-1" size="lg" disabled={(step === 2 && !studyVibe) || (step === 4 && !isValidGroupTwo(groupTwo))}>
             {step === TOTAL_STEPS ? "Get started" : "Next"}
           </Button>
         </div>

@@ -7,8 +7,9 @@ import type { StoreState } from "@/store/use-store";
 export function buildStudentContext(data: StoreState): string {
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
-  const exams = getExams(lang, elective);
-  const labels = getSubjectLabels(lang, elective);
+  const groupTwo = data.groupTwo;
+  const exams = getExams(lang, elective, groupTwo);
+  const labels = getSubjectLabels(lang, elective, groupTwo);
   const td = today();
 
   const lines: string[] = [];

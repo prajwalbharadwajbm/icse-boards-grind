@@ -74,7 +74,7 @@ Reasons are `welcome`, an activity name (`mcq`, `poem_qa`, …), `ai:<purpose>`,
 
 ### `GET /api/report/:uid`
 
-The public parent report. It returns only `name`, `streak`, `studyLog`, `subjects`, `selectedLanguage` and `selectedElective`, and only while the student has sharing turned on (`403 not_shared` otherwise). No sign-in needed.
+The public parent report. It returns only `name`, `avatar`, `streak`, `studyLog`, `subjects`, `selectedLanguage`, `selectedElective` and `groupTwo`, and only while the student has sharing turned on (`403 not_shared` otherwise). No sign-in needed.
 
 ### Admin: `GET /api/admin/users` and `POST /api/admin/credits`
 

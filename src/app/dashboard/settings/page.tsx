@@ -8,7 +8,8 @@ import { useAuth } from "@/providers/auth-provider";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getSubjectLabels, getSubjectColors, SECOND_LANGUAGES, ELECTIVES, withSubjectKeys } from "@/lib/constants";
+import { getSubjectLabels, getSubjectColors, SECOND_LANGUAGES, ELECTIVES, GROUP_THREE, DEFAULT_GROUP_TWO, isValidGroupTwo, withSubjectKeys } from "@/lib/constants";
+import { GroupTwoPicker } from "@/components/subjects/group-two-picker";
 import { StickerAvatar } from "@/components/brand/avatars";
 import { AVATARS, STUDY_VIBES, avatarFor, vibeFor } from "@/lib/identity";
 import { today } from "@/lib/utils";
@@ -27,8 +28,10 @@ export default function SettingsPage() {
 
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
-  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const groupTwo = data.groupTwo;
+  const [groupTwoDraft, setGroupTwoDraft] = useState<string[]>(isValidGroupTwo(groupTwo) ? [...groupTwo] : DEFAULT_GROUP_TWO);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   const [name, setName] = useState(data.name || "");
   const [studyHours, setStudyHours] = useState(data.studyHours || 8);
@@ -257,7 +260,7 @@ export default function SettingsPage() {
               onChange={(e) => {
                 capture("language_changed", { new_language: e.target.value });
                 const next = e.target.value;
-                update((s) => ({ selectedLanguage: next, subjects: withSubjectKeys(s.subjects, next, elective) }));
+                update((s) => ({ selectedLanguage: next, subjects: withSubjectKeys(s.subjects, next, elective, s.groupTwo) }));
               }}
               className={FIELD_CLASS}
               style={FIELD_STYLE}
@@ -268,22 +271,33 @@ export default function SettingsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Elective</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Group III elective</label>
             <select
               value={elective}
               onChange={(e) => {
                 capture("elective_changed", { new_elective: e.target.value });
                 const next = e.target.value;
-                update((s) => ({ selectedElective: next, subjects: withSubjectKeys(s.subjects, lang, next) }));
+                update((s) => ({ selectedElective: next, subjects: withSubjectKeys(s.subjects, lang, next, s.groupTwo) }));
               }}
               className={FIELD_CLASS}
               style={FIELD_STYLE}
             >
-              {ELECTIVES.map((el) => (
+              {/* Older accounts may have a Group II subject saved here; keep it listed so it still shows */}
+              {[...GROUP_THREE, ...ELECTIVES.filter((el) => el.key === elective && !GROUP_THREE.includes(el))].map((el) => (
                 <option key={el.key} value={el.key}>{el.name}, Group {el.group} ({new Date(el.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })})</option>
               ))}
             </select>
           </div>
+          <GroupTwoPicker
+            value={groupTwoDraft}
+            onChange={(next) => {
+              setGroupTwoDraft(next);
+              // Saved only once it's a valid ICSE choice; until then the picker says what's missing
+              if (!isValidGroupTwo(next)) return;
+              capture("group_two_changed", { group_two: [...next].sort().join(",") });
+              update((s) => ({ groupTwo: next, subjects: withSubjectKeys(s.subjects, lang, elective, next) }));
+            }}
+          />
           <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
             Changing subjects will update your exam dates and study plans.
           </p>

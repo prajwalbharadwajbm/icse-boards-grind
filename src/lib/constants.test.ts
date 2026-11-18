@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ELECTIVES, SECOND_LANGUAGES, getDefaultChapters, withSubjectKeys, type Chapter } from "./constants";
+import { ELECTIVES, SECOND_LANGUAGES, getDefaultChapters, getExams, getSubjectColors, getSubjectLabels, withSubjectKeys, type Chapter } from "./constants";
 
 const ch = (name: string, status: Chapter["status"] = "not_started"): Chapter => ({ name, status, difficulty: 3 });
 
@@ -86,5 +86,64 @@ describe("getDefaultChapters", () => {
     const b = getDefaultChapters("hindi", "computer");
     expect(b.math[0].status).toBe("not_started");
     expect(b.hindi[0].status).toBe("not_started");
+  });
+});
+
+describe("Group II subjects", () => {
+  const keys = (exams: { key: string }[]) => exams.map((e) => e.key).sort();
+
+  it("gives a commerce student Economics and Commercial Studies papers instead of Maths and Science", () => {
+    const exams = getExams("hindi", "computer", ["economics", "commercial"]);
+    expect(keys(exams)).toEqual(
+      ["commercial", "computer", "economics", "english_lang", "english_lit", "geography", "hindi", "history"].sort()
+    );
+    expect(exams.find((e) => e.key === "economics")?.date).toBe("2027-03-31");
+    expect(exams.find((e) => e.key === "commercial")?.date).toBe("2027-03-29");
+  });
+
+  it("names a commerce student's subjects without Maths or Science", () => {
+    const labels = getSubjectLabels("hindi", "computer", ["economics", "commercial"]);
+    expect(labels).toMatchObject({ economics: "Economics", commercial: "Commercial Studies", hindi: "Hindi" });
+    expect(Object.keys(labels)).not.toContain("math");
+    expect(Object.keys(labels)).not.toContain("physics");
+    expect(Object.keys(getSubjectColors("hindi", "computer", ["economics", "commercial"])).sort()).toEqual(Object.keys(labels).sort());
+  });
+
+  it("counts Science as three papers", () => {
+    const exams = getExams("hindi", "computer", ["math", "science", "economics"]);
+    expect(keys(exams)).toEqual(expect.arrayContaining(["math", "physics", "chemistry", "biology", "economics"]));
+    expect(exams).toHaveLength(11);
+  });
+
+  it("leaves students who never chose Group II with Maths and Science, as before", () => {
+    expect(keys(getExams("hindi", "computer"))).toEqual(
+      ["biology", "chemistry", "computer", "english_lang", "english_lit", "geography", "hindi", "history", "math", "physics"].sort()
+    );
+    expect(Object.keys(getSubjectLabels("hindi", "computer")).sort()).toEqual(keys(getExams("hindi", "computer")));
+  });
+
+  it("keeps a Group II subject an older account saved as its elective, without listing it twice", () => {
+    expect(keys(getExams("hindi", "economics")).filter((k) => k === "economics")).toHaveLength(1);
+    expect(keys(getExams("hindi", "economics", ["economics", "commercial"])).filter((k) => k === "economics")).toHaveLength(1);
+  });
+
+  it("lists subjects in the same order as before for students who never chose", () => {
+    expect(Object.keys(getSubjectLabels("hindi", "computer"))).toEqual([
+      "english_lang", "english_lit", "math", "physics", "chemistry", "biology", "history", "geography", "hindi", "computer",
+    ]);
+  });
+
+  it("ignores a saved Group II list that isn't a valid ICSE choice and uses Maths + Science", () => {
+    const standard = keys(getExams("hindi", "computer"));
+    expect(keys(getExams("hindi", "computer", ["economics"]))).toEqual(standard);
+    expect(keys(getExams("hindi", "computer", ["x", "y"]))).toEqual(standard);
+    expect(keys(getExams("hindi", "computer", ["math", "economics", "commercial", "env_science"]))).toEqual(standard);
+  });
+
+  it("gives every chosen Group II subject its chapter list", () => {
+    const chapters = getDefaultChapters("hindi", "computer", ["economics", "commercial"]);
+    expect(chapters.economics.length).toBeGreaterThan(0);
+    expect(chapters.commercial.length).toBeGreaterThan(0);
+    expect(chapters.math).toBeUndefined();
   });
 });

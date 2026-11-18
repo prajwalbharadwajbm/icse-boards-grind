@@ -171,6 +171,8 @@ export const TIMETABLE: ExamTimetable = TIMETABLES[EXAM_YEAR];
 export const CORE_EXAMS: Exam[] = TIMETABLE.core;
 export const SECOND_LANGUAGES: SecondLanguage[] = TIMETABLE.secondLanguages;
 export const ELECTIVES: Elective[] = TIMETABLE.electives;
+/** The Group III choices: the elective picker. Group II papers are chosen with GROUP_TWO_OPTIONS */
+export const GROUP_THREE: Elective[] = ELECTIVES.filter((e) => e.group?.startsWith("III"));
 
 /** Writing start of a paper as a local Date, e.g. 2027-02-15 10:15 */
 export function examStart(date: string): Date {
@@ -189,17 +191,66 @@ export function examEnd(exam: Pick<Exam, "date" | "duration">): Date {
   return end;
 }
 
-/** Build the full exam list from core + selected language + selected elective */
-export function getExams(languageKey: string, electiveKey: string): Exam[] {
-  const exams = [...CORE_EXAMS];
+/**
+ * ICSE Group II: every student takes any two or three of these (CISCE regulations). Science is one
+ * subject with three papers. Group I (English, a second language, History & Civics, Geography) is
+ * compulsory and Group III is the elective.
+ */
+export const GROUP_TWO_OPTIONS = [
+  { key: "math", name: "Mathematics", papers: ["math"] },
+  { key: "science", name: "Science", detail: "Physics, Chemistry, Biology", papers: ["physics", "chemistry", "biology"] },
+  { key: "economics", name: "Economics", papers: ["economics"] },
+  { key: "commercial", name: "Commercial Studies", papers: ["commercial"] },
+  { key: "env_science", name: "Environmental Science", papers: ["env_science"] },
+  { key: "french_elective", name: "French", papers: ["french_elective"] },
+  { key: "sanskrit_elective", name: "Sanskrit", papers: ["sanskrit_elective"] },
+] as const;
+
+/** Students who never chose (everyone before Group II choice existed) take Maths and Science */
+export const DEFAULT_GROUP_TWO = ["math", "science"];
+export const GROUP_TWO_MIN = 2;
+export const GROUP_TWO_MAX = 3;
+
+/** A real ICSE Group II choice: two or three different subjects from GROUP_TWO_OPTIONS */
+export function isValidGroupTwo(groupTwo?: readonly string[] | null): groupTwo is readonly string[] {
+  if (!groupTwo) return false;
+  const known = new Set(groupTwo.filter((k) => GROUP_TWO_OPTIONS.some((o) => o.key === k)));
+  return known.size === groupTwo.length && known.size >= GROUP_TWO_MIN && known.size <= GROUP_TWO_MAX;
+}
+
+/**
+ * The paper keys for a student's Group II choice, e.g. ["math", "science"] → math, physics, chemistry,
+ * biology. Anything that isn't a valid choice (never chosen, or a hand-edited or imported value) means
+ * Maths + Science.
+ */
+export function groupTwoPapers(groupTwo?: readonly string[] | null): string[] {
+  const chosen = isValidGroupTwo(groupTwo) ? groupTwo : DEFAULT_GROUP_TWO;
+  return GROUP_TWO_OPTIONS.filter((o) => chosen.includes(o.key)).flatMap((o) => [...o.papers]);
+}
+
+/** Every board paper a student sits apart from the second language and elective, in timetable order of subjects */
+function studentPaperKeys(groupTwo?: readonly string[] | null): string[] {
+  return ["english_lang", "english_lit", ...groupTwoPapers(groupTwo), "history", "geography"];
+}
+
+/** Build the full exam list: Group I, the chosen Group II subjects, the second language and the elective */
+export function getExams(languageKey: string, electiveKey: string, groupTwo?: readonly string[] | null): Exam[] {
+  const papers = studentPaperKeys(groupTwo);
+  const exams: Exam[] = CORE_EXAMS.filter((e) => papers.includes(e.key));
+  for (const key of papers) {
+    if (exams.some((e) => e.key === key)) continue;
+    const paper = ELECTIVES.find((e) => e.key === key);
+    if (paper) exams.push({ date: paper.date, subject: paper.name, key: paper.key, duration: paper.duration });
+  }
 
   const lang = SECOND_LANGUAGES.find((l) => l.key === languageKey);
   if (lang) {
     exams.push({ date: lang.date, subject: lang.name, key: lang.key, duration: lang.duration });
   }
 
+  // Older accounts may have a Group II subject saved as their elective; it can also be in groupTwo
   const elective = ELECTIVES.find((e) => e.key === electiveKey);
-  if (elective) {
+  if (elective && !exams.some((e) => e.key === elective.key)) {
     exams.push({ date: elective.date, subject: elective.name, key: elective.key, duration: elective.duration });
   }
 
@@ -238,8 +289,8 @@ export const ALL_SUBJECT_COLORS: Record<string, string> = {
 };
 
 /** Get labels for all subjects including the selected language and elective */
-export function getSubjectLabels(languageKey: string, electiveKey: string): Record<string, string> {
-  const labels: Record<string, string> = {
+export function getSubjectLabels(languageKey: string, electiveKey: string, groupTwo?: readonly string[] | null): Record<string, string> {
+  const named: Record<string, string> = {
     english_lang: "English Language",
     english_lit: "English Literature",
     math: "Mathematics",
@@ -249,6 +300,11 @@ export function getSubjectLabels(languageKey: string, electiveKey: string): Reco
     history: "History & Civics",
     geography: "Geography",
   };
+  const labels: Record<string, string> = {};
+  for (const key of studentPaperKeys(groupTwo)) {
+    const name = named[key] ?? ELECTIVES.find((e) => e.key === key)?.name;
+    if (name) labels[key] = name;
+  }
 
   const lang = SECOND_LANGUAGES.find((l) => l.key === languageKey);
   if (lang) labels[lang.key] = lang.name;
@@ -260,7 +316,7 @@ export function getSubjectLabels(languageKey: string, electiveKey: string): Reco
 }
 
 /** Get colors for all subjects including the selected language and elective */
-export function getSubjectColors(languageKey: string, electiveKey: string): Record<string, string> {
+export function getSubjectColors(languageKey: string, electiveKey: string, groupTwo?: readonly string[] | null): Record<string, string> {
   const colors: Record<string, string> = {
     english_lang: "#7b61ff",
     english_lit: "#9c7cff",
@@ -288,15 +344,17 @@ export function getSubjectColors(languageKey: string, electiveKey: string): Reco
     robotics_ai: "#00acc1", sanskrit_elective: "#ab47bc",
   };
 
-  if (langColors[languageKey]) colors[languageKey] = langColors[languageKey];
-  if (electiveColors[electiveKey]) colors[electiveKey] = electiveColors[electiveKey];
-
-  return colors;
+  const all: Record<string, string> = { ...colors, ...electiveColors, ...langColors };
+  const picked: Record<string, string> = {};
+  for (const key of Object.keys(getSubjectLabels(languageKey, electiveKey, groupTwo))) {
+    if (all[key]) picked[key] = all[key];
+  }
+  return picked;
 }
 
 /** Get default chapters for all subjects */
-export function getDefaultChapters(languageKey: string, electiveKey: string): Record<string, Chapter[]> {
-  const chapters: Record<string, Chapter[]> = {
+export function getDefaultChapters(languageKey: string, electiveKey: string, groupTwo?: readonly string[] | null): Record<string, Chapter[]> {
+  const core: Record<string, Chapter[]> = {
     physics: [
       { name: "Force", status: "not_started", difficulty: 3 },
       { name: "Work, Power & Energy", status: "not_started", difficulty: 3 },
@@ -440,7 +498,12 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
     ],
   };
 
-  // Second language and elective, from their CISCE 2027 syllabus (see syllabus-chapters.ts)
+  // Group I and the chosen Group II subjects; Economics, Commercial Studies and the like, the second
+  // language and the elective come from their CISCE 2027 syllabus (see syllabus-chapters.ts)
+  const chapters: Record<string, Chapter[]> = {};
+  for (const key of studentPaperKeys(groupTwo)) {
+    chapters[key] = core[key] ?? syllabusChapters(key);
+  }
   chapters[languageKey] = syllabusChapters(languageKey);
   chapters[electiveKey] = syllabusChapters(electiveKey);
 
@@ -456,10 +519,11 @@ export function getDefaultChapters(languageKey: string, electiveKey: string): Re
 export function withSubjectKeys(
   subjects: Record<string, Chapter[]> | undefined,
   languageKey: string,
-  electiveKey: string
+  electiveKey: string,
+  groupTwo?: readonly string[] | null
 ): Record<string, Chapter[]> {
   const next = { ...(subjects || {}) };
-  for (const [key, chapters] of Object.entries(getDefaultChapters(languageKey, electiveKey))) {
+  for (const [key, chapters] of Object.entries(getDefaultChapters(languageKey, electiveKey, groupTwo))) {
     if (!next[key]?.length) next[key] = chapters;
   }
   return next;

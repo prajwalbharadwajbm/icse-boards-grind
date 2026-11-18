@@ -15,8 +15,9 @@ interface DayPlanProps {
 export function DayPlan({ blocks, nowMin, isPlanToday, onBlockClick }: DayPlanProps) {
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
-  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
+  const groupTwo = useStore((s) => s.groupTwo);
+  const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   const renderedBlocks = useMemo(() => {
     return blocks.map((block, i) => {

@@ -69,9 +69,10 @@ function ReportContent() {
 
   const lang = data?.selectedLanguage || "kannada";
   const elective = data?.selectedElective || "computer";
-  const exams = useMemo(() => data ? getExams(lang, elective) : [], [data, lang, elective]);
-  const subjectLabels = useMemo(() => data ? getSubjectLabels(lang, elective) : {}, [data, lang, elective]);
-  const subjectColors = useMemo(() => data ? getSubjectColors(lang, elective) : {}, [data, lang, elective]);
+  const groupTwo = data?.groupTwo;
+  const exams = useMemo(() => data ? getExams(lang, elective, groupTwo) : [], [data, lang, elective, groupTwo]);
+  const subjectLabels = useMemo(() => data ? getSubjectLabels(lang, elective, groupTwo) : {}, [data, lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => data ? getSubjectColors(lang, elective, groupTwo) : {}, [data, lang, elective, groupTwo]);
 
   const stats = useMemo(() => {
     if (!data) return null;
@@ -93,7 +94,9 @@ function ReportContent() {
 
     let chapsDone = 0, totalChapters = 0;
     const subjectProgress: { key: string; done: number; total: number }[] = [];
-    Object.entries(data.subjects || {}).forEach(([key, chapters]) => {
+    // Only the student's current subjects: a Group II switch can leave old chapter lists saved
+    Object.keys(subjectLabels).forEach((key) => {
+      const chapters = (data.subjects || {})[key] || [];
       const done = chapters.filter((c) => c.status === "completed").length;
       chapsDone += done;
       totalChapters += chapters.length;
@@ -103,7 +106,7 @@ function ReportContent() {
     });
 
     return { totalHours, weekHours, chapsDone, totalChapters, subjectProgress, streak: data.streak || 0 };
-  }, [data]);
+  }, [data, subjectLabels]);
 
   const spinner = (
     <div

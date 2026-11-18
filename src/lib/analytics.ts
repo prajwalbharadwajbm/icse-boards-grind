@@ -22,6 +22,7 @@ interface AnalyticsContext {
   onboarded: boolean;
   language: string | null;
   elective: string | null;
+  groupTwo?: string[] | null;
 }
 
 let _context: AnalyticsContext = { onboarded: false, language: null, elective: null };
@@ -68,10 +69,10 @@ function localDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** The user's next board paper, based on their language and elective once onboarded. */
+/** The user's next board paper, based on their language, elective and Group II subjects once onboarded. */
 function nextPaper(): { key: string; days: number } | null {
   const exams = _context.onboarded && _context.language && _context.elective
-    ? getExams(_context.language, _context.elective)
+    ? getExams(_context.language, _context.elective, _context.groupTwo)
     : [...CORE_EXAMS].sort((a, b) => a.date.localeCompare(b.date));
   const td = localDate(new Date());
   const next = exams.find((e) => e.date >= td);
@@ -119,12 +120,13 @@ function syncPersonProperties() {
   posthog.setPersonProperties(props);
 }
 
-/** Called by PostHogProvider whenever the student's language, elective or onboarding state changes. */
+/** Called by PostHogProvider whenever the student's language, elective, Group II subjects or onboarding state changes. */
 export function setAnalyticsContext(context: AnalyticsContext) {
   _context = {
     onboarded: context.onboarded,
     language: context.onboarded ? context.language : null,
     elective: context.onboarded ? context.elective : null,
+    groupTwo: context.onboarded ? context.groupTwo : null,
   };
   if (typeof window === "undefined") return;
   if (!initialized) initPostHog();

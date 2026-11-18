@@ -10,6 +10,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
   const onboarded = useStore((s) => s.onboarded);
   const language = useStore((s) => s.selectedLanguage);
   const elective = useStore((s) => s.selectedElective);
+  const groupTwo = useStore((s) => s.groupTwo);
   const hydrated = useStore((s) => s._hydrated);
 
   useEffect(() => {
@@ -40,8 +41,8 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    setAnalyticsContext({ onboarded, language, elective });
-  }, [hydrated, onboarded, language, elective]);
+    setAnalyticsContext({ onboarded, language, elective, groupTwo });
+  }, [hydrated, onboarded, language, elective, groupTwo]);
 
   return <>{children}</>;
 }

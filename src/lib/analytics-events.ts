@@ -20,6 +20,7 @@ export interface AnalyticsEventMap {
   onboarding_completed: {
     language: string;
     elective: string;
+    group_two: string;
     learning_style: string;
     study_hours: number;
     target_percent: number;
@@ -84,6 +85,8 @@ export interface AnalyticsEventMap {
   // ── Settings ──────────────────────────────────────────────────────────
   settings_page_viewed: Record<string, never>;
   settings_saved: { study_hours: number; target_percent: number; has_grok_key: boolean };
+  /** Group II subjects changed in Settings, e.g. "economics,commercial" */
+  group_two_changed: { group_two: string };
   language_changed: { new_language: string };
   elective_changed: { new_elective: string };
   data_exported: Record<string, never>;

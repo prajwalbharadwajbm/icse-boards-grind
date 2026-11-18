@@ -14,9 +14,10 @@ export default function ProgressPage() {
 
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
-  const exams = useMemo(() => getExams(lang, elective), [lang, elective]);
-  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
-  const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const groupTwo = data.groupTwo;
+  const exams = useMemo(() => getExams(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   useEffect(() => {
     capture("progress_page_viewed");
