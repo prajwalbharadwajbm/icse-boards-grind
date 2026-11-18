@@ -140,7 +140,8 @@ export default function DashboardPage() {
   const smartRecs = useMemo(() => {
     const weak: { subject: string; color: string; detail: string; key: string }[] = [];
     const grammarWeak: { category: string; accuracy: number }[] = [];
-    const revisionDue = getRevisionDueChapters(td, data.subjects);
+    const currentSubjects = Object.fromEntries(Object.keys(subjectLabels).map((key) => [key, data.subjects[key] || []]));
+    const revisionDue = getRevisionDueChapters(td, currentSubjects);
 
     Object.keys(subjectLabels).forEach((key) => {
       const rating = (data.subjectRatings || {})[key] || "medium";

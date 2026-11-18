@@ -29,8 +29,8 @@ export function useGenerateNotifications() {
     const SUBJECT_LABELS = getSubjectLabels(selectedLanguage, selectedElective, groupTwo);
     const exams = getExams(selectedLanguage, selectedElective, groupTwo);
 
-    // Revision-due notifications
-    Object.keys(subjects).forEach((subjectKey) => {
+    // Revision-due notifications, for the student's current subjects only
+    Object.keys(SUBJECT_LABELS).forEach((subjectKey) => {
       (subjects[subjectKey] || []).forEach((ch) => {
         if (ch.status === "needs_revision" && ch.revisionDate && ch.revisionIntervals) {
           const completed = ch.revisionsCompleted || 0;

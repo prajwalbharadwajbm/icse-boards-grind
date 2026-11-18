@@ -94,7 +94,9 @@ function ReportContent() {
 
     let chapsDone = 0, totalChapters = 0;
     const subjectProgress: { key: string; done: number; total: number }[] = [];
-    Object.entries(data.subjects || {}).forEach(([key, chapters]) => {
+    // Only the student's current subjects: a Group II switch can leave old chapter lists saved
+    Object.keys(subjectLabels).forEach((key) => {
+      const chapters = (data.subjects || {})[key] || [];
       const done = chapters.filter((c) => c.status === "completed").length;
       chapsDone += done;
       totalChapters += chapters.length;
@@ -104,7 +106,7 @@ function ReportContent() {
     });
 
     return { totalHours, weekHours, chapsDone, totalChapters, subjectProgress, streak: data.streak || 0 };
-  }, [data]);
+  }, [data, subjectLabels]);
 
   const spinner = (
     <div

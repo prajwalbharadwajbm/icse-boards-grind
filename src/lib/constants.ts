@@ -208,18 +208,34 @@ export const GROUP_TWO_OPTIONS = [
 
 /** Students who never chose (everyone before Group II choice existed) take Maths and Science */
 export const DEFAULT_GROUP_TWO = ["math", "science"];
+export const GROUP_TWO_MIN = 2;
+export const GROUP_TWO_MAX = 3;
 
-const GROUP_ONE_PAPERS = ["english_lang", "english_lit", "history", "geography"];
+/** A real ICSE Group II choice: two or three different subjects from GROUP_TWO_OPTIONS */
+export function isValidGroupTwo(groupTwo?: readonly string[] | null): groupTwo is readonly string[] {
+  if (!groupTwo) return false;
+  const known = new Set(groupTwo.filter((k) => GROUP_TWO_OPTIONS.some((o) => o.key === k)));
+  return known.size === groupTwo.length && known.size >= GROUP_TWO_MIN && known.size <= GROUP_TWO_MAX;
+}
 
-/** The paper keys for a student's Group II choice, e.g. ["math", "science"] → math, physics, chemistry, biology */
+/**
+ * The paper keys for a student's Group II choice, e.g. ["math", "science"] → math, physics, chemistry,
+ * biology. Anything that isn't a valid choice (never chosen, or a hand-edited or imported value) means
+ * Maths + Science.
+ */
 export function groupTwoPapers(groupTwo?: readonly string[] | null): string[] {
-  const chosen = groupTwo && groupTwo.length > 0 ? groupTwo : DEFAULT_GROUP_TWO;
+  const chosen = isValidGroupTwo(groupTwo) ? groupTwo : DEFAULT_GROUP_TWO;
   return GROUP_TWO_OPTIONS.filter((o) => chosen.includes(o.key)).flatMap((o) => [...o.papers]);
+}
+
+/** Every board paper a student sits apart from the second language and elective, in timetable order of subjects */
+function studentPaperKeys(groupTwo?: readonly string[] | null): string[] {
+  return ["english_lang", "english_lit", ...groupTwoPapers(groupTwo), "history", "geography"];
 }
 
 /** Build the full exam list: Group I, the chosen Group II subjects, the second language and the elective */
 export function getExams(languageKey: string, electiveKey: string, groupTwo?: readonly string[] | null): Exam[] {
-  const papers = [...GROUP_ONE_PAPERS, ...groupTwoPapers(groupTwo)];
+  const papers = studentPaperKeys(groupTwo);
   const exams: Exam[] = CORE_EXAMS.filter((e) => papers.includes(e.key));
   for (const key of papers) {
     if (exams.some((e) => e.key === key)) continue;
@@ -285,7 +301,7 @@ export function getSubjectLabels(languageKey: string, electiveKey: string, group
     geography: "Geography",
   };
   const labels: Record<string, string> = {};
-  for (const key of [...GROUP_ONE_PAPERS, ...groupTwoPapers(groupTwo)]) {
+  for (const key of studentPaperKeys(groupTwo)) {
     const name = named[key] ?? ELECTIVES.find((e) => e.key === key)?.name;
     if (name) labels[key] = name;
   }
@@ -485,7 +501,7 @@ export function getDefaultChapters(languageKey: string, electiveKey: string, gro
   // Group I and the chosen Group II subjects; Economics, Commercial Studies and the like, the second
   // language and the elective come from their CISCE 2027 syllabus (see syllabus-chapters.ts)
   const chapters: Record<string, Chapter[]> = {};
-  for (const key of [...GROUP_ONE_PAPERS, ...groupTwoPapers(groupTwo)]) {
+  for (const key of studentPaperKeys(groupTwo)) {
     chapters[key] = core[key] ?? syllabusChapters(key);
   }
   chapters[languageKey] = syllabusChapters(languageKey);

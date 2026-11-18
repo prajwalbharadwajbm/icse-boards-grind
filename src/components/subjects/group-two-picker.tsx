@@ -1,9 +1,6 @@
 "use client";
 
-import { GROUP_TWO_OPTIONS } from "@/lib/constants";
-
-export const GROUP_TWO_MIN = 2;
-export const GROUP_TWO_MAX = 3;
+import { GROUP_TWO_OPTIONS, GROUP_TWO_MIN, GROUP_TWO_MAX } from "@/lib/constants";
 
 /** ICSE Group II: pick any two or three. Science counts as one subject (three papers) */
 export function GroupTwoPicker({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {

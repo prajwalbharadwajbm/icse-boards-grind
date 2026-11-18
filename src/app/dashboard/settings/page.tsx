@@ -8,8 +8,8 @@ import { useAuth } from "@/providers/auth-provider";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getSubjectLabels, getSubjectColors, SECOND_LANGUAGES, ELECTIVES, GROUP_THREE, DEFAULT_GROUP_TWO, withSubjectKeys } from "@/lib/constants";
-import { GroupTwoPicker, GROUP_TWO_MIN, GROUP_TWO_MAX } from "@/components/subjects/group-two-picker";
+import { getSubjectLabels, getSubjectColors, SECOND_LANGUAGES, ELECTIVES, GROUP_THREE, DEFAULT_GROUP_TWO, isValidGroupTwo, withSubjectKeys } from "@/lib/constants";
+import { GroupTwoPicker } from "@/components/subjects/group-two-picker";
 import { StickerAvatar } from "@/components/brand/avatars";
 import { AVATARS, STUDY_VIBES, avatarFor, vibeFor } from "@/lib/identity";
 import { today } from "@/lib/utils";
@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
   const groupTwo = data.groupTwo;
-  const [groupTwoDraft, setGroupTwoDraft] = useState<string[]>(groupTwo?.length ? groupTwo : DEFAULT_GROUP_TWO);
+  const [groupTwoDraft, setGroupTwoDraft] = useState<string[]>(isValidGroupTwo(groupTwo) ? [...groupTwo] : DEFAULT_GROUP_TWO);
   const SUBJECT_LABELS = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
   const SUBJECT_COLORS = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
@@ -293,8 +293,8 @@ export default function SettingsPage() {
             onChange={(next) => {
               setGroupTwoDraft(next);
               // Saved only once it's a valid ICSE choice; until then the picker says what's missing
-              if (next.length < GROUP_TWO_MIN || next.length > GROUP_TWO_MAX) return;
-              capture("group_two_changed", { group_two: next.join(",") });
+              if (!isValidGroupTwo(next)) return;
+              capture("group_two_changed", { group_two: [...next].sort().join(",") });
               update((s) => ({ groupTwo: next, subjects: withSubjectKeys(s.subjects, lang, elective, next) }));
             }}
           />

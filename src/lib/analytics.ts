@@ -69,7 +69,7 @@ function localDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** The user's next board paper, based on their language and elective once onboarded. */
+/** The user's next board paper, based on their language, elective and Group II subjects once onboarded. */
 function nextPaper(): { key: string; days: number } | null {
   const exams = _context.onboarded && _context.language && _context.elective
     ? getExams(_context.language, _context.elective, _context.groupTwo)
@@ -120,7 +120,7 @@ function syncPersonProperties() {
   posthog.setPersonProperties(props);
 }
 
-/** Called by PostHogProvider whenever the student's language, elective or onboarding state changes. */
+/** Called by PostHogProvider whenever the student's language, elective, Group II subjects or onboarding state changes. */
 export function setAnalyticsContext(context: AnalyticsContext) {
   _context = {
     onboarded: context.onboarded,

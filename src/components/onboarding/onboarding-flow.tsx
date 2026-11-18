@@ -4,13 +4,13 @@ import { useState, useEffect, useMemo } from "react";
 import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
 import { DEFAULT_SCHOOL_HOURS } from "@/lib/school-hours";
 import type { Routine } from "@/store/use-store";
-import { GroupTwoPicker, GROUP_TWO_MIN, GROUP_TWO_MAX } from "@/components/subjects/group-two-picker";
+import { GroupTwoPicker } from "@/components/subjects/group-two-picker";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
-import { SECOND_LANGUAGES, GROUP_THREE, DEFAULT_GROUP_TWO, getSubjectLabels, getSubjectColors, withSubjectKeys } from "@/lib/constants";
+import { SECOND_LANGUAGES, GROUP_THREE, DEFAULT_GROUP_TWO, isValidGroupTwo, getSubjectLabels, getSubjectColors, withSubjectKeys } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { StickerMark, StarSticker } from "@/components/brand/sticker";
 import { StickerAvatar } from "@/components/brand/avatars";
@@ -106,7 +106,7 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
       capture("onboarding_completed", {
         language: selectedLanguage,
         elective: selectedElective,
-        group_two: groupTwo.join(","),
+        group_two: [...groupTwo].sort().join(","),
         learning_style: learningStyle,
         study_hours: studyHours,
         target_percent: targetPercent,
@@ -480,7 +480,7 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
               Back
             </Button>
           )}
-          <Button onClick={handleNext} className="flex-1" size="lg" disabled={(step === 2 && !studyVibe) || (step === 4 && (groupTwo.length < GROUP_TWO_MIN || groupTwo.length > GROUP_TWO_MAX))}>
+          <Button onClick={handleNext} className="flex-1" size="lg" disabled={(step === 2 && !studyVibe) || (step === 4 && !isValidGroupTwo(groupTwo))}>
             {step === TOTAL_STEPS ? "Get started" : "Next"}
           </Button>
         </div>

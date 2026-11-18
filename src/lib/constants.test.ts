@@ -127,6 +127,19 @@ describe("Group II subjects", () => {
     expect(keys(getExams("hindi", "economics", ["economics", "commercial"])).filter((k) => k === "economics")).toHaveLength(1);
   });
 
+  it("lists subjects in the same order as before for students who never chose", () => {
+    expect(Object.keys(getSubjectLabels("hindi", "computer"))).toEqual([
+      "english_lang", "english_lit", "math", "physics", "chemistry", "biology", "history", "geography", "hindi", "computer",
+    ]);
+  });
+
+  it("ignores a saved Group II list that isn't a valid ICSE choice and uses Maths + Science", () => {
+    const standard = keys(getExams("hindi", "computer"));
+    expect(keys(getExams("hindi", "computer", ["economics"]))).toEqual(standard);
+    expect(keys(getExams("hindi", "computer", ["x", "y"]))).toEqual(standard);
+    expect(keys(getExams("hindi", "computer", ["math", "economics", "commercial", "env_science"]))).toEqual(standard);
+  });
+
   it("gives every chosen Group II subject its chapter list", () => {
     const chapters = getDefaultChapters("hindi", "computer", ["economics", "commercial"]);
     expect(chapters.economics.length).toBeGreaterThan(0);
