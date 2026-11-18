@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { SchoolHoursFields, DEFAULT_SCHOOL_HOURS } from "@/components/routine/school-hours-fields";
+import type { Routine } from "@/store/use-store";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
@@ -39,9 +41,10 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
   const [ratings, setRatings] = useState<Record<string, string>>({});
   const [targetPercent, setTargetPercent] = useState(90);
   const [prepLevel, setPrepLevel] = useState("somewhat");
-  const [routine, setRoutine] = useState({
-    wake: "06:00", breakfast: "08:00", lunch: "13:00",
+  const [routine, setRoutine] = useState<Routine>({
+    wake: "06:00", breakfast: "07:00", lunch: "13:00",
     snack: "17:00", dinner: "20:30", sleep: "22:30",
+    school: DEFAULT_SCHOOL_HOURS,
   });
   // Compute dynamic labels/colors based on selections
   const subjectLabels = useMemo(() => getSubjectLabels(selectedLanguage, selectedElective), [selectedLanguage, selectedElective]);
@@ -437,6 +440,9 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
                   </div>
                   <h2 className={`${TITLE_CLASS} text-center`} style={{ color: "var(--text)" }}>Your daily routine</h2>
                   <p className={`${SUB_CLASS} mb-5 text-center`} style={{ color: "var(--text-secondary)" }}>We&apos;ll plan study blocks around your schedule</p>
+                  <div className="rounded-2xl p-4 mb-4" style={{ border: "2px solid var(--outline)" }}>
+                    <SchoolHoursFields value={routine.school} onChange={(school) => setRoutine({ ...routine, school })} />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     {(["wake", "breakfast", "lunch", "snack", "dinner", "sleep"] as const).map((key) => (
                       <div key={key}>

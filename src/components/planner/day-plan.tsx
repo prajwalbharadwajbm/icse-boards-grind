@@ -21,7 +21,9 @@ export function DayPlan({ blocks, nowMin, isPlanToday, onBlockClick }: DayPlanPr
   const renderedBlocks = useMemo(() => {
     return blocks.map((block, i) => {
       const startMin = timeToMin(block.start);
-      const endMin = timeToMin(block.end);
+      // A block that runs past midnight (sleep ends at "00:00") ends the next day
+      let endMin = timeToMin(block.end);
+      if (endMin <= startMin) endMin += 1440;
       const duration = endMin - startMin;
       const isCurrent = isPlanToday && nowMin >= startMin && nowMin < endMin;
       const isPast = isPlanToday && nowMin >= endMin;

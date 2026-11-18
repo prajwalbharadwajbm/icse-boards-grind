@@ -73,6 +73,10 @@ export function buildStudentContext(data: StoreState): string {
   const r = data.routine || { wake: "06:00", breakfast: "08:00", lunch: "13:00", snack: "17:00", dinner: "20:30", sleep: "22:30" };
   lines.push(`=== DAILY ROUTINE ===`);
   lines.push(`Wake: ${r.wake}, Breakfast: ${r.breakfast}, Lunch: ${r.lunch}, Snack: ${r.snack}, Dinner: ${r.dinner}, Sleep: ${r.sleep}`);
+  if (r.school) {
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    lines.push(`School: ${r.school.start}–${r.school.end} on ${r.school.days.map((d) => dayNames[d]).join(", ")}. Never plan study during school.`);
+  }
 
   return lines.join("\n");
 }

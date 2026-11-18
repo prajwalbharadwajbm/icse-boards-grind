@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useMemo, useEffect } from "react";
+import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useAuth } from "@/providers/auth-provider";
@@ -292,6 +293,9 @@ export default function SettingsPage() {
       {/* Daily Routine */}
       <Card>
         <CardTitle>Daily routine</CardTitle>
+        <div className="mb-5 pb-5 border-b" style={{ borderColor: "var(--divider)" }}>
+          <SchoolHoursFields value={routine.school} onChange={(school) => setRoutine({ ...routine, school })} />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           {(["wake", "breakfast", "lunch", "snack", "dinner", "sleep"] as const).map((key) => (
             <div key={key}>

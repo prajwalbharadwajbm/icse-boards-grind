@@ -118,6 +118,7 @@ function buildDemoData(): Partial<StoreState> {
       snack: "16:30",
       dinner: "20:00",
       sleep: "22:30",
+      school: { start: "08:00", end: "14:30", days: [1, 2, 3, 4, 5] },
     },
     theme: "light",
     timerSessions: [],
