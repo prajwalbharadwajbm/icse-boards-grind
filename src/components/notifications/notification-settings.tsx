@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AskForIt } from "@/components/feedback/ask-for-it";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,8 +163,16 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           Push notifications
         </h3>
         <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Get reminders for study sessions, exams, and revisions
+          Reminders for study sessions, exams and revisions show while the app is open in a browser tab
         </p>
+        <div className="mt-3">
+          <AskForIt
+            feature="phone_reminders"
+            source="settings"
+            label="Want reminders even when the app is closed?"
+            thanks="Noted: we'll add them if enough students ask"
+          />
+        </div>
       </div>
 
       {/* Permission Status */}

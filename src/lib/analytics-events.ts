@@ -87,6 +87,8 @@ export interface AnalyticsEventMap {
   settings_saved: { study_hours: number; target_percent: number; has_grok_key: boolean };
   /** Group II subjects changed in Settings, e.g. "economics,commercial" */
   group_two_changed: { group_two: string };
+  /** "Ask for it": a student asked for something not built yet. Built once enough ask (docs/analytics.md) */
+  feature_requested: { feature: "class_9" | "isc" | "phone_reminders"; source: "onboarding" | "settings" };
   language_changed: { new_language: string };
   elective_changed: { new_elective: string };
   data_exported: Record<string, never>;
