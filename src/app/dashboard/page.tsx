@@ -16,7 +16,7 @@ import {
   examStart,
   examEnd,
 } from "@/lib/constants";
-import { today, daysBetween, dateStr, timeToMin } from "@/lib/utils";
+import { today, daysBetween, dateStr, timeToMin, blockEndMin } from "@/lib/utils";
 import { clock, paperName, plural, signed } from "@/lib/exam-format";
 import { HallTicket } from "@/components/exam/hall-ticket";
 import { TimetableCard } from "@/components/exam/timetable-card";
@@ -186,7 +186,7 @@ export default function DashboardPage() {
   const pageTitle = new Date(td + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
 
   // Today's plan from the current block onwards
-  const upcomingBlocks = plan.filter((b) => timeToMin(b.end) > nowMin).slice(0, 6);
+  const upcomingBlocks = plan.filter((b) => blockEndMin(b) > nowMin).slice(0, 6);
   const hoursPct = Math.min(100, (hoursToday / target) * 100);
 
   // A student who hasn't logged study time or marked a chapter done yet
@@ -214,7 +214,7 @@ export default function DashboardPage() {
         ) : (
           <ol className="flex flex-col gap-2">
             {upcomingBlocks.map((block, i) => {
-              const isCurrent = nowMin >= timeToMin(block.start) && nowMin < timeToMin(block.end);
+              const isCurrent = nowMin >= timeToMin(block.start) && nowMin < blockEndMin(block);
               const dotColor = block.type === "study" && block.subjectKey ? subjectColors[block.subjectKey] : undefined;
               return (
                 <li

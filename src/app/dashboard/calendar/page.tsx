@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getExams, getSubjectColors, getSubjectLabels, type Block } from "@/lib/constants";
-import { today, formatDate, formatTime24, timeToMin, daysBetween } from "@/lib/utils";
+import { today, formatDate, formatTime24, timeToMin, blockEndMin, daysBetween } from "@/lib/utils";
 import { getDayPlan } from "@/lib/algorithms";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,7 @@ export default function CalendarPage() {
   const selectedDayStudyMin = useMemo(() => {
     if (!selectedDayPlan) return 0;
     return selectedDayPlan.reduce((sum, b) => {
-      if (b.type === "study") return sum + (timeToMin(b.end) - timeToMin(b.start));
+      if (b.type === "study") return sum + (blockEndMin(b) - timeToMin(b.start));
       return sum;
     }, 0);
   }, [selectedDayPlan]);
@@ -227,7 +227,7 @@ export default function CalendarPage() {
             <div>
               {selectedDayPlan.map((block, i) => {
                 const startMin = timeToMin(block.start);
-                const endMin = timeToMin(block.end);
+                const endMin = blockEndMin(block);
                 const duration = endMin - startMin;
                 const isCurrent = selectedDate === td && nowMin >= startMin && nowMin < endMin;
                 const isPast = selectedDate === td && nowMin >= endMin;
@@ -268,7 +268,7 @@ export default function CalendarPage() {
               const subjectBreakdown: Record<string, number> = {};
               selectedDayPlan.forEach((b) => {
                 if (b.type === "study" && b.subjectKey) {
-                  const mins = timeToMin(b.end) - timeToMin(b.start);
+                  const mins = blockEndMin(b) - timeToMin(b.start);
                   subjectBreakdown[b.subjectKey] = (subjectBreakdown[b.subjectKey] || 0) + mins;
                 }
               });

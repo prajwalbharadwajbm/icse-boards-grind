@@ -35,6 +35,12 @@ export function timeToMin(hhmm: string): number {
   return h * 60 + m;
 }
 
+/** When a plan block ends, in minutes from midnight. A block ending at or before its start (sleep to "00:00") ends the next day */
+export function blockEndMin(block: { start: string; end: string }): number {
+  const end = timeToMin(block.end);
+  return end <= timeToMin(block.start) ? end + 1440 : end;
+}
+
 export function minToTime(min: number): string {
   const h = Math.floor(min / 60) % 24;
   const m = min % 60;
