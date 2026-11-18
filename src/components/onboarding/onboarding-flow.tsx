@@ -186,14 +186,13 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
                     style={{ background: "var(--bg-card)", color: "var(--text)" }}
                     autoFocus
                   />
-                  {/* Shown in /preview too: analytics ignores that path */}
                   <div className="mt-6 pt-5 flex flex-col items-center gap-2.5" style={{ borderTop: "2px dashed var(--divider)" }}>
                     <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
                       Not in ICSE Class 10? Tell us, and we&apos;ll build it if enough students ask
                     </p>
                     <div className="flex flex-wrap justify-center gap-2">
-                      <AskForIt feature="class_9" source="onboarding" label="I'm in Class 9" thanks="Noted: Class 9 is next if enough of you ask" />
-                      <AskForIt feature="isc" source="onboarding" label="I'm in ISC (Class 11/12)" thanks="Noted: ISC is next if enough of you ask" />
+                      <AskForIt feature="class_9" source="onboarding" />
+                      <AskForIt feature="isc" source="onboarding" />
                     </div>
                   </div>
                 </div>

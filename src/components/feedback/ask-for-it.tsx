@@ -3,27 +3,27 @@
 import { useEffect, useState } from "react";
 import { capture } from "@/lib/analytics";
 import type { EventProperties } from "@/lib/analytics-events";
+import { Button } from "@/components/ui/button";
 
-export type RequestedFeature = EventProperties<"feature_requested">["feature"];
+type FeatureRequest = EventProperties<"feature_requested">;
+export type RequestedFeature = FeatureRequest["feature"];
 
-const storageKey = (feature: RequestedFeature) => `bg-asked-${feature}`;
+/** What each button says, and the thanks that replaces it */
+const COPY: Record<RequestedFeature, { label: string; thanks: string }> = {
+  class_9: { label: "I'm in Class 9", thanks: "Noted: Class 9 is next if enough of you ask" },
+  isc: { label: "I'm in ISC (Class 11/12)", thanks: "Noted: ISC is next if enough of you ask" },
+  phone_reminders: { label: "Want reminders even when the app is closed?", thanks: "Noted: we'll add them if enough students ask" },
+};
+
+const storageKey = (feature: RequestedFeature) => `ask-for-it:${feature}`;
 
 /**
- * "Ask for it": a feature we haven't built (or that only half works) gets a button that counts
- * requests in PostHog (feature_requested). It's built once enough students ask. One tap per
- * feature per device; the thanks line replaces the button.
+ * "Ask for it": a feature we haven't built, or one that only half works, gets a button that counts
+ * requests in PostHog (feature_requested). We build it once enough students ask. A request is
+ * remembered on this device only once it was really sent, so a tap in /preview, or by someone
+ * analytics ignores, doesn't hide the button later.
  */
-export function AskForIt({
-  feature,
-  source,
-  label,
-  thanks,
-}: {
-  feature: RequestedFeature;
-  source: EventProperties<"feature_requested">["source"];
-  label: string;
-  thanks: string;
-}) {
+export function AskForIt({ feature, source }: { feature: RequestedFeature; source: FeatureRequest["source"] }) {
   const [asked, setAsked] = useState(false);
 
   useEffect(() => {
@@ -37,27 +37,28 @@ export function AskForIt({
   if (asked) {
     return (
       <p className="text-[13px] font-bold" style={{ color: "var(--text-secondary)" }} role="status">
-        {thanks}
+        {COPY[feature].thanks}
       </p>
     );
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
+      className="h-auto min-h-9 py-1.5 text-left whitespace-normal"
       onClick={() => {
-        capture("feature_requested", { feature, source });
-        try {
-          localStorage.setItem(storageKey(feature), "1");
-        } catch {
-          // Counted anyway; it just may be asked again on this device
+        if (capture("feature_requested", { feature, source })) {
+          try {
+            localStorage.setItem(storageKey(feature), "1");
+          } catch {
+            // Counted anyway; it may just be asked again on this device
+          }
         }
         setAsked(true);
       }}
-      className="min-h-10 px-4 py-2 rounded-full text-[13px] font-bold transition-[transform,box-shadow] duration-150 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-left"
-      style={{ background: "var(--bg-card)", color: "var(--text)", border: "2px solid var(--outline)", boxShadow: "2px 2px 0 var(--outline)" }}
     >
-      {label}
-    </button>
+      {COPY[feature].label}
+    </Button>
   );
 }

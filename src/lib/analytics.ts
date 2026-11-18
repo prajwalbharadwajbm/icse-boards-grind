@@ -139,11 +139,12 @@ export function capture<E extends AnalyticsEvent>(
   ...args: Record<string, never> extends EventProperties<E>
     ? [properties?: EventProperties<E>]
     : [properties: EventProperties<E>]
-) {
-  if (typeof window === "undefined") return;
+): boolean {
+  if (typeof window === "undefined") return false;
   if (!initialized) initPostHog();
-  if (isInternalUser() || isUntrackedPath()) return;
+  if (!initialized || isInternalUser() || isUntrackedPath()) return false;
   posthog.capture(event, { ...contextProperties(), ...(args[0] as Record<string, unknown> | undefined) });
+  return true;
 }
 
 /**

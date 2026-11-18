@@ -206,9 +206,11 @@ english_page_viewed
 
 ### Settings, leaderboard, what's new
 
-`feature_requested` (`feature`: `class_9` | `isc` | `phone_reminders`, `source`: `onboarding` | `settings`): the "Ask for it" buttons for things not built yet. We build a feature once enough distinct students ask; count with `count(DISTINCT person_id)` grouped by `feature`.
-
 `settings_saved` (`study_hours`, `target_percent`, `has_grok_key`), `language_changed` (`new_language`), `elective_changed` (`new_elective`), `group_two_changed` (`group_two`: sorted, comma-separated Group II keys), `data_exported`, `data_imported` (`mode`), `leaderboard_toggle` (`enabled`), `leaderboard_opted_in`, `whats_new_dismissed` (`updates_shown`).
+
+### Feedback
+
+`feature_requested` (`feature`: `class_9` | `isc` | `phone_reminders`, `source`: `onboarding` | `settings`): the "Ask for it" buttons for things not built yet. We build a feature once enough distinct students ask; count with `count(DISTINCT person_id)` grouped by `feature`. Only sent requests are remembered on the device, so ignored traffic (internal, `/preview`) never hides the button.
 
 ## Querying with Claude (PostHog MCP)
 

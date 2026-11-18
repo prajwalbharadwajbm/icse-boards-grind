@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect } from "react";
 import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
+import { AskForIt } from "@/components/feedback/ask-for-it";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { useAuth } from "@/providers/auth-provider";
@@ -301,6 +302,13 @@ export default function SettingsPage() {
           <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
             Changing subjects will update your exam dates and study plans.
           </p>
+          <div className="pt-4 flex flex-col gap-2.5" style={{ borderTop: "2px dashed var(--divider)" }}>
+            <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>Not in ICSE Class 10? Tell us, and we&apos;ll build it if enough students ask</p>
+            <div className="flex flex-wrap gap-2">
+              <AskForIt feature="class_9" source="settings" />
+              <AskForIt feature="isc" source="settings" />
+            </div>
+          </div>
         </div>
       </Card>
 
