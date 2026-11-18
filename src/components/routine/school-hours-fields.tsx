@@ -1,8 +1,7 @@
 "use client";
 
 import type { SchoolHours } from "@/store/use-store";
-
-export const DEFAULT_SCHOOL_HOURS: SchoolHours = { start: "08:00", end: "14:30", days: [1, 2, 3, 4, 5] };
+import { DEFAULT_SCHOOL_HOURS, usableSchoolHours } from "@/lib/school-hours";
 
 // Monday first, as students read a school week
 const DAYS = [
@@ -29,8 +28,13 @@ export function SchoolHoursFields({
   value: SchoolHours | null | undefined;
   onChange: (value: SchoolHours | null) => void;
 }) {
-  const on = !!value;
+  const hasSchool = !!value;
   const hours = value ?? DEFAULT_SCHOOL_HOURS;
+  const problem = !hasSchool || usableSchoolHours(hours)
+    ? null
+    : hours.days.length === 0
+      ? "Pick at least one school day"
+      : "Home by has to be after school starts";
 
   const toggleDay = (day: number) => {
     const days = hours.days.includes(day) ? hours.days.filter((d) => d !== day) : [...hours.days, day];
@@ -42,29 +46,29 @@ export function SchoolHoursFields({
       <button
         type="button"
         role="switch"
-        aria-checked={on}
-        onClick={() => onChange(on ? null : DEFAULT_SCHOOL_HOURS)}
+        aria-checked={hasSchool}
+        onClick={() => onChange(hasSchool ? null : DEFAULT_SCHOOL_HOURS)}
         className="flex items-center justify-between gap-3 text-left"
       >
         <span>
           <span className="block text-sm font-bold" style={{ color: "var(--text)" }}>I have school</span>
           <span className="block text-[13px]" style={{ color: "var(--text-muted)" }}>
-            {on ? "No study is planned during school on school days" : "Your whole day is planned, e.g. during holidays or study leave"}
+            {hasSchool ? "No study is planned during school on school days" : "Your whole day is planned, e.g. during holidays or study leave"}
           </span>
         </span>
         <span
           aria-hidden="true"
           className="relative shrink-0 w-12 h-7 rounded-full transition-colors duration-150"
-          style={{ background: on ? "var(--primary)" : "var(--paper)", border: "2px solid var(--outline)" }}
+          style={{ background: hasSchool ? "var(--primary)" : "var(--paper)", border: "2px solid var(--outline)" }}
         >
           <span
             className="absolute top-0.5 w-5 h-5 rounded-full transition-[left] duration-150"
-            style={{ left: on ? "calc(100% - 22px)" : "2px", background: on ? "#fff" : "var(--outline)" }}
+            style={{ left: hasSchool ? "calc(100% - 22px)" : "2px", background: hasSchool ? "#fff" : "var(--outline)" }}
           />
         </span>
       </button>
 
-      {on && (
+      {hasSchool && (
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -114,6 +118,11 @@ export function SchoolHoursFields({
               })}
             </div>
           </fieldset>
+          {problem && (
+            <p role="alert" className="text-[13px] font-bold" style={{ color: "var(--danger)" }}>
+              {problem}. Until then your whole day is planned
+            </p>
+          )}
         </>
       )}
     </div>

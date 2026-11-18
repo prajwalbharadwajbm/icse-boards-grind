@@ -42,4 +42,21 @@ describe("generateDayPlan with school hours", () => {
   it("plans a day off school exactly as before", () => {
     expect(generateDayPlan(SUNDAY, withSchool)).toEqual(generateDayPlan(SUNDAY, student()));
   });
+
+  it("keeps school at its set time when breakfast runs into it, ending breakfast at the bell", () => {
+    const lateBreakfast = { ...withSchool, routine: { ...withSchool.routine, breakfast: "07:45" } };
+    const plan = generateDayPlan(WEDNESDAY, lateBreakfast);
+    expect(plan).toContainEqual(expect.objectContaining({ start: "08:00", end: "14:30", label: "School" }));
+    expect(plan).toContainEqual(expect.objectContaining({ start: "07:45", end: "08:00", label: "BREAKFAST" }));
+  });
+
+  it("treats school hours that end before they start as no school", () => {
+    const backwards = student({ start: "08:00", end: "02:30", days: MON_TO_FRI });
+    expect(generateDayPlan(WEDNESDAY, backwards)).toEqual(generateDayPlan(WEDNESDAY, student()));
+  });
+
+  it("plans the whole day when school is switched off", () => {
+    const off = { ...student(), routine: { ...routine, school: null } };
+    expect(generateDayPlan(WEDNESDAY, off)).toEqual(generateDayPlan(WEDNESDAY, student()));
+  });
 });

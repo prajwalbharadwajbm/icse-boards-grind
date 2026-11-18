@@ -1,5 +1,6 @@
 import { getExams, getSubjectLabels, type Block, type Chapter } from "./constants";
 import { dateStr, daysBetween, timeToMin, minToTime, today } from "./utils";
+import { usableSchoolHours } from "./school-hours";
 import type { StoreState } from "@/store/use-store";
 
 /* ── helpers ── */
@@ -533,7 +534,11 @@ export function generateDayPlan(
   for (const fb of fixedBlocks) {
     // If fixed block overlaps with cursor due to routine ordering, push forward
     const fbStart = Math.max(fb.time, cursor);
-    const fbEnd = fbStart + fb.duration;
+    // School keeps its set time: a block that would run into it ends at the bell
+    const fbEnd =
+      school && fb.label !== "School" && fbStart < school.start
+        ? Math.min(fbStart + fb.duration, school.start)
+        : fbStart + fb.duration;
 
     // Collect the gap before this fixed block (if any)
     if (fbStart > cursor) {
@@ -593,10 +598,9 @@ export function generateDayPlan(
 
 /** School start and end in minutes when dateString is one of the student's school days, else null */
 function schoolWindow(dateString: string, school: StoreState["routine"]["school"]): { start: number; end: number } | null {
-  if (!school || !school.days.includes(new Date(dateString + "T00:00:00").getDay())) return null;
-  const start = timeToMin(school.start);
-  const end = timeToMin(school.end);
-  return end > start ? { start, end } : null;
+  const usable = usableSchoolHours(school);
+  if (!usable || !usable.days.includes(new Date(dateString + "T00:00:00").getDay())) return null;
+  return { start: usable.start, end: usable.end };
 }
 
 /* ── Public API ── */

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { SchoolHoursFields, DEFAULT_SCHOOL_HOURS } from "@/components/routine/school-hours-fields";
+import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
+import { DEFAULT_SCHOOL_HOURS } from "@/lib/school-hours";
 import type { Routine } from "@/store/use-store";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
