@@ -30,10 +30,16 @@ Body: `{ purpose: "coach" | "briefing" | "grammar", messages: [{ role, content }
 1. `validateAIRequest` (`src/server/ai-request.ts`) checks the purpose, at most 41 messages, at most 12,000 characters per message and 60,000 in total, a system prompt only as the first message, and that the last message is the student's.
 2. `consumeAIQuota` (`src/server/quota.ts`) counts the request against the student's limits in `aiUsage/{uid}` inside a transaction. Over the limit returns `429` with `daily_limit` or `rate_limited` and a `retryAfterSeconds`.
 3. If the feature has a credit cost, `spendCredits` charges it.
-4. `callAIProvider` (`src/server/ai-provider.ts`) calls the provider with a key from `AI_API_KEYS`. Keys starting `gsk_` go to Groq (`llama-3.3-70b-versatile`), others to xAI (`grok-3-mini`). On a 429 or 5xx it tries the next key. If every key fails, the request is given back to the quota and any credits are refunded.
+4. `callAIProvider` (`src/server/ai-provider.ts`) calls the provider with a key from `AI_API_KEYS`. Keys starting `gsk_` go to Groq (`openai/gpt-oss-120b`), others to xAI (`grok-3-mini`). The request body comes from `chatCompletionRequest` (`src/lib/ai-provider-config.ts`).
+   - **Groq requests are trimmed to fit.** Groq's free tier allows 8,000 tokens a minute for this model, counting the prompt plus `max_completion_tokens`, and refuses any single request over that with a `413`. Each Groq request is kept to a 6,000-token budget: the system prompt and the newest message always stay, and the oldest turns are dropped first. The estimate errs high: about 3.5 characters per token for English, one per character for Kannada, Hindi and other scripts.
+   - **A `413` is retried once, shortened.** If Groq still answers `413`, the same key gets the system prompt and the newest message only. That first `413` is logged as a warning. If even the short request is too large, the student gets `400 message_too_long`.
+   - **On a `429` or `5xx` it tries the next key.** xAI requests are never trimmed.
+   - **If every key fails,** the request is given back to the quota and any credits are refunded.
+
+   The 8,000 tokens a minute are shared by every request on the Groq account, so a second large request in the same minute can get a `429`, which the student sees as "The AI coach is busy right now".
 5. The coach streams the provider's server-sent events straight through; the briefing and grammar drill get `{ text }`. The response carries `X-AI-Remaining-Today`.
 
-A student who adds their own API key in Settings skips the server: `src/lib/ai-service.ts` calls the provider directly with their key, with no limits and no credits.
+A student who adds their own API key in Settings skips the server: `src/lib/ai-service.ts` calls the provider directly with their key, with no limits and no credits. It builds the request with the same `chatCompletionRequest`, so a student's own Groq key gets the same trimming, but not the `413` retry.
 
 ### Limits and costs: `src/lib/ai-policy.ts`
 
@@ -115,4 +121,4 @@ Deploying the rules before the new app is live would break the old parent report
 
 ## Tests
 
-`npm test` runs the unit tests in `src/**/*.test.ts` (Vitest): request validation, the quota windows including the India-midnight reset, the admin email check, and credit costs. CI runs them on every pull request.
+`npm test` runs the unit tests in `src/**/*.test.ts` (Vitest): request validation, the quota windows including the India-midnight reset, the admin email check, credit costs, trimming Groq requests to the token budget, and the provider's `413` retry and key fallback. CI runs them on every pull request.
