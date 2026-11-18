@@ -79,6 +79,16 @@ describe("chatCompletionRequest on a long coach chat", () => {
     expect(body.messages[body.messages.length - 1]).toEqual(kannada[kannada.length - 1]);
   });
 
+  it("keeps a chat full of dates, marks and formulas under the cap, at a token per 1.5 symbols and per 3 letters", () => {
+    const timetable = chat(41, (i) => `Turn ${i}: ` + "15-02-2027 09:45 Eng 80/80; 18-02 Lit 76%; v=u+at, s=ut+½at², 3×10⁸ m/s. ".repeat(25));
+    const body = groqBody(timetable);
+    const pessimistic = body.messages.reduce((n, m) => {
+      const letters = (m.content.match(/[A-Za-z\s]/g) || []).length;
+      return n + letters / 3 + (m.content.length - letters) / 1.5;
+    }, 0);
+    expect(pessimistic + body.max_completion_tokens).toBeLessThan(GROQ_FREE_TIER_TOKENS);
+  });
+
   it("sends a short chat unchanged", () => {
     const short = chat(5, (i) => `Question ${i} about Light`);
     expect(groqBody(short).messages).toEqual(short);

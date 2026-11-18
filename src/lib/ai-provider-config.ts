@@ -25,7 +25,7 @@ export interface ChatTurn {
 }
 
 /** A token count on the high side: about 3.5 characters per token for English, one per character for other scripts */
-export function estimateTokens(text: string): number {
+function estimateTokens(text: string): number {
   let ascii = 0;
   let other = 0;
   for (const ch of text) {
@@ -35,18 +35,19 @@ export function estimateTokens(text: string): number {
   return Math.ceil(ascii / 3.5) + other + 4;
 }
 
+const sumTokens = (messages: ChatTurn[]) => messages.reduce((n, m) => n + estimateTokens(m.content), 0);
+
 /**
  * Drop the oldest turns until the prompt fits the budget. The system prompt and the newest message
  * always stay, and the kept history starts on a student turn.
  */
-export function fitToTokenBudget<T extends ChatTurn>(messages: T[], promptBudget: number): T[] {
-  const total = messages.reduce((n, m) => n + estimateTokens(m.content), 0);
-  if (total <= promptBudget || messages.length <= 2) return messages;
+function fitToTokenBudget(messages: ChatTurn[], promptBudget: number): ChatTurn[] {
+  if (sumTokens(messages) <= promptBudget || messages.length <= 2) return messages;
 
   const head = messages[0].role === "system" ? [messages[0]] : [];
   const rest = messages.slice(head.length);
   const kept = [rest[rest.length - 1]];
-  let used = [...head, ...kept].reduce((n, m) => n + estimateTokens(m.content), 0);
+  let used = sumTokens([...head, ...kept]);
   for (let i = rest.length - 2; i >= 0; i--) {
     const cost = estimateTokens(rest[i].content);
     if (used + cost > promptBudget) break;
@@ -57,18 +58,33 @@ export function fitToTokenBudget<T extends ChatTurn>(messages: T[], promptBudget
   return [...head, ...kept];
 }
 
-/** The chat completion request for a key. Shared by the server and students' own keys so both stay in step */
+/** Only the system prompt and the newest message */
+function shortestChat(messages: ChatTurn[]): ChatTurn[] {
+  const head = messages[0]?.role === "system" ? [messages[0]] : [];
+  return messages.length <= head.length + 1 ? messages : [...head, messages[messages.length - 1]];
+}
+
+/**
+ * The chat completion request for a key. Shared by the server and students' own keys so both stay in step.
+ * Providers with a token budget (Groq) get the oldest turns trimmed to fit; `shortest` sends only the
+ * system prompt and the newest message, for a retry after the provider said the request was too large.
+ */
 export function chatCompletionRequest(
   apiKey: string,
-  opts: { messages: ChatTurn[]; stream: boolean; maxTokens: number; tokenBudget?: number }
+  opts: { messages: ChatTurn[]; stream: boolean; maxTokens: number; shortest?: boolean }
 ): { url: string; body: string } {
   const config = getAIConfig(apiKey);
   const isGroq = apiKey.startsWith("gsk_");
   const completionTokens = opts.maxTokens + config.reasoningTokens;
-  const budget = opts.tokenBudget ?? config.tokenBudget;
+  const messages =
+    config.tokenBudget === null
+      ? opts.messages
+      : opts.shortest
+        ? shortestChat(opts.messages)
+        : fitToTokenBudget(opts.messages, config.tokenBudget - completionTokens);
   const body: Record<string, unknown> = {
     model: config.model,
-    messages: budget === null ? opts.messages : fitToTokenBudget(opts.messages, budget - completionTokens),
+    messages,
     stream: opts.stream,
     temperature: 0.7,
   };
