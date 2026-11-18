@@ -23,8 +23,12 @@ export async function callAIProvider(opts: {
   signal?: AbortSignal;
 }): Promise<Response> {
   let lastStatus = 0;
-  for (const key of serverKeys()) {
-    const { url, body: requestBody } = chatCompletionRequest(key, opts);
+  const keys = serverKeys();
+  let shrunk = false;
+  for (let k = 0; k < keys.length; k++) {
+    const key = keys[k];
+    // After a 413 the size estimate was too low: resend with only the system prompt and the newest message
+    const { url, body: requestBody } = chatCompletionRequest(key, shrunk ? { ...opts, tokenBudget: 0 } : opts);
     try {
       const res = await fetch(url, {
         method: "POST",
@@ -36,6 +40,11 @@ export async function callAIProvider(opts: {
       lastStatus = res.status;
       const body = await res.text().catch(() => "");
       console.error(`[ai] provider ${new URL(url).host} returned ${res.status}: ${body.slice(0, 300)}`);
+      if (res.status === 413 && !shrunk) {
+        shrunk = true;
+        k--; // same key, smaller request
+        continue;
+      }
       if (res.status !== 429 && res.status < 500) break; // a request problem, another key won't help
     } catch (err) {
       if (opts.signal?.aborted) throw new ApiError(499, "cancelled", "Request cancelled");
