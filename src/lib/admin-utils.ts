@@ -18,6 +18,7 @@ export interface AdminUser {
     snack?: string;
     dinner?: string;
     sleep?: string;
+    school?: { start: string; end: string; days: number[] } | null;
   };
   grokApiKey?: string;
   subjects?: Record<string, Chapter[]>;

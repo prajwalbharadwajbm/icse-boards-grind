@@ -5,6 +5,13 @@ import { persist } from "zustand/middleware";
 import { DEFAULT_CHAPTERS, type Chapter, type Block } from "@/lib/constants";
 import { DEFAULT_CREDITS } from "@/lib/credits";
 
+export interface SchoolHours {
+  start: string;
+  end: string;
+  /** Days of the week with school: 0 = Sunday … 6 = Saturday */
+  days: number[];
+}
+
 export interface Routine {
   wake: string;
   breakfast: string;
@@ -12,6 +19,11 @@ export interface Routine {
   snack: string;
   dinner: string;
   sleep: string;
+  /**
+   * Unset for students who haven't told us, null for no school (holidays, study leave): the planner
+   * then uses the whole day. Null, not undefined, because Firestore rejects undefined fields.
+   */
+  school?: SchoolHours | null;
 }
 
 export interface StudyLogEntry {

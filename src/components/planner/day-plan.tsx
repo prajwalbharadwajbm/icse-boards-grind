@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { getSubjectColors, getSubjectLabels, type Block } from "@/lib/constants";
 import { useStore } from "@/store/use-store";
-import { formatTime24, timeToMin } from "@/lib/utils";
+import { formatTime24, timeToMin, blockEndMin } from "@/lib/utils";
 
 interface DayPlanProps {
   blocks: Block[];
@@ -21,7 +21,7 @@ export function DayPlan({ blocks, nowMin, isPlanToday, onBlockClick }: DayPlanPr
   const renderedBlocks = useMemo(() => {
     return blocks.map((block, i) => {
       const startMin = timeToMin(block.start);
-      const endMin = timeToMin(block.end);
+      const endMin = blockEndMin(block);
       const duration = endMin - startMin;
       const isCurrent = isPlanToday && nowMin >= startMin && nowMin < endMin;
       const isPast = isPlanToday && nowMin >= endMin;

@@ -10,6 +10,7 @@ import { CoachBanner } from "@/components/layout/coach-banner";
 import { useAuth } from "@/providers/auth-provider";
 import { useTimerEngine } from "@/hooks/use-timer-engine";
 import { getDefaultChapters } from "@/lib/constants";
+import { DEFAULT_SCHOOL_HOURS } from "@/lib/school-hours";
 import type { StoreState } from "@/store/use-store";
 
 // Import all dashboard page components
@@ -118,6 +119,7 @@ function buildDemoData(): Partial<StoreState> {
       snack: "16:30",
       dinner: "20:00",
       sleep: "22:30",
+      school: DEFAULT_SCHOOL_HOURS,
     },
     theme: "light",
     timerSessions: [],

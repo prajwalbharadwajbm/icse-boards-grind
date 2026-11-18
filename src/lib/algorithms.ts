@@ -1,5 +1,6 @@
 import { getExams, getSubjectLabels, type Block, type Chapter } from "./constants";
 import { dateStr, daysBetween, timeToMin, minToTime, today } from "./utils";
+import { usableSchoolHours } from "./school-hours";
 import type { StoreState } from "@/store/use-store";
 
 /* ── helpers ── */
@@ -486,6 +487,9 @@ export function generateDayPlan(
   // Build weighted subject queue
   const subjectQueue = buildSubjectQueue(priorities, revisionExam?.key);
 
+  // School hours on a school day: no study then, and meals inside them are eaten at school
+  const school = schoolWindow(dateString, routine.school);
+
   // Define fixed daily blocks (sorted by time)
   const fixedBlocks = [
     {
@@ -518,7 +522,10 @@ export function generateDayPlan(
       label: "DINNER",
       type: "meal" as const,
     },
-  ].sort((a, b) => a.time - b.time);
+  ]
+    .filter((fb) => !school || fb.type !== "meal" || fb.time < school.start || fb.time >= school.end)
+    .concat(school ? [{ time: school.start, duration: school.end - school.start, label: "School", type: "break" as const }] : [])
+    .sort((a, b) => a.time - b.time);
 
   // Collect study gaps and place fixed blocks
   const gaps: { start: number; end: number; isLight: boolean }[] = [];
@@ -527,7 +534,11 @@ export function generateDayPlan(
   for (const fb of fixedBlocks) {
     // If fixed block overlaps with cursor due to routine ordering, push forward
     const fbStart = Math.max(fb.time, cursor);
-    const fbEnd = fbStart + fb.duration;
+    // School keeps its set time: a block that would run into it ends at the bell
+    const fbEnd =
+      school && fb.label !== "School" && fbStart < school.start
+        ? Math.min(fbStart + fb.duration, school.start)
+        : fbStart + fb.duration;
 
     // Collect the gap before this fixed block (if any)
     if (fbStart > cursor) {
@@ -583,6 +594,13 @@ export function generateDayPlan(
   blocks.sort((a, b) => timeToMin(a.start) - timeToMin(b.start));
 
   return blocks;
+}
+
+/** School start and end in minutes when dateString is one of the student's school days, else null */
+function schoolWindow(dateString: string, school: StoreState["routine"]["school"]): { start: number; end: number } | null {
+  const usable = usableSchoolHours(school);
+  if (!usable || !usable.days.includes(new Date(dateString + "T00:00:00").getDay())) return null;
+  return { start: usable.start, end: usable.end };
 }
 
 /* ── Public API ── */

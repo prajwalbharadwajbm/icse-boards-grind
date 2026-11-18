@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useStore } from "@/store/use-store";
+import { WEEKDAY_SHORT } from "@/lib/school-hours";
 import { useRouter } from "next/navigation";
 import { apiJson } from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
@@ -605,7 +606,8 @@ function UserDetailModal({ user, onClose }: { user: AdminUser | null; onClose: (
             <div className="grid grid-cols-3 gap-1 text-xs">
               {Object.entries(user.routine).map(([k, v]) => (
                 <div key={k}>
-                  <span style={{ color: "var(--text-secondary)" }}>{k}: </span>{v}
+                  <span style={{ color: "var(--text-secondary)" }}>{k}: </span>
+                  {typeof v === "string" ? v : v ? `${v.start}–${v.end}, ${v.days.map((d) => WEEKDAY_SHORT[d]).join(" ")}` : "none"}
                 </div>
               ))}
             </div>
