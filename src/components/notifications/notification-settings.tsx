@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AskForIt } from "@/components/feedback/ask-for-it";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,7 +89,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     if (perm === "granted") {
       // Show a test notification
       await showNotification("Notifications enabled", {
-        body: "You'll now receive study reminders and exam alerts.",
+        body: "Study and exam reminders will show while the dashboard is open in a tab.",
         tag: "setup-complete",
       });
     }
@@ -144,12 +145,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       <Card>
         <div className="text-center">
           <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-2" style={{ color: "var(--text)" }}>
-            Notifications not supported
+            Study reminders not supported
           </h3>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            Your browser doesn&apos;t support push notifications. Try using Chrome, Edge, or Firefox on desktop,
-            or add this app to your home screen on mobile.
+            This browser can&apos;t show reminders. Try Chrome, Edge or Firefox on a computer.
           </p>
+          <div className="mt-3 flex justify-center">
+            <AskForIt feature="phone_reminders" source="settings" />
+          </div>
         </div>
       </Card>
     );
@@ -159,11 +162,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     <Card className="space-y-5">
       <div>
         <h3 className="font-display text-lg font-extrabold tracking-[-0.01em] mb-1" style={{ color: "var(--text)" }}>
-          Push notifications
+          Study reminders
         </h3>
         <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Get reminders for study sessions, exams, and revisions
+          Reminders for study sessions and exams show while the dashboard is open in a browser tab
         </p>
+        <div className="mt-3">
+          <AskForIt feature="phone_reminders" source="settings" />
+        </div>
       </div>
 
       {/* Permission Status */}
@@ -194,7 +200,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           </p>
           <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
             {permission === "granted"
-              ? "You'll receive study reminders"
+              ? "Reminders show while the dashboard is open"
               : permission === "denied"
               ? "Please enable in browser settings"
               : "Enable to get study reminders"}

@@ -5,6 +5,7 @@ import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
 import { DEFAULT_SCHOOL_HOURS } from "@/lib/school-hours";
 import type { Routine } from "@/store/use-store";
 import { GroupTwoPicker } from "@/components/subjects/group-two-picker";
+import { AskForIt } from "@/components/feedback/ask-for-it";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { capture } from "@/lib/analytics";
@@ -185,6 +186,15 @@ export function OnboardingFlow({ preview = false }: { preview?: boolean }) {
                     style={{ background: "var(--bg-card)", color: "var(--text)" }}
                     autoFocus
                   />
+                  <div className="mt-6 pt-5 flex flex-col items-center gap-2.5" style={{ borderTop: "2px dashed var(--divider)" }}>
+                    <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
+                      Not in ICSE Class 10? Tell us, and we&apos;ll build it if enough students ask
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <AskForIt feature="class_9" source="onboarding" />
+                      <AskForIt feature="isc" source="onboarding" />
+                    </div>
+                  </div>
                 </div>
               )}
 
