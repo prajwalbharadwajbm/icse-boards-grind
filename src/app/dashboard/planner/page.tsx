@@ -17,8 +17,8 @@ import { DayPlan } from "@/components/planner/day-plan";
 export default function PlannerPage() {
   const data = useStore();
   const td = today();
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
-  const SUBJECT_COLORS = useMemo(() => getSubjectColors(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo), [data.selectedLanguage, data.selectedElective, data.groupTwo]);
+  const SUBJECT_COLORS = useMemo(() => getSubjectColors(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo), [data.selectedLanguage, data.selectedElective, data.groupTwo]);
 
   const [planDateObj, setPlanDateObj] = useState(new Date());
   const planDate = dateStr(planDateObj);

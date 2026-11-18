@@ -17,6 +17,7 @@ export function useGenerateNotifications() {
   const subjects = useStore((s) => s.subjects);
   const selectedLanguage = useStore((s) => s.selectedLanguage) || "kannada";
   const selectedElective = useStore((s) => s.selectedElective) || "computer";
+  const groupTwo = useStore((s) => s.groupTwo);
   const addNotification = useNotifications((s) => s.addNotification);
   const generated = useRef(false);
 
@@ -25,8 +26,8 @@ export function useGenerateNotifications() {
     generated.current = true;
 
     const td = today();
-    const SUBJECT_LABELS = getSubjectLabels(selectedLanguage, selectedElective);
-    const exams = getExams(selectedLanguage, selectedElective);
+    const SUBJECT_LABELS = getSubjectLabels(selectedLanguage, selectedElective, groupTwo);
+    const exams = getExams(selectedLanguage, selectedElective, groupTwo);
 
     // Revision-due notifications
     Object.keys(subjects).forEach((subjectKey) => {
@@ -75,5 +76,5 @@ export function useGenerateNotifications() {
         }
       }
     });
-  }, [subjects, selectedLanguage, selectedElective, addNotification]);
+  }, [subjects, selectedLanguage, selectedElective, groupTwo, addNotification]);
 }

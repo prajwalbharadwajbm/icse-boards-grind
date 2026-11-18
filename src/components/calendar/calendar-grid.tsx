@@ -20,8 +20,9 @@ export function CalendarGrid({ month, year, studyLog, onDayClick, selectedDate }
   const td = today();
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
-  const exams = useMemo(() => getExams(lang, elective), [lang, elective]);
-  const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const groupTwo = useStore((s) => s.groupTwo);
+  const exams = useMemo(() => getExams(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   const { cells } = useMemo(() => {
     const dim = new Date(year, month + 1, 0).getDate();

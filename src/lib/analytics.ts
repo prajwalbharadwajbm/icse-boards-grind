@@ -22,6 +22,7 @@ interface AnalyticsContext {
   onboarded: boolean;
   language: string | null;
   elective: string | null;
+  groupTwo?: string[] | null;
 }
 
 let _context: AnalyticsContext = { onboarded: false, language: null, elective: null };
@@ -71,7 +72,7 @@ function localDate(d: Date): string {
 /** The user's next board paper, based on their language and elective once onboarded. */
 function nextPaper(): { key: string; days: number } | null {
   const exams = _context.onboarded && _context.language && _context.elective
-    ? getExams(_context.language, _context.elective)
+    ? getExams(_context.language, _context.elective, _context.groupTwo)
     : [...CORE_EXAMS].sort((a, b) => a.date.localeCompare(b.date));
   const td = localDate(new Date());
   const next = exams.find((e) => e.date >= td);
@@ -125,6 +126,7 @@ export function setAnalyticsContext(context: AnalyticsContext) {
     onboarded: context.onboarded,
     language: context.onboarded ? context.language : null,
     elective: context.onboarded ? context.elective : null,
+    groupTwo: context.onboarded ? context.groupTwo : null,
   };
   if (typeof window === "undefined") return;
   if (!initialized) initPostHog();

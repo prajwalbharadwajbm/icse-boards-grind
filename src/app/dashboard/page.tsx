@@ -32,9 +32,10 @@ export default function DashboardPage() {
 
   const lang = data.selectedLanguage || "kannada";
   const elective = data.selectedElective || "computer";
-  const exams = useMemo(() => getExams(lang, elective), [lang, elective]);
-  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
-  const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const groupTwo = data.groupTwo;
+  const exams = useMemo(() => getExams(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
 
   // Live countdown ticks every second
   useEffect(() => {
@@ -48,19 +49,13 @@ export default function DashboardPage() {
   const sessionsToday = todayLog ? todayLog.sessions : 0;
   const target = data.studyHours || 8;
 
-  const chapsDone = useMemo(() => {
-    let count = 0;
-    Object.values(data.subjects || {}).forEach((chapters) => {
-      chapters.forEach((ch) => { if (ch.status === "completed") count++; });
-    });
-    return count;
-  }, [data.subjects]);
-
-  const totalChapters = useMemo(() => {
-    let count = 0;
-    Object.values(data.subjects || {}).forEach((chapters) => { count += chapters.length; });
-    return count;
-  }, [data.subjects]);
+  // Only the student's current subjects: switching Group II can leave an old list saved
+  const currentChapters = useMemo(
+    () => Object.keys(subjectLabels).flatMap((key) => (data.subjects || {})[key] || []),
+    [data.subjects, subjectLabels]
+  );
+  const chapsDone = currentChapters.filter((ch) => ch.status === "completed").length;
+  const totalChapters = currentChapters.length;
 
   // Next paper: the first one whose writing time hasn't finished yet
   const nextExam = useMemo(
@@ -179,7 +174,7 @@ export default function DashboardPage() {
   const hasSmartRecs = smartRecs.weak.length > 0 || smartRecs.grammarWeak.length > 0 || smartRecs.revisionDue.length > 0;
 
   // Motivation line, changes every minute
-  const quote = MOTIVATIONAL_QUOTES[Math.floor(Date.now() / 60000) % MOTIVATIONAL_QUOTES.length];
+  const quote = MOTIVATIONAL_QUOTES[Math.floor(now.getTime() / 60000) % MOTIVATIONAL_QUOTES.length];
 
   const firstExam = exams[0];
   const lastExam = exams[exams.length - 1];

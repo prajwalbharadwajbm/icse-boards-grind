@@ -9,7 +9,8 @@ import { SubjectCard } from "@/components/subjects/subject-card";
 export default function SubjectsPage() {
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
-  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
+  const groupTwo = useStore((s) => s.groupTwo);
+  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
   const subjectKeys = Object.keys(subjectLabels);
 
   useEffect(() => {

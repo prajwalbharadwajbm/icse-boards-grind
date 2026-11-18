@@ -252,18 +252,19 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
   const name = useStore((s) => s.name) || "Student";
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
+  const groupTwo = useStore((s) => s.groupTwo);
   const avatar = useStore((s) => s.avatar);
   const vibe = vibeFor(useStore((s) => s.studyVibe));
 
   // Next paper, shown quietly above the profile
   const nextExamInfo = useMemo(() => {
     const td = today();
-    const exams = getExams(lang, elective);
+    const exams = getExams(lang, elective, groupTwo);
     const next = exams.find((e) => e.date >= td);
     if (!next) return null;
     const days = daysBetween(td, next.date);
     return { days, subject: next.subject.replace(/ Paper \d$/, "") };
-  }, [lang, elective]);
+  }, [lang, elective, groupTwo]);
 
   // Auto-open subsections with fewer than 3 children
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {

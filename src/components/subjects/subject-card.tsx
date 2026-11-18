@@ -20,13 +20,14 @@ export function SubjectCard({ subjectKey }: SubjectCardProps) {
   const chapters: Chapter[] = useStore((s) => s.subjects[subjectKey] ?? NO_CHAPTERS);
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
+  const groupTwo = useStore((s) => s.groupTwo);
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [newChapterName, setNewChapterName] = useState("");
   const [newDifficulty, setNewDifficulty] = useState(3);
 
-  const labels = getSubjectLabels(lang, elective);
-  const colors = getSubjectColors(lang, elective);
+  const labels = getSubjectLabels(lang, elective, groupTwo);
+  const colors = getSubjectColors(lang, elective, groupTwo);
   const label = labels[subjectKey] || subjectKey;
   const color = colors[subjectKey] || "var(--primary)";
 

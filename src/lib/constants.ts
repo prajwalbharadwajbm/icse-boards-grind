@@ -171,6 +171,8 @@ export const TIMETABLE: ExamTimetable = TIMETABLES[EXAM_YEAR];
 export const CORE_EXAMS: Exam[] = TIMETABLE.core;
 export const SECOND_LANGUAGES: SecondLanguage[] = TIMETABLE.secondLanguages;
 export const ELECTIVES: Elective[] = TIMETABLE.electives;
+/** The Group III choices: the elective picker. Group II papers are chosen with GROUP_TWO_OPTIONS */
+export const GROUP_THREE: Elective[] = ELECTIVES.filter((e) => e.group?.startsWith("III"));
 
 /** Writing start of a paper as a local Date, e.g. 2027-02-15 10:15 */
 export function examStart(date: string): Date {

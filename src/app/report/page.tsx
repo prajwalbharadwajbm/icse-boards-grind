@@ -69,9 +69,10 @@ function ReportContent() {
 
   const lang = data?.selectedLanguage || "kannada";
   const elective = data?.selectedElective || "computer";
-  const exams = useMemo(() => data ? getExams(lang, elective) : [], [data, lang, elective]);
-  const subjectLabels = useMemo(() => data ? getSubjectLabels(lang, elective) : {}, [data, lang, elective]);
-  const subjectColors = useMemo(() => data ? getSubjectColors(lang, elective) : {}, [data, lang, elective]);
+  const groupTwo = data?.groupTwo;
+  const exams = useMemo(() => data ? getExams(lang, elective, groupTwo) : [], [data, lang, elective, groupTwo]);
+  const subjectLabels = useMemo(() => data ? getSubjectLabels(lang, elective, groupTwo) : {}, [data, lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => data ? getSubjectColors(lang, elective, groupTwo) : {}, [data, lang, elective, groupTwo]);
 
   const stats = useMemo(() => {
     if (!data) return null;

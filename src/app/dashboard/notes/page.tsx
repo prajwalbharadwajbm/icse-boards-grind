@@ -10,8 +10,9 @@ export default function NotesPage() {
   const revisionNotes = useStore((s) => s.revisionNotes) || {};
   const lang = useStore((s) => s.selectedLanguage) || "kannada";
   const elective = useStore((s) => s.selectedElective) || "computer";
-  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective), [lang, elective]);
-  const subjectColors = useMemo(() => getSubjectColors(lang, elective), [lang, elective]);
+  const groupTwo = useStore((s) => s.groupTwo);
+  const subjectLabels = useMemo(() => getSubjectLabels(lang, elective, groupTwo), [lang, elective, groupTwo]);
+  const subjectColors = useMemo(() => getSubjectColors(lang, elective, groupTwo), [lang, elective, groupTwo]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {

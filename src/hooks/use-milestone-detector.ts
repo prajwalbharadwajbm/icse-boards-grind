@@ -40,7 +40,8 @@ export function useMilestoneDetector() {
 
       const lang = state.selectedLanguage || "kannada";
       const elective = state.selectedElective || "computer";
-      const SUBJECT_LABELS = getSubjectLabels(lang, elective);
+      const groupTwo = state.groupTwo;
+      const SUBJECT_LABELS = getSubjectLabels(lang, elective, groupTwo);
 
       // Check notification prefs
       const savedPrefs = typeof localStorage !== "undefined" ? localStorage.getItem("notification-prefs") : null;

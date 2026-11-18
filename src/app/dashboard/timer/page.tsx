@@ -25,7 +25,7 @@ export default function TimerPage() {
     capture("timer_page_viewed");
   }, []);
 
-  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer"), [data.selectedLanguage, data.selectedElective]);
+  const SUBJECT_LABELS = useMemo(() => getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo), [data.selectedLanguage, data.selectedElective, data.groupTwo]);
 
   // Build subject options
   const subjectOptions = useMemo(() => {

@@ -93,7 +93,8 @@ export async function loadFromCloud(uid: string): Promise<boolean> {
         cloudData.subjects = withSubjectKeys(
           saved,
           cloudData.selectedLanguage || "kannada",
-          cloudData.selectedElective || "computer"
+          cloudData.selectedElective || "computer",
+          cloudData.groupTwo
         );
         filledSubjects = Object.entries(cloudData.subjects).some(
           ([key, chapters]) => !(key in saved) || chapters.length !== saved[key].length

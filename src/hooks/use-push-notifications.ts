@@ -38,6 +38,7 @@ export function usePushNotifications() {
 
   const selectedLanguage = useStore((s) => s.selectedLanguage) || "kannada";
   const selectedElective = useStore((s) => s.selectedElective) || "computer";
+  const groupTwo = useStore((s) => s.groupTwo);
   const routine = useStore((s) => s.routine);
 
   // Initialize on mount and auto-enable notifications
@@ -93,7 +94,7 @@ export function usePushNotifications() {
 
     // Schedule exam notifications
     if (prefs.examAlerts) {
-      const exams = getExams(selectedLanguage, selectedElective);
+      const exams = getExams(selectedLanguage, selectedElective, groupTwo);
       scheduleExamNotifications(exams);
     }
 
@@ -103,7 +104,7 @@ export function usePushNotifications() {
       scheduleEveningNudge();
       scheduleStreakRisk();
     }
-  }, [isInitialized, permission, selectedLanguage, selectedElective, routine]);
+  }, [isInitialized, permission, selectedLanguage, selectedElective, groupTwo, routine]);
 
   // Re-schedule at midnight
   useEffect(() => {
