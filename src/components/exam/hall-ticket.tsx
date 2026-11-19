@@ -1,6 +1,6 @@
 "use client";
 
-import { TIMETABLE, EXAM_YEAR, type Exam } from "@/lib/constants";
+import { TIMETABLE, EXAM_YEAR, type Exam, type ExamTimetable } from "@/lib/constants";
 import { clock, paperName, plural } from "@/lib/exam-format";
 import { Starburst } from "@/components/brand/sticker";
 
@@ -28,7 +28,7 @@ export function HallTicket({
   countdown: { days: number; hours: number; minutes: number; seconds: number } | null;
   board?: string;
   /** When candidates are seated and writing starts for this paper (24h, India time) */
-  times?: { seatedBy: string; writingStart: string };
+  times?: Pick<ExamTimetable, "seatedBy" | "writingStart">;
 }) {
   const shell: React.CSSProperties = {
     background: COBALT,

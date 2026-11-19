@@ -70,7 +70,7 @@ export function TimetableCard({
                 <span className="text-xs pl-4" style={{ color: isNext ? "#000" : "var(--text-muted)" }}>{gapText}</span>
               </span>
               <span className="px-4 flex items-center text-[13px] font-bold tabular-nums" style={{ color: isNext ? "#000" : "var(--text-muted)" }}>
-                {isPast ? "Done" : isNext ? (days === 0 ? "Today" : "Next up") : `${days}d`}
+                {isPast ? "Done" : isNext ? (days === 0 ? "Today" : "Next up") : days === 0 ? "Today" : `${days}d`}
               </span>
             </li>
           );

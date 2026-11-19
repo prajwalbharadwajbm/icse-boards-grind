@@ -13,6 +13,9 @@ export const INTERNAL_EMAILS = [
 /** Routes that render the app with demo data. Nothing captured there is real usage. */
 const UNTRACKED_PATH_PREFIXES = ["/preview"];
 
+/** Pages for students outside ICSE Class 10 (the public ISC timetable): their events carry no ICSE paper countdown */
+const NON_ICSE_PATH_PREFIXES = ["/isc"];
+
 let initialized = false;
 let _currentEmail: string | null = null;
 let _identifiedUid: string | null = null;
@@ -51,9 +54,13 @@ function isInternalUser(): boolean {
   return !!_currentEmail && INTERNAL_EMAILS.includes(_currentEmail);
 }
 
-function isUntrackedPath(): boolean {
+function onPathUnder(prefixes: string[]): boolean {
   const path = window.location.pathname;
-  return UNTRACKED_PATH_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+  return prefixes.some((p) => path === p || path.startsWith(p + "/"));
+}
+
+function isUntrackedPath(): boolean {
+  return onPathUnder(UNTRACKED_PATH_PREFIXES);
 }
 
 function isStandalone(): boolean {
@@ -71,6 +78,7 @@ function localDate(d: Date): string {
 
 /** The user's next board paper, based on their language, elective and Group II subjects once onboarded. */
 function nextPaper(): { key: string; days: number } | null {
+  if (onPathUnder(NON_ICSE_PATH_PREFIXES)) return null;
   const exams = _context.onboarded && _context.language && _context.elective
     ? getExams(_context.language, _context.elective, _context.groupTwo)
     : [...CORE_EXAMS].sort((a, b) => a.date.localeCompare(b.date));

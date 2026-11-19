@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { capture } from "@/lib/analytics";
 import type { Exam } from "@/lib/constants";
-import { ISC_PAPERS, ISC_SEATED_BY, ISC_SUBJECTS, iscPaperStart, nextIscPaper, papersFor, type IscPaper } from "@/lib/isc-timetable";
+import {
+  ISC_MAIN_SUBJECTS,
+  ISC_MORE_SUBJECTS,
+  ISC_PAPERS,
+  ISC_SEASON,
+  ISC_SEATED_BY,
+  ISC_SUBJECTS,
+  iscPaperStart,
+  nextIscPaper,
+  papersFor,
+  type IscPaper,
+} from "@/lib/isc-timetable";
 import { daysBetween, today } from "@/lib/utils";
 import { HallTicket } from "@/components/exam/hall-ticket";
 import { TimetableCard } from "@/components/exam/timetable-card";
@@ -12,10 +23,6 @@ import { AskForIt } from "@/components/feedback/ask-for-it";
 import { StickerMark, Wordmark } from "@/components/brand/sticker";
 
 const STORAGE_KEY = "isc-subjects";
-/** Subjects shown before "More subjects": English and the usual Science, Commerce and Humanities choices */
-const SHOWN_FIRST = ISC_SUBJECTS.findIndex((s) => s.key === "language") + 1;
-/** Wait for a burst of taps to settle before recording the picks */
-const PICKS_SETTLE_MS = 2000;
 
 /** The countdown card and the timetable list take the app's Exam shape. Only Art papers start in the morning */
 function asExam(p: IscPaper): Exam {
@@ -41,7 +48,6 @@ export default function IscPage() {
   const [showAll, setShowAll] = useState(false);
   // null until mounted: the countdown and "days left" render in the browser only, so the server HTML never disagrees
   const [now, setNow] = useState<Date | null>(null);
-  const changedByStudent = useRef(false);
 
   useEffect(() => {
     capture("isc_page_viewed");
@@ -63,29 +69,22 @@ export default function IscPage() {
     };
   }, []);
 
-  // Save the student's own changes, and record them once they stop tapping
-  useEffect(() => {
-    if (!changedByStudent.current) return;
+  // Every change is saved and recorded with the full set, so a student who taps and closes the tab still counts
+  const changePicks = (next: string[]) => {
+    setPicked(next);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(picked));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
       // Not saved: they pick again next visit
     }
-    const id = setTimeout(() => {
-      capture("isc_subjects_picked", { subjects: [...picked].sort().join(","), count: picked.length });
-    }, PICKS_SETTLE_MS);
-    return () => clearTimeout(id);
-  }, [picked]);
-
-  const toggle = (key: string) => {
-    changedByStudent.current = true;
-    setPicked((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+    capture("isc_subjects_picked", { subjects: [...next].sort().join(","), count: next.length });
   };
+  const toggle = (key: string) => changePicks(picked.includes(key) ? picked.filter((k) => k !== key) : [...picked, key]);
 
   const mine = useMemo(() => papersFor(ISC_PAPERS, picked), [picked]);
   const hasPicks = ISC_PAPERS.some((p) => picked.includes(p.subject));
-  const pickedHidden = ISC_SUBJECTS.slice(SHOWN_FIRST).some((s) => picked.includes(s.key));
-  const subjects = showAll || pickedHidden ? ISC_SUBJECTS : ISC_SUBJECTS.slice(0, SHOWN_FIRST);
+  const pickedHidden = ISC_MORE_SUBJECTS.some((s) => picked.includes(s.key));
+  const subjects = showAll || pickedHidden ? ISC_SUBJECTS : ISC_MAIN_SUBJECTS;
 
   const next = now ? nextIscPaper(ISC_PAPERS, picked, now) : null;
   const nextIndex = next ? mine.indexOf(next) : -1;
@@ -120,8 +119,8 @@ export default function IscPage() {
             ISC 2027 timetable
           </h1>
           <p className="text-[17px] leading-[1.6] max-w-[52ch]" style={{ color: "var(--text-secondary)" }}>
-            All {ISC_PAPERS.length} theory papers, from 9 February to 8 April 2027, with a countdown to each. Tap your
-            subjects to see only your papers. Free, and no sign-in.
+            All {ISC_PAPERS.length} theory papers, from {ISC_SEASON}, with a countdown to each. Tap your subjects to see
+            only your papers. Free, and no sign-in.
           </p>
         </section>
 
@@ -175,16 +174,13 @@ export default function IscPage() {
                 className="text-sm font-bold underline underline-offset-4 decoration-2"
                 style={{ color: "var(--text)" }}
               >
-                {showAll ? "Fewer subjects" : `${ISC_SUBJECTS.length - SHOWN_FIRST} more subjects`}
+                {showAll ? "Fewer subjects" : `${ISC_MORE_SUBJECTS.length} more subjects`}
               </button>
             )}
             {picked.length > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  changedByStudent.current = true;
-                  setPicked([]);
-                }}
+                onClick={() => changePicks([])}
                 className="text-sm font-bold underline underline-offset-4 decoration-2"
                 style={{ color: "var(--text-muted)" }}
               >

@@ -17,6 +17,11 @@ describe("nextIscPaper", () => {
     expect(next?.date).toBe("2027-02-15");
   });
 
+  it("counts a paper later that day until the minute writing starts", () => {
+    expect(nextIscPaper(ISC_PAPERS, ["mathematics"], ist("2027-03-01 13:59"))?.name).toBe("Mathematics");
+    expect(nextIscPaper(ISC_PAPERS, ["mathematics", "physics"], ist("2027-03-01 14:00"))?.name).toBe("Physics (theory)");
+  });
+
   it("is null once the student's last paper has started", () => {
     expect(nextIscPaper(ISC_PAPERS, ["physics"], ist("2027-03-08 14:01"))).toBeNull();
   });

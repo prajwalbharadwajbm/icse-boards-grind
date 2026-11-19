@@ -91,16 +91,17 @@ export interface AnalyticsEventMap {
   // ── Feedback ──
   /** "Ask for it": a student asked for something not built yet. We build it once enough ask (docs/analytics.md) */
   feature_requested: { feature: "class_9" | "isc" | "phone_reminders"; source: "onboarding" | "settings" | "isc_page" };
-  /** The public /isc timetable opened (no sign-in) */
-  isc_page_viewed: Record<string, never>;
-  /** Subjects picked on the public /isc timetable, e.g. "accountancy,commerce,economics,english" (sorted). Sent once the picks settle */
-  isc_subjects_picked: { subjects: string; count: number };
   language_changed: { new_language: string };
   elective_changed: { new_elective: string };
   data_exported: Record<string, never>;
   data_imported: { mode: string };
   leaderboard_toggle: { enabled: boolean };
   parent_report_toggle: { enabled: boolean };
+
+  // ── ISC timetable (public /isc, no sign-in) ──
+  isc_page_viewed: Record<string, never>;
+  /** The visitor's ISC subjects after a change, e.g. "accountancy,commerce,economics,english" (sorted). Sent on every change */
+  isc_subjects_picked: { subjects: string; count: number };
 
   // ── Progress ──────────────────────────────────────────────────────────
   progress_page_viewed: Record<string, never>;

@@ -2,10 +2,15 @@
   ISC (Class 12) Year 2027 timetable, for the public /isc page. The app itself is ICSE Class 10 only;
   this page is how ISC students get something useful and ask for the full planner.
 
-  Published by CISCE on 10 Nov 2026. cisce.org blocks automated checks, so the dates were matched
-  across The Hindu, Times of India and Careers360 copies of the official PDF (all 41 papers agree).
-  Papers start writing at 2:00 pm, Art papers at 9:00 am (The Hindu and Times of India), after 15
-  minutes of reading time. Every paper is 3 hours. Practicals are set by each school, so they are not here.
+  Published by CISCE on 10 Nov 2026. cisce.org blocks automated checks, so this was checked against
+  The Hindu, Times of India and Careers360 copies of the official PDF:
+  - Dates: all 41 papers agree across the three.
+  - Start times: The Hindu lists 2:00 pm for every paper except Art (9:00 am), and Times of India marks
+    only the Art papers 9:00 am. Careers360 alone gives 9:00 for Physical Education, Biology and
+    Commerce; we follow the other two. Check the CISCE PDF if a student reports otherwise.
+  - Times of India: reading time starts 15 minutes before writing, and candidates are seated
+    30 minutes before (8:30 am / 1:30 pm). Every paper is 3 hours (The Hindu).
+  Practicals are set by each school, so they are not here.
 */
 
 export interface IscSubject {
@@ -25,8 +30,8 @@ export interface IscPaper {
   hours: number;
 }
 
-/** Picker order: English first, then the usual Science, Commerce and Humanities subjects, then the rest */
-export const ISC_SUBJECTS: IscSubject[] = [
+/** Shown first in the picker: English, then the usual Science, Commerce and Humanities subjects */
+export const ISC_MAIN_SUBJECTS: IscSubject[] = [
   { key: "english", name: "English" },
   { key: "physics", name: "Physics" },
   { key: "chemistry", name: "Chemistry" },
@@ -45,7 +50,11 @@ export const ISC_SUBJECTS: IscSubject[] = [
   { key: "legal_studies", name: "Legal Studies" },
   { key: "mass_media", name: "Mass Media & Communication" },
   { key: "physical_education", name: "Physical Education" },
-  { key: "language", name: "A language (Hindi, Bengali, French…)" },
+  { key: "language", name: "A language (Hindi, Bengali, Tamil…)" },
+];
+
+/** Behind "more subjects" in the picker */
+export const ISC_MORE_SUBJECTS: IscSubject[] = [
   { key: "elective_english", name: "Elective English" },
   { key: "applied_mathematics", name: "Applied Mathematics" },
   { key: "environmental_science", name: "Environmental Science" },
@@ -63,6 +72,8 @@ export const ISC_SUBJECTS: IscSubject[] = [
   { key: "mechanical_drawing", name: "Geometrical and Mechanical Drawing" },
   { key: "modern_english", name: "Modern English" },
 ];
+
+export const ISC_SUBJECTS: IscSubject[] = [...ISC_MAIN_SUBJECTS, ...ISC_MORE_SUBJECTS];
 
 const paper = (date: string, subject: string, name: string, start: IscPaper["start"] = "14:00", key = subject): IscPaper => ({
   key,
@@ -117,6 +128,12 @@ export const ISC_PAPERS: IscPaper[] = [
   paper("2027-04-06", "elective_english", "Elective English"),
   paper("2027-04-08", "legal_studies", "Legal Studies"),
 ];
+
+const dayMonth = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "long" });
+const lastPaper = ISC_PAPERS[ISC_PAPERS.length - 1];
+
+/** "9 February to 8 April 2027": the first and last paper */
+export const ISC_SEASON = `${dayMonth(ISC_PAPERS[0].date)} to ${dayMonth(lastPaper.date)} ${lastPaper.date.slice(0, 4)}`;
 
 /** Candidates are seated 30 minutes before writing starts; reading time is the 15 minutes before it */
 export const ISC_SEATED_BY: Record<IscPaper["start"], string> = { "09:00": "08:30", "14:00": "13:30" };
