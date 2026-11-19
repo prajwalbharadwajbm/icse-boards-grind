@@ -1,6 +1,6 @@
 "use client";
 
-import { TIMETABLE, EXAM_YEAR, type Exam } from "@/lib/constants";
+import { TIMETABLE, EXAM_YEAR, type Exam, type ExamTimetable } from "@/lib/constants";
 import { clock, paperName, plural } from "@/lib/exam-format";
 import { Starburst } from "@/components/brand/sticker";
 
@@ -9,7 +9,8 @@ const COBALT = "#2F5BFF";
 
 /**
  * The countdown to the next paper: a cobalt card with the paper's date on a starburst sticker.
- * This is the one sticker on the dashboard.
+ * This is the one sticker on the dashboard. `board` and `times` default to this year's ICSE; the
+ * public /isc page passes its own.
  */
 export function HallTicket({
   exam,
@@ -17,12 +18,17 @@ export function HallTicket({
   total,
   examDays,
   countdown,
+  board = `ICSE ${EXAM_YEAR}`,
+  times = TIMETABLE,
 }: {
   exam: Exam | undefined;
   index: number;
   total: number;
   examDays: number | null;
   countdown: { days: number; hours: number; minutes: number; seconds: number } | null;
+  board?: string;
+  /** When candidates are seated and writing starts for this paper (24h, India time) */
+  times?: Pick<ExamTimetable, "seatedBy" | "writingStart">;
 }) {
   const shell: React.CSSProperties = {
     background: COBALT,
@@ -34,7 +40,7 @@ export function HallTicket({
   if (!exam || !countdown) {
     return (
       <section className="rounded-[28px] p-7 sm:p-8 flex flex-col gap-2" style={shell}>
-        <p className="text-[15px] font-medium">ICSE {EXAM_YEAR}</p>
+        <p className="text-[15px] font-medium">{board}</p>
         <h2 className="font-display text-[48px] sm:text-[64px] font-extrabold leading-[0.95] tracking-[-0.04em]">All papers written</h2>
         <p className="text-[15px] mt-2 max-w-[48ch]">CISCE expects to declare results in April or May {EXAM_YEAR}</p>
       </section>
@@ -57,7 +63,7 @@ export function HallTicket({
         till {paperName(exam.subject)}
       </p>
       <p className="text-[15px] tabular-nums" aria-live="off" suppressHydrationWarning>
-        {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s more. Be seated by {clock(TIMETABLE.seatedBy)}, writing from {clock(TIMETABLE.writingStart)}
+        {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s more. Be seated by {clock(times.seatedBy)}, writing from {clock(times.writingStart)}
       </p>
 
       <div className="absolute -top-4 right-4 sm:-top-5 sm:right-7 scale-[0.8] sm:scale-100 origin-top-right">
@@ -65,7 +71,7 @@ export function HallTicket({
           <span className="font-display text-[26px] font-extrabold leading-none">
             {date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>
-          <span className="text-[13px] font-bold mt-1">{date.toLocaleDateString("en-IN", { weekday: "short" })}, {clock(TIMETABLE.writingStart)}</span>
+          <span className="text-[13px] font-bold mt-1">{date.toLocaleDateString("en-IN", { weekday: "short" })}, {clock(times.writingStart)}</span>
         </Starburst>
       </div>
       {soon && examDays !== 0 && (

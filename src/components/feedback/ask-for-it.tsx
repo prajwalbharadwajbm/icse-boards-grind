@@ -23,7 +23,16 @@ const storageKey = (feature: RequestedFeature) => `ask-for-it:${feature}`;
  * remembered on this device only once it was really sent, so a tap in /preview, or by someone
  * analytics ignores, doesn't hide the button later.
  */
-export function AskForIt({ feature, source }: { feature: RequestedFeature; source: FeatureRequest["source"] }) {
+export function AskForIt({
+  feature,
+  source,
+  label = COPY[feature].label,
+}: {
+  feature: RequestedFeature;
+  source: FeatureRequest["source"];
+  /** Wording for a page where the default doesn't fit, e.g. on /isc everyone is already in ISC */
+  label?: string;
+}) {
   const [asked, setAsked] = useState(false);
 
   useEffect(() => {
@@ -58,7 +67,7 @@ export function AskForIt({ feature, source }: { feature: RequestedFeature; sourc
         setAsked(true);
       }}
     >
-      {COPY[feature].label}
+      {label}
     </Button>
   );
 }
