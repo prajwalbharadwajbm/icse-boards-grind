@@ -210,7 +210,11 @@ english_page_viewed
 
 ### Feedback
 
-`feature_requested` (`feature`: `class_9` | `isc` | `phone_reminders`, `source`: `onboarding` | `settings`): the "Ask for it" buttons for things not built yet. We build a feature once enough distinct students ask; count with `count(DISTINCT person_id)` grouped by `feature`. Only sent requests are remembered on the device, so ignored traffic (internal, `/preview`) never hides the button.
+`feature_requested` (`feature`: `class_9` | `isc` | `phone_reminders`, `source`: `onboarding` | `settings` | `isc_page`): the "Ask for it" buttons for things not built yet. We build a feature once enough distinct students ask; count with `count(DISTINCT person_id)` grouped by `feature`. Only sent requests are remembered on the device, so ignored traffic (internal, `/preview`) never hides the button.
+
+`isc_page_viewed`: the public `/isc` ISC 2027 timetable opened. With `feature_requested` (`source`: `isc_page`) it gives the share of ISC visitors who ask for the full planner.
+
+`isc_subjects_picked` (`subjects`: sorted, comma-separated keys from `ISC_SUBJECTS` in `src/lib/isc-timetable.ts`; `count`): a visitor to the public `/isc` timetable picked their subjects. Sent about two seconds after the last tap, so a burst of taps is one event; take each person's latest. It shows which ISC subjects and streams are asking, so we know which chapter lists to build first if ISC goes ahead. `/isc` needs no sign-in, so these visitors stay anonymous.
 
 ## Querying with Claude (PostHog MCP)
 
