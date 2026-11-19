@@ -383,7 +383,7 @@ export default function SettingsPage() {
           type="password"
         />
         <p className="text-[13px] mt-2" style={{ color: "var(--text-muted)" }}>
-          Supports xAI Grok (grok-3-mini) and Groq (llama-3.3-70b). Keys starting with &quot;gsk_&quot; use Groq.
+          Supports xAI Grok (grok-3-mini) and Groq (gpt-oss-120b). Keys starting with &quot;gsk_&quot; use Groq.
         </p>
       </Card>
 

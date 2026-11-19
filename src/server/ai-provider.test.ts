@@ -25,6 +25,7 @@ describe("callAIProvider", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     fetchMock.mockReset();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -124,6 +125,52 @@ describe("callAIProvider", () => {
     expect(res.status).toBe(200);
     expect(urlOf(1)).toBe(GEMINI_URL);
     expect(sentMessages(1)).toEqual(huge);
+  });
+
+  it("moves past a revoked key to the next main key before ever using the fallback", async () => {
+    keysInOrder("gsk_revoked,gsk_good");
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    fetchMock.mockResolvedValueOnce(new Response("invalid api key", { status: 401 })).mockResolvedValueOnce(ok());
+
+    const res = await callAIProvider({ messages: history, maxTokens: 1200, stream: false });
+
+    expect(res.status).toBe(200);
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe("Bearer gsk_good");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("without fallback keys, still stops at a request Groq refuses instead of trying another main provider", async () => {
+    keysInOrder("gsk_test,xai-test");
+    fetchMock.mockResolvedValueOnce(new Response("bad request", { status: 400 }));
+
+    await expect(callAIProvider({ messages: history, maxTokens: 1200, stream: false })).rejects.toMatchObject({ status: 503 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells the student the coach is busy when Groq was rate limited, even if the fallback then fails", async () => {
+    const busy = { status: 503, message: "The AI coach is busy right now. Try again in a minute" };
+    fetchMock.mockResolvedValueOnce(new Response("rate limited", { status: 429 }));
+    await expect(callAIProvider({ messages: history, maxTokens: 1200, stream: false })).rejects.toMatchObject(busy);
+
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    fetchMock
+      .mockResolvedValueOnce(new Response("rate limited", { status: 429 }))
+      .mockResolvedValueOnce(new Response("down", { status: 503 }));
+    await expect(callAIProvider({ messages: history, maxTokens: 1200, stream: false })).rejects.toMatchObject(busy);
+  });
+
+  it("moves on from a key that hasn't started answering in 20 seconds, leaving the fallback time to reply", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    const hangs = (_url: string, init: RequestInit) =>
+      new Promise<Response>((_, reject) => init.signal?.addEventListener("abort", () => reject(init.signal?.reason)));
+    fetchMock.mockImplementationOnce(hangs).mockResolvedValueOnce(ok());
+
+    const pending = callAIProvider({ messages: history, maxTokens: 1200, stream: false });
+    await vi.advanceTimersByTimeAsync(20_000);
+
+    expect((await pending).status).toBe(200);
+    expect(urlOf(1)).toBe(GEMINI_URL);
   });
 
   it("does not touch the fallback when Groq answers", async () => {
