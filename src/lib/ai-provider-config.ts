@@ -1,12 +1,35 @@
+export type AIProvider = "groq" | "gemini" | "xai";
+
+/** Groq keys start with gsk_, Gemini keys with AIza (older) or AQ. (newer); anything else is xAI */
+export function providerOf(apiKey: string): AIProvider {
+  if (apiKey.startsWith("gsk_")) return "groq";
+  if (apiKey.startsWith("AIza") || apiKey.startsWith("AQ.")) return "gemini";
+  return "xai";
+}
+
 /**
- * Which provider and model an API key belongs to: Groq keys start with gsk_, others go to xAI.
+ * Which provider and model an API key belongs to.
  *
  * Groq shut down llama-3.3-70b-versatile on 16 August 2026 (https://console.groq.com/docs/deprecations)
  * and recommends openai/gpt-oss-120b. That is a reasoning model, so it is asked to think briefly,
  * its reasoning is left out of the reply, and the token limit gets headroom for the thinking.
+ *
+ * Gemini is the fallback when Groq fails (AI_FALLBACK_API_KEYS). gemini-3.8-flash is on the free tier
+ * (https://ai.google.dev/gemini-api/docs/pricing) and is called through Gemini's OpenAI-compatible
+ * endpoint, so replies stream in the same format. Its thinking counts against max_tokens, so it gets
+ * headroom too. Its context is far larger than any chat here, so nothing is trimmed.
  */
 export function getAIConfig(apiKey: string) {
-  if (apiKey.startsWith("gsk_")) {
+  const provider = providerOf(apiKey);
+  if (provider === "gemini") {
+    return {
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      model: "gemini-3.8-flash",
+      reasoningTokens: 1024,
+      tokenBudget: null as number | null,
+    };
+  }
+  if (provider === "groq") {
     return {
       url: "https://api.groq.com/openai/v1/chat/completions",
       model: "openai/gpt-oss-120b",
@@ -74,7 +97,7 @@ export function chatCompletionRequest(
   opts: { messages: ChatTurn[]; stream: boolean; maxTokens: number; shortest?: boolean }
 ): { url: string; body: string } {
   const config = getAIConfig(apiKey);
-  const isGroq = apiKey.startsWith("gsk_");
+  const provider = providerOf(apiKey);
   const completionTokens = opts.maxTokens + config.reasoningTokens;
   const messages =
     config.tokenBudget === null
@@ -88,10 +111,13 @@ export function chatCompletionRequest(
     stream: opts.stream,
     temperature: 0.7,
   };
-  if (isGroq) {
+  if (provider === "groq") {
     body.max_completion_tokens = completionTokens;
     body.reasoning_effort = "low";
     body.include_reasoning = false;
+  } else if (provider === "gemini") {
+    body.max_tokens = completionTokens;
+    body.reasoning_effort = "low";
   } else {
     body.max_tokens = opts.maxTokens;
   }

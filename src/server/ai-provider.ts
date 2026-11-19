@@ -1,20 +1,25 @@
-import { chatCompletionRequest, getAIConfig } from "@/lib/ai-provider-config";
+import { chatCompletionRequest, getAIConfig, providerOf, type AIProvider } from "@/lib/ai-provider-config";
 import { ApiError } from "./errors";
 import type { AIChatMessage } from "./ai-request";
 
+const keyList = (value: string | undefined) => (value || "").split(",").map((k) => k.trim()).filter(Boolean);
+
 /**
- * Server-held AI keys, comma-separated in AI_API_KEYS (never NEXT_PUBLIC_*).
- * Keys starting with gsk_ go to Groq, others to xAI. callAIProvider tries the next key on rate limits
- * and outages, and resends a Groq request it was told is too large (413) once, shortened.
+ * Server-held AI keys (never NEXT_PUBLIC_*), comma-separated:
+ * - AI_API_KEYS, the main keys, shuffled so load spreads across them.
+ * - AI_FALLBACK_API_KEYS, tried in order only after every main key failed (a Gemini key).
+ * The provider comes from the key's prefix (see providerOf). callAIProvider tries the next key on rate
+ * limits and outages, and resends a Groq request it was told is too large (413) once, shortened.
  */
 function serverKeys(): string[] {
-  const keys = (process.env.AI_API_KEYS || "").split(",").map((k) => k.trim()).filter(Boolean);
-  if (keys.length === 0) {
+  const main = keyList(process.env.AI_API_KEYS);
+  const fallback = keyList(process.env.AI_FALLBACK_API_KEYS);
+  if (main.length + fallback.length === 0) {
     console.error("[ai] AI_API_KEYS is not set");
     throw new ApiError(503, "ai_not_configured", "The AI coach isn't available right now. Try again later");
   }
-  // Shuffle so load spreads across keys
-  return keys.map((k) => [Math.random(), k] as const).sort((a, b) => a[0] - b[0]).map(([, k]) => k);
+  const shuffled = main.map((k) => [Math.random(), k] as const).sort((a, b) => a[0] - b[0]).map(([, k]) => k);
+  return [...shuffled, ...fallback];
 }
 
 export async function callAIProvider(opts: {
@@ -25,7 +30,11 @@ export async function callAIProvider(opts: {
 }): Promise<Response> {
   let lastStatus = 0;
   let tooLong = false;
+  // Providers that refused the request itself: their other keys would too, but another provider may not
+  const refused = new Set<AIProvider>();
   keys: for (const key of serverKeys()) {
+    const provider = providerOf(key);
+    if (refused.has(provider)) continue;
     // Groq trims chats to fit its budget. If it still says 413 the size estimate was too low:
     // resend once with only the system prompt and the newest message (unless that was already the request)
     const full = chatCompletionRequest(key, opts);
@@ -52,10 +61,13 @@ export async function callAIProvider(opts: {
         }
         console.error(detail);
         if (res.status === 413 && shortest) {
-          tooLong = true; // even the system prompt and the newest message don't fit
-          break keys;
+          // Even the system prompt and the newest message don't fit this provider. A provider with a
+          // bigger context (the Gemini fallback) may still answer; if none does, the student is told
+          tooLong = true;
+          refused.add(provider);
+          continue keys;
         }
-        if (res.status !== 429 && res.status < 500) break keys; // a request problem, another key won't help
+        if (res.status !== 429 && res.status < 500) refused.add(provider); // a request problem, not a busy key
         continue keys;
       } catch (err) {
         if (opts.signal?.aborted) throw new ApiError(499, "cancelled", "Request cancelled");

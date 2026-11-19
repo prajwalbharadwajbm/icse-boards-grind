@@ -79,6 +79,63 @@ describe("callAIProvider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+  const urlOf = (call: number) => fetchMock.mock.calls[call][0];
+
+  it("tries the fallback keys only after every main key has failed", async () => {
+    keysInOrder("gsk_a,gsk_b");
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    fetchMock
+      .mockResolvedValueOnce(new Response("down", { status: 503 }))
+      .mockResolvedValueOnce(new Response("down", { status: 503 }))
+      .mockResolvedValueOnce(ok());
+
+    const res = await callAIProvider({ messages: history, maxTokens: 1200, stream: false });
+
+    expect(res.status).toBe(200);
+    expect([urlOf(0), urlOf(1)]).toEqual([
+      "https://api.groq.com/openai/v1/chat/completions",
+      "https://api.groq.com/openai/v1/chat/completions",
+    ]);
+    expect(urlOf(2)).toBe(GEMINI_URL);
+  });
+
+  it("goes straight to the fallback when Groq refuses the request itself, as when its model was retired", async () => {
+    keysInOrder("gsk_a,gsk_b");
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { code: "model_not_found" } }), { status: 404 }))
+      .mockResolvedValueOnce(ok());
+
+    const res = await callAIProvider({ messages: history, maxTokens: 1200, stream: false });
+
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(urlOf(1)).toBe(GEMINI_URL);
+  });
+
+  it("sends a chat too long for Groq to the fallback whole, before telling the student it is too long", async () => {
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    const huge: AIChatMessage[] = [system, { role: "user", content: "ಬೆಳಕಿನ ವಕ್ರೀಭವನ ".repeat(700) }];
+    fetchMock.mockResolvedValueOnce(tooLarge()).mockResolvedValueOnce(ok());
+
+    const res = await callAIProvider({ messages: huge, maxTokens: 1200, stream: false });
+
+    expect(res.status).toBe(200);
+    expect(urlOf(1)).toBe(GEMINI_URL);
+    expect(sentMessages(1)).toEqual(huge);
+  });
+
+  it("does not touch the fallback when Groq answers", async () => {
+    vi.stubEnv("AI_FALLBACK_API_KEYS", "AIzaFallback");
+    fetchMock.mockResolvedValueOnce(ok());
+
+    await callAIProvider({ messages: history, maxTokens: 1200, stream: false });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(urlOf(0)).toBe("https://api.groq.com/openai/v1/chat/completions");
+  });
+
   it("tells the student their message is too long when even the shortest request is too large", async () => {
     const huge: AIChatMessage[] = [system, { role: "user", content: "ಬೆಳಕಿನ ವಕ್ರೀಭವನ ".repeat(700) }];
     fetchMock.mockResolvedValue(tooLarge());

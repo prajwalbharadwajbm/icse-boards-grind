@@ -32,6 +32,18 @@ describe("chatCompletionRequest", () => {
     expect(parsed).not.toHaveProperty("max_tokens");
   });
 
+  it("sends Gemini keys, old and new formats, to Gemini's OpenAI-style endpoint with room to think", () => {
+    for (const key of ["AIzaSyTest", "AQ.Ab8Test"]) {
+      const { url, body } = chatCompletionRequest(key, { messages, stream: true, maxTokens: 600 });
+      const parsed = JSON.parse(body);
+      expect(url).toBe("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
+      expect(parsed).toMatchObject({ model: "gemini-3.8-flash", messages, stream: true, reasoning_effort: "low" });
+      expect(parsed.max_tokens).toBeGreaterThan(600);
+      expect(parsed).not.toHaveProperty("max_completion_tokens");
+      expect(parsed).not.toHaveProperty("include_reasoning");
+    }
+  });
+
   it("keeps the plain token limit for xAI", () => {
     const parsed = JSON.parse(chatCompletionRequest("xai-test", { messages, stream: false, maxTokens: 600 }).body);
     expect(parsed).toMatchObject({ model: "grok-3-mini", max_tokens: 600, stream: false });
