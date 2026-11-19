@@ -1,22 +1,69 @@
+export type AIProvider = "groq" | "gemini" | "xai";
+
+/** Groq keys start with gsk_, Gemini keys with AIza (older) or AQ. (newer); anything else is xAI */
+export function providerOf(apiKey: string): AIProvider {
+  if (apiKey.startsWith("gsk_")) return "groq";
+  if (apiKey.startsWith("AIza") || apiKey.startsWith("AQ.")) return "gemini";
+  return "xai";
+}
+
+export interface AIProviderConfig {
+  url: string;
+  model: string;
+  /** Headroom added to the reply's token limit for a reasoning model's thinking */
+  reasoningTokens: number;
+  /** Prompt + reply tokens one request may use, or null when the provider has no tight limit */
+  tokenBudget: number | null;
+  /** The request field that caps the reply, thinking included */
+  tokenLimitField: "max_completion_tokens" | "max_tokens";
+  /** Provider-specific request fields */
+  extra: Record<string, unknown>;
+}
+
 /**
- * Which provider and model an API key belongs to: Groq keys start with gsk_, others go to xAI.
+ * Each provider's model and request shape.
  *
  * Groq shut down llama-3.3-70b-versatile on 16 August 2026 (https://console.groq.com/docs/deprecations)
  * and recommends openai/gpt-oss-120b. That is a reasoning model, so it is asked to think briefly,
  * its reasoning is left out of the reply, and the token limit gets headroom for the thinking.
+ *
+ * Gemini is the fallback when Groq fails (AI_FALLBACK_API_KEYS). gemini-3.8-flash is on the free tier
+ * (https://ai.google.dev/gemini-api/docs/pricing) and is called through Gemini's OpenAI-compatible
+ * endpoint, so replies stream in the same format. Its thinking counts against max_tokens, so it gets
+ * headroom too. Its context is far larger than any chat here, so nothing is trimmed.
  */
-export function getAIConfig(apiKey: string) {
-  if (apiKey.startsWith("gsk_")) {
-    return {
-      url: "https://api.groq.com/openai/v1/chat/completions",
-      model: "openai/gpt-oss-120b",
-      reasoningTokens: 400,
-      // Groq's free tier allows 8,000 tokens a minute (prompt + max_completion_tokens) for this model,
-      // and refuses any single request over that with a 413. Stay well under it.
-      tokenBudget: 6000 as number | null,
-    };
-  }
-  return { url: "https://api.x.ai/v1/chat/completions", model: "grok-3-mini", reasoningTokens: 0, tokenBudget: null as number | null };
+const PROVIDERS: Record<AIProvider, AIProviderConfig> = {
+  groq: {
+    url: "https://api.groq.com/openai/v1/chat/completions",
+    model: "openai/gpt-oss-120b",
+    reasoningTokens: 400,
+    // Groq's free tier allows 8,000 tokens a minute (prompt + max_completion_tokens) for this model,
+    // and refuses any single request over that with a 413. Stay well under it.
+    tokenBudget: 6000,
+    tokenLimitField: "max_completion_tokens",
+    extra: { reasoning_effort: "low", include_reasoning: false },
+  },
+  gemini: {
+    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    model: "gemini-3.8-flash",
+    reasoningTokens: 1024,
+    tokenBudget: null,
+    tokenLimitField: "max_tokens",
+    extra: { reasoning_effort: "low" },
+  },
+  xai: {
+    url: "https://api.x.ai/v1/chat/completions",
+    model: "grok-3-mini",
+    reasoningTokens: 0,
+    tokenBudget: null,
+    tokenLimitField: "max_tokens",
+    extra: {},
+  },
+};
+
+/** Which provider, model and request shape an API key belongs to */
+export function getAIConfig(apiKey: string): AIProviderConfig {
+  return PROVIDERS[providerOf(apiKey)];
 }
 
 export interface ChatTurn {
@@ -74,7 +121,6 @@ export function chatCompletionRequest(
   opts: { messages: ChatTurn[]; stream: boolean; maxTokens: number; shortest?: boolean }
 ): { url: string; body: string } {
   const config = getAIConfig(apiKey);
-  const isGroq = apiKey.startsWith("gsk_");
   const completionTokens = opts.maxTokens + config.reasoningTokens;
   const messages =
     config.tokenBudget === null
@@ -88,12 +134,7 @@ export function chatCompletionRequest(
     stream: opts.stream,
     temperature: 0.7,
   };
-  if (isGroq) {
-    body.max_completion_tokens = completionTokens;
-    body.reasoning_effort = "low";
-    body.include_reasoning = false;
-  } else {
-    body.max_tokens = opts.maxTokens;
-  }
+  body[config.tokenLimitField] = completionTokens;
+  Object.assign(body, config.extra);
   return { url: config.url, body: JSON.stringify(body) };
 }

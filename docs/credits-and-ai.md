@@ -17,7 +17,8 @@ Now the app runs as a normal Next.js app on Vercel (`output: "export"` is gone f
 ```
 browser ──ID token──▶ /api/ai ──▶ check limits (aiUsage/{uid})
                                ──▶ charge credits if the feature costs any (users/{uid}.credits + ledger)
-                               ──▶ Groq / xAI with a server-held key (AI_API_KEYS)
+                               ──▶ Groq / xAI with a server-held key (AI_API_KEYS),
+                                   then Gemini if they all fail (AI_FALLBACK_API_KEYS)
                                ◀── streamed reply (coach) or { text } (briefing, grammar)
 ```
 
@@ -30,10 +31,11 @@ Body: `{ purpose: "coach" | "briefing" | "grammar", messages: [{ role, content }
 1. `validateAIRequest` (`src/server/ai-request.ts`) checks the purpose, at most 41 messages, at most 12,000 characters per message and 60,000 in total, a system prompt only as the first message, and that the last message is the student's.
 2. `consumeAIQuota` (`src/server/quota.ts`) counts the request against the student's limits in `aiUsage/{uid}` inside a transaction. Over the limit returns `429` with `daily_limit` or `rate_limited` and a `retryAfterSeconds`.
 3. If the feature has a credit cost, `spendCredits` charges it.
-4. `callAIProvider` (`src/server/ai-provider.ts`) calls the provider with a key from `AI_API_KEYS`. Keys starting `gsk_` go to Groq (`openai/gpt-oss-120b`), others to xAI (`grok-3-mini`). The request body comes from `chatCompletionRequest` (`src/lib/ai-provider-config.ts`).
+4. `callAIProvider` (`src/server/ai-provider.ts`) calls the provider with a key from `AI_API_KEYS`, shuffled, then the keys in `AI_FALLBACK_API_KEYS` in order. The key's prefix picks the provider (`providerOf`): `gsk_` goes to Groq (`openai/gpt-oss-120b`), `AIza` or `AQ.` to Gemini (`gemini-3.8-flash`, free tier, through its OpenAI-compatible endpoint), anything else to xAI (`grok-3-mini`). The request body comes from `chatCompletionRequest` (`src/lib/ai-provider-config.ts`).
    - **Groq requests are trimmed to fit.** Groq's free tier allows 8,000 tokens a minute for this model, counting the prompt plus `max_completion_tokens`, and refuses any single request over that with a `413`. Each Groq request is kept to a 6,000-token budget: the system prompt and the newest message always stay, and the oldest turns are dropped first. The estimate errs high: about 3.5 characters per token for English, one per character for Kannada, Hindi and other scripts.
-   - **A `413` is retried once, shortened.** If Groq still answers `413`, the same key gets the system prompt and the newest message only. That first `413` is logged as a warning. If even the short request is too large, the student gets `400 message_too_long`.
-   - **On a `429` or `5xx` it tries the next key.** xAI requests are never trimmed.
+   - **A `413` is retried once, shortened.** If Groq still answers `413`, the same key gets the system prompt and the newest message only. That first `413` is logged as a warning. If even the short request is too large, the chat goes whole to the fallback keys (Gemini's context is far bigger); only if they don't answer does the student get `400 message_too_long`.
+   - **On a `429`, a `5xx`, a network error or a rejected key (`401`/`403`) it tries the next key.** Any other `4xx`, such as a retired model, ends the main list (another main key won't help) and goes to the fallback list. A key that hasn't started answering in 20 seconds is given up on, and everything must finish within 55 seconds, inside the function's 60-second limit. Gemini and xAI requests are never trimmed.
+   - **Gemini is the fallback only.** Its keys are tried only after the main keys gave up, so a working Groq never sends chats to Google. Google's free tier may use what is sent to improve its products, with human review, and the Gemini API terms say it is not for apps likely to be used by under-18s.
    - **If every key fails,** the request is given back to the quota and any credits are refunded.
 
    The 8,000 tokens a minute are shared by every request on the Groq account, so a second large request in the same minute can get a `429`, which the student sees as "The AI coach is busy right now".
@@ -90,6 +92,7 @@ Set these in Vercel → Project → Settings → Environment Variables (Producti
 | --- | --- |
 | `FIREBASE_SERVICE_ACCOUNT_KEY` | Firebase console → Project settings → Service accounts → Generate new private key. Paste the JSON base64-encoded: `base64 -i key.json \| tr -d '\n'`. |
 | `AI_API_KEYS` | Comma-separated Groq (`gsk_…`) and/or xAI keys. |
+| `AI_FALLBACK_API_KEYS` | Optional. Comma-separated Gemini keys (`AIza…` or `AQ.…`), used only when every `AI_API_KEYS` key fails. |
 | `ADMIN_EMAILS` | Comma-separated emails allowed into `/admin`. |
 
 Instead of the base64 JSON you can set `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL` and `FIREBASE_ADMIN_PRIVATE_KEY`. Without credentials the API routes return `503 server_not_configured`; the rest of the app still loads.
