@@ -2,6 +2,8 @@
 
 import { useState, useRef, useMemo, useEffect } from "react";
 import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
+import { PreboardDates } from "@/components/routine/preboard-dates";
+import { PREBOARD_LEAD_DAYS, preboardDateRange, preboardFocus } from "@/lib/algorithms";
 import { AskForIt } from "@/components/feedback/ask-for-it";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
@@ -333,6 +335,30 @@ export default function SettingsPage() {
           ))}
         </div>
       </Card>
+
+      {/* Preboards */}
+      <div id="preboards" className="scroll-mt-24">
+        <Card>
+          <CardTitle>Preboards</CardTitle>
+          <p className="text-[13px] -mt-2 mb-4" style={{ color: "var(--text-muted)" }}>
+            Add your school&apos;s preboard dates. In the {PREBOARD_LEAD_DAYS} days before each paper, your plan focuses on
+            it, and on the day it starts with a quick review. Leave a paper blank if it has no preboard.
+          </p>
+          <PreboardDates
+            papers={Object.keys(SUBJECT_LABELS).map((key) => ({ key, label: SUBJECT_LABELS[key], color: SUBJECT_COLORS[key] }))}
+            value={data.preboards || {}}
+            range={preboardDateRange(data)}
+            onChange={(next) => {
+              setField("preboards", next);
+              capture("preboards_changed", { papers: Object.entries(next).filter(([key, date]) => date && key in SUBJECT_LABELS).length });
+            }}
+          />
+          {/* Always mounted, so screen readers announce the text when it appears */}
+          <p className="text-[13px] font-bold empty:hidden mt-4" style={{ color: "var(--text)" }} role="status">
+            {preboardFocus(today(), data) ? "Preboard mode is on. Your planner is focusing on your next paper" : ""}
+          </p>
+        </Card>
+      </div>
 
       {/* Subject Confidence */}
       <Card>

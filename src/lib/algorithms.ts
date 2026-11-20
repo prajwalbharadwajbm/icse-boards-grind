@@ -1,4 +1,4 @@
-import { getExams, getSubjectLabels, type Block, type Chapter } from "./constants";
+import { EXAM_YEAR, getExams, getSubjectLabels, type Block, type Chapter } from "./constants";
 import { dateStr, daysBetween, timeToMin, minToTime, today } from "./utils";
 import { usableSchoolHours } from "./school-hours";
 import type { StoreState } from "@/store/use-store";
@@ -194,11 +194,12 @@ function fillGapWithStudy(
   revDueChapters: { subjectKey: string; chapterName: string }[],
   subjects: Record<string, Chapter[]>,
   labels: Record<string, string>,
-  isLight: boolean
+  isLight: boolean,
+  /** Sessions per subject so far today, shared across gaps so chapters keep moving on */
+  subjectSessionIndex: Record<string, number>
 ): number {
   let cursor = gapStart;
   let sessionCount = 0;
-  const subjectSessionIndex: Record<string, number> = {};
 
   while (cursor < gapEnd) {
     const remaining = gapEnd - cursor;
@@ -418,6 +419,88 @@ function buildExamDayPlan(
 }
 
 /* ══════════════════════════════════════════
+ *  PREBOARDS
+ *  School preboards (usually December to January) come before the boards. In the week before each
+ *  preboard paper, the day studies that paper instead of spreading every subject.
+ * ══════════════════════════════════════════ */
+
+/** A preboard paper takes over the plan this many days before it */
+export const PREBOARD_LEAD_DAYS = 7;
+
+/** More slots than any day has study sessions, so a day's queue never wraps back to its start */
+const DAY_SLOTS = 24;
+
+export interface PreboardPaper {
+  key: string;
+  date: string;
+}
+
+export interface PreboardFocus {
+  /** Papers written today, each reviewed first if there's time to study before school */
+  today: PreboardPaper[];
+  /** The next paper, within PREBOARD_LEAD_DAYS: most study blocks */
+  next?: PreboardPaper;
+  /** The paper after it, also within PREBOARD_LEAD_DAYS: every fourth block, or every other on the same day */
+  after?: PreboardPaper;
+}
+
+/**
+ * Dates a preboard can have: from June of the year before the boards to the day before the
+ * student's first board paper. Anything else (a typo, a date in board season) is ignored.
+ */
+export function preboardDateRange(data: Pick<StoreState, "selectedLanguage" | "selectedElective" | "groupTwo">): { min: string; max: string } {
+  const firstBoardPaper = storeExams(data).map((e) => e.date).sort()[0];
+  const dayBefore = new Date(firstBoardPaper + "T00:00:00");
+  dayBefore.setDate(dayBefore.getDate() - 1);
+  return { min: `${EXAM_YEAR - 1}-06-01`, max: dateStr(dayBefore) };
+}
+
+type PreboardData = Pick<StoreState, "preboards" | "selectedLanguage" | "selectedElective" | "groupTwo">;
+
+/** The student's preboard papers in date order: only papers they take, with a date in range */
+function preboardPapers(data: PreboardData): PreboardPaper[] {
+  const labels = storeLabels(data);
+  const { min, max } = preboardDateRange(data);
+  return Object.entries(data.preboards || {})
+    .filter(([key, date]) => key in labels && /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= min && date <= max)
+    .map(([key, date]) => ({ key, date }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key));
+}
+
+/**
+ * What the plan focuses on during preboards, or null on a day with no preboard and none in the
+ * next PREBOARD_LEAD_DAYS days (so a long break between papers plans as usual).
+ */
+export function preboardFocus(dateString: string, data: PreboardData): PreboardFocus | null {
+  const papers = preboardPapers(data);
+  const soon = (p?: PreboardPaper) => (p && daysBetween(dateString, p.date) <= PREBOARD_LEAD_DAYS ? p : undefined);
+  const todays = papers.filter((p) => p.date === dateString);
+  const nextIndex = papers.findIndex((p) => p.date > dateString);
+  const next = soon(papers[nextIndex]);
+  if (todays.length === 0 && !next) return null;
+  return { today: todays, next, after: next ? soon(papers[nextIndex + 1]) : undefined };
+}
+
+/** Repeat a queue to at least n slots */
+function repeatTo(queue: string[], n: number): string[] {
+  if (queue.length === 0) return [];
+  return Array.from({ length: Math.max(n, queue.length) }, (_, i) => queue[i % queue.length]);
+}
+
+/**
+ * Study order during preboards: today's papers reviewed first (when `review`), then three of every
+ * four blocks on the next paper and the fourth on the one after (every other block when both are
+ * on the same day). With no paper coming up, the rest of the day goes back to the usual queue.
+ */
+function preboardQueue(focus: PreboardFocus, usualQueue: string[], review: boolean): string[] {
+  const head = review ? focus.today.map((p) => p.key) : [];
+  const { next, after } = focus;
+  if (!next) return [...head, ...repeatTo(usualQueue, DAY_SLOTS)];
+  const cycle = !after ? [next.key] : after.date === next.date ? [next.key, after.key] : [next.key, next.key, after.key, next.key];
+  return [...head, ...repeatTo(cycle, DAY_SLOTS)];
+}
+
+/* ══════════════════════════════════════════
  *  GENERATE DAY PLAN (main entry)
  * ══════════════════════════════════════════ */
 
@@ -484,8 +567,8 @@ export function generateDayPlan(
   });
   priorities.sort((a, b) => b.priority - a.priority);
 
-  // Build weighted subject queue
-  const subjectQueue = buildSubjectQueue(priorities, revisionExam?.key);
+  // Build weighted subject queue (during preboards the next preboard paper takes over, below)
+  const usualQueue = buildSubjectQueue(priorities, revisionExam?.key);
 
   // School hours on a school day: no study then, and meals inside them are eaten at school
   const school = schoolWindow(dateString, routine.school);
@@ -570,8 +653,18 @@ export function generateDayPlan(
     type: "sleep",
   });
 
+  // Preboards: a review of today's paper only helps before it is written, which on a school day
+  // means a study slot before school starts
+  const preboard = preboardFocus(dateString, data);
+  const review =
+    !!preboard &&
+    preboard.today.length > 0 &&
+    (!school || gaps.some((g) => g.start < school.start && g.end - g.start >= SESSION_MIN));
+  const subjectQueue = preboard ? preboardQueue(preboard, usualQueue, review) : usualQueue;
+
   // Fill all gaps with study sessions + breaks
   const revDueChapters = [...revisionDueChapters];
+  const subjectSessionIndex: Record<string, number> = {};
   let totalSessionsSoFar = 0;
 
   for (const gap of gaps) {
@@ -585,9 +678,18 @@ export function generateDayPlan(
       revDueChapters,
       data.subjects,
       labels,
-      gap.isLight
+      gap.isLight,
+      subjectSessionIndex
     );
     totalSessionsSoFar += sessionsAdded;
+  }
+
+  // Name the review blocks: each of today's papers' first study block
+  if (review && preboard) {
+    for (const paper of preboard.today) {
+      const first = blocks.find((b) => b.type === "study" && b.subjectKey === paper.key);
+      if (first) first.label = `${labels[paper.key] || paper.key} \u2014 Quick review before your preboard`;
+    }
   }
 
   // Sort all blocks by start time
@@ -611,9 +713,11 @@ export function getDayPlan(dateString: string, data: StoreState): Block[] {
   return generateDayPlan(dateString, data);
 }
 
+/** Warnings about a day's plan. `dateString` is the day the blocks are for (the planner can show other days) */
 export function analyzeStudyBalance(
   blocks: Block[],
-  data: StoreState
+  data: StoreState,
+  dateString: string = today()
 ): string[] | null {
   const exams = storeExams(data);
   const labels = storeLabels(data);
@@ -630,11 +734,14 @@ export function analyzeStudyBalance(
   if (totalStudyMin === 0) return null;
 
   const warnings: string[] = [];
-  const td = today();
+  const td = dateString;
 
+  // During preboards the generated plan focuses on the next paper on purpose, so don't call that
+  // unbalanced (a student's own custom plan still gets the warning)
+  const inPreboards = !(data.customPlans || {})[dateString] && preboardFocus(dateString, data) !== null;
   Object.keys(subjectMinutes).forEach((key) => {
     const pct = subjectMinutes[key] / totalStudyMin;
-    if (pct > 0.5 && Object.keys(subjectMinutes).length < 3) {
+    if (!inPreboards && pct > 0.5 && Object.keys(subjectMinutes).length < 3) {
       warnings.push(
         `You're spending ${Math.round(pct * 100)}% of study time on ${labels[key] || key}. Consider diversifying.`
       );

@@ -89,6 +89,8 @@ export interface StoreState {
   selectedElective: string;
   /** ICSE Group II subjects (any two or three); Maths + Science unless the student chose otherwise */
   groupTwo: string[];
+  /** School preboard dates by paper key (e.g. physics: "2026-12-08"); the planner focuses on the next one */
+  preboards: Record<string, string>;
   coachMessages: Record<string, CoachMessage[]>;
   dailyBriefingCache: Record<string, { content: string; timestamp: number }>;
   solvedPapers: string[];
@@ -154,6 +156,7 @@ const defaultState: StoreState = {
   selectedLanguage: "kannada",
   selectedElective: "computer",
   groupTwo: [...DEFAULT_GROUP_TWO],
+  preboards: {},
   coachMessages: {},
   dailyBriefingCache: {},
   solvedPapers: [],

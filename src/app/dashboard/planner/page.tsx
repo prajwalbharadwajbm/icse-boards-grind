@@ -6,13 +6,25 @@ import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
 import { getSubjectLabels, getSubjectColors, type Block } from "@/lib/constants";
 import { today, dateStr, formatDate, formatTime24, timeToMin, minToTime } from "@/lib/utils";
-import { getDayPlan, analyzeStudyBalance } from "@/lib/algorithms";
+import { getDayPlan, analyzeStudyBalance, preboardFocus, type PreboardFocus, type PreboardPaper } from "@/lib/algorithms";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayPlan } from "@/components/planner/day-plan";
+
+/** What preboard mode is doing on this day, e.g. "Preboards: focusing on Mathematics, your next paper (Thu, 10 Dec)." */
+function preboardNote(focus: PreboardFocus, labels: Record<string, string>): string {
+  const name = (p: PreboardPaper) => labels[p.key] || p.key;
+  const next = focus.next ? `${name(focus.next)} (${formatDate(focus.next.date)})` : null;
+  if (focus.today.length > 0) {
+    const today = focus.today.map(name).join(" and ");
+    return next ? `Preboard today: ${today}. After it, the plan moves to ${next}.` : `Preboard today: ${today}. After it, the plan goes back to your boards.`;
+  }
+  return next ? `Preboards: focusing on ${next}, your next paper.` : "";
+}
 
 export default function PlannerPage() {
   const data = useStore();
@@ -39,7 +51,8 @@ export default function PlannerPage() {
   const hasCustomPlan = !!(data.customPlans || {})[planDate];
 
   // Balance warnings
-  const warnings = useMemo(() => analyzeStudyBalance(blocks, data), [blocks, data]);
+  const warnings = useMemo(() => analyzeStudyBalance(blocks, data, planDate), [blocks, data, planDate]);
+  const preboard = useMemo(() => preboardFocus(planDate, data), [planDate, data]);
 
   // Study time total
   const totalStudyMin = useMemo(() => {
@@ -251,6 +264,14 @@ export default function PlannerPage() {
             {Math.floor(totalStudyMin / 60)}h {totalStudyMin % 60}m
           </span>
         </div>
+        {preboard && !hasCustomPlan && (
+          <p className="mt-2 text-xs font-bold" style={{ color: "var(--text-secondary)" }}>
+            {preboardNote(preboard, SUBJECT_LABELS)}{" "}
+            <Link href="/dashboard/settings#preboards" className="underline underline-offset-2" style={{ color: "var(--text)" }}>
+              Change dates
+            </Link>
+          </p>
+        )}
         {hasCustomPlan && (
           <div className="mt-2 flex items-center gap-1.5">
             <span
