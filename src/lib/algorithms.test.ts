@@ -98,6 +98,44 @@ describe("generateDayPlan during preboards", () => {
     expect(studySubjects(plan)[0]).toBe("math");
   });
 
+  it("reviews both papers first when two preboards fall on the same day, and labels the review", () => {
+    const sameDay = { ...student(), preboards: { physics: "2026-12-08", chemistry: "2026-12-08", math: "2026-12-10" } };
+    const plan = generateDayPlan("2026-12-08", sameDay);
+    const study = plan.filter((b) => b.type === "study");
+    expect(new Set(study.slice(0, 2).map((b) => b.subjectKey))).toEqual(new Set(["physics", "chemistry"]));
+    expect(study[0].label).toMatch(/ — Quick review before your preboard$/);
+    expect(study.slice(2).every((b) => b.subjectKey === "math")).toBe(true);
+    const dayBefore = studySubjects(generateDayPlan("2026-12-07", sameDay));
+    expect(dayBefore.filter((k) => k === "physics").length - dayBefore.filter((k) => k === "chemistry").length).toBeGreaterThanOrEqual(-1);
+    expect(dayBefore.filter((k) => k === "physics").length - dayBefore.filter((k) => k === "chemistry").length).toBeLessThanOrEqual(1);
+  });
+
+  it("skips the review when there's no time to study before school, where the paper is written", () => {
+    const early = { ...student({ start: "07:15", end: "14:00", days: MON_TO_FRI }), preboards: PREBOARDS };
+    early.routine = { ...early.routine, breakfast: "06:30" };
+    const subjects = studySubjects(generateDayPlan("2026-12-08", early));
+    expect(subjects).not.toContain("physics");
+    expect(subjects[0]).toBe("math");
+  });
+
+  it("only focuses on a paper in the week before it, so a long break between papers plans as usual", () => {
+    const winterBreak = { ...student(), preboards: { physics: "2026-12-08", math: "2027-01-18" } };
+    expect(generateDayPlan("2026-12-20", winterBreak)).toEqual(generateDayPlan("2026-12-20", student()));
+    expect(studySubjects(generateDayPlan("2027-01-11", winterBreak)).every((k) => k === "math")).toBe(true);
+  });
+
+  it("ignores preboard dates in board season, so board revision is kept", () => {
+    const late = { ...student(), preboards: { chemistry: "2027-02-17" } };
+    expect(generateDayPlan("2027-02-13", late)).toEqual(generateDayPlan("2027-02-13", student()));
+  });
+
+  it("works through different chapters across the day instead of repeating one", () => {
+    const plan = generateDayPlan("2026-12-05", withPreboards);
+    const chapters = plan.filter((b) => b.type === "study" && b.subjectKey === "physics").map((b) => b.label);
+    const unfinished = (withPreboards.subjects.physics || []).filter((c) => c.status !== "completed").length;
+    expect(new Set(chapters).size).toBe(Math.min(chapters.length, unfinished));
+  });
+
   it("plans exactly as before more than a week ahead of preboards, after them, and with none set", () => {
     for (const date of ["2026-11-30", "2026-12-13"]) {
       expect(generateDayPlan(date, withPreboards)).toEqual(generateDayPlan(date, student()));

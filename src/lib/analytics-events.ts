@@ -87,8 +87,8 @@ export interface AnalyticsEventMap {
   settings_saved: { study_hours: number; target_percent: number; has_grok_key: boolean };
   /** Group II subjects changed in Settings, e.g. "economics,commercial" */
   group_two_changed: { group_two: string };
-  /** Preboard dates changed in Settings; `papers` is how many papers now have a date */
-  preboards_saved: { papers: number };
+  /** A preboard date set or cleared in Settings (sent on every change); `papers` is how many of the student's papers now have a date */
+  preboards_changed: { papers: number };
 
   // ── Feedback ──
   /** "Ask for it": a student asked for something not built yet. We build it once enough ask (docs/analytics.md) */

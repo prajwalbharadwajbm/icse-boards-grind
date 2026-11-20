@@ -175,7 +175,7 @@ export const whatsNewEntries: WhatsNewEntry[] = [
     emoji: "\u{1F4DD}",
     title: "Plan around your preboards",
     description:
-      "Add your preboard dates in Settings and the planner focuses each day on the paper that's next, starting a week before the first one. Also new: set your school hours so no study is planned during school, and pick your own Group II subjects.",
+      "Add your preboard dates in Settings and, in the week before each paper, the planner focuses on it, with a quick review on the day. Also new: set your school hours so no study is planned during school, and pick your own Group II subjects.",
     link: "/dashboard/settings#preboards",
   },
 ];

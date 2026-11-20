@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { capture } from "@/lib/analytics";
-import { useStore, type StoreState } from "@/store/use-store";
+import { useStore } from "@/store/use-store";
 import { getSubjectLabels, getSubjectColors, type Block } from "@/lib/constants";
 import { today, dateStr, formatDate, formatTime24, timeToMin, minToTime } from "@/lib/utils";
 import { getDayPlan, analyzeStudyBalance, preboardFocus, type PreboardFocus, type PreboardPaper } from "@/lib/algorithms";
@@ -15,16 +15,15 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayPlan } from "@/components/planner/day-plan";
 
-/** What preboard mode is doing on this day, e.g. "Preboards: focusing on Maths, your next paper (Thu, 10 Dec)." */
-function preboardNote(focus: PreboardFocus, data: StoreState): string {
-  const labels = getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo);
+/** What preboard mode is doing on this day, e.g. "Preboards: focusing on Mathematics, your next paper (Thu, 10 Dec)." */
+function preboardNote(focus: PreboardFocus, labels: Record<string, string>): string {
   const name = (p: PreboardPaper) => labels[p.key] || p.key;
-  const day = (p: PreboardPaper) =>
-    new Date(p.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
-  if (focus.today && focus.next) return `Preboard today: ${name(focus.today)}. After it, the plan moves to ${name(focus.next)} (${day(focus.next)}).`;
-  if (focus.today) return `Preboard today: ${name(focus.today)}, your last one. After it, the plan goes back to your boards.`;
-  if (focus.next) return `Preboards: focusing on ${name(focus.next)}, your next paper (${day(focus.next)}).`;
-  return "";
+  const next = focus.next ? `${name(focus.next)} (${formatDate(focus.next.date)})` : null;
+  if (focus.today.length > 0) {
+    const today = focus.today.map(name).join(" and ");
+    return next ? `Preboard today: ${today}. After it, the plan moves to ${next}.` : `Preboard today: ${today}. After it, the plan goes back to your boards.`;
+  }
+  return next ? `Preboards: focusing on ${next}, your next paper.` : "";
 }
 
 export default function PlannerPage() {
@@ -267,7 +266,7 @@ export default function PlannerPage() {
         </div>
         {preboard && !hasCustomPlan && (
           <p className="mt-2 text-xs font-bold" style={{ color: "var(--text-secondary)" }}>
-            {preboardNote(preboard, data)}{" "}
+            {preboardNote(preboard, SUBJECT_LABELS)}{" "}
             <Link href="/dashboard/settings#preboards" className="underline underline-offset-2" style={{ color: "var(--text)" }}>
               Change dates
             </Link>
