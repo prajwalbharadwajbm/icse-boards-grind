@@ -169,6 +169,15 @@ export const whatsNewEntries: WhatsNewEntry[] = [
       "Your countdown, planner and calendar now follow the CISCE timetable for 15 February to 31 March 2027. Papers start earlier this year: reading time at 10:00 am, writing at 10:15 am. Boards Grind also has a brand new look, with a sticker for every streak.",
     link: "/dashboard",
   },
+  {
+    version: "2026-11-20-preboards",
+    date: "Nov 20, 2026",
+    emoji: "\u{1F4DD}",
+    title: "Plan around your preboards",
+    description:
+      "Add your preboard dates in Settings and the planner focuses each day on the paper that's next, starting a week before the first one. Also new: set your school hours so no study is planned during school, and pick your own Group II subjects.",
+    link: "/dashboard/settings#preboards",
+  },
 ];
 
 export function getLatestWhatsNewVersion(): string {

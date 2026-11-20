@@ -2,6 +2,8 @@
 
 import { useState, useRef, useMemo, useEffect } from "react";
 import { SchoolHoursFields } from "@/components/routine/school-hours-fields";
+import { PreboardDates } from "@/components/routine/preboard-dates";
+import { preboardFocus } from "@/lib/algorithms";
 import { AskForIt } from "@/components/feedback/ask-for-it";
 import { capture } from "@/lib/analytics";
 import { useStore } from "@/store/use-store";
@@ -333,6 +335,30 @@ export default function SettingsPage() {
           ))}
         </div>
       </Card>
+
+      {/* Preboards */}
+      <div id="preboards" className="scroll-mt-24">
+        <Card>
+          <CardTitle>Preboards</CardTitle>
+          <p className="text-[13px] -mt-2 mb-4" style={{ color: "var(--text-muted)" }}>
+            Add your school&apos;s preboard dates. From a week before the first paper, each day&apos;s plan focuses on the paper
+            that&apos;s next. Leave a paper blank if it has no preboard.
+          </p>
+          <PreboardDates
+            papers={Object.keys(SUBJECT_LABELS).map((key) => ({ key, label: SUBJECT_LABELS[key], color: SUBJECT_COLORS[key] }))}
+            value={data.preboards || {}}
+            onChange={(next) => {
+              setField("preboards", next);
+              capture("preboards_saved", { papers: Object.values(next).filter(Boolean).length });
+            }}
+          />
+          {preboardFocus(today(), data) && (
+            <p className="text-[13px] font-bold mt-4" style={{ color: "var(--text)" }} role="status">
+              Preboard mode is on. Your planner now focuses on the next paper
+            </p>
+          )}
+        </Card>
+      </div>
 
       {/* Subject Confidence */}
       <Card>

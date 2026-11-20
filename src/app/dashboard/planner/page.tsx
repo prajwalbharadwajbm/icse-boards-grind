@@ -3,16 +3,29 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { capture } from "@/lib/analytics";
-import { useStore } from "@/store/use-store";
+import { useStore, type StoreState } from "@/store/use-store";
 import { getSubjectLabels, getSubjectColors, type Block } from "@/lib/constants";
 import { today, dateStr, formatDate, formatTime24, timeToMin, minToTime } from "@/lib/utils";
-import { getDayPlan, analyzeStudyBalance } from "@/lib/algorithms";
+import { getDayPlan, analyzeStudyBalance, preboardFocus, type PreboardFocus, type PreboardPaper } from "@/lib/algorithms";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayPlan } from "@/components/planner/day-plan";
+
+/** What preboard mode is doing on this day, e.g. "Preboards: focusing on Maths, your next paper (Thu, 10 Dec)." */
+function preboardNote(focus: PreboardFocus, data: StoreState): string {
+  const labels = getSubjectLabels(data.selectedLanguage || "kannada", data.selectedElective || "computer", data.groupTwo);
+  const name = (p: PreboardPaper) => labels[p.key] || p.key;
+  const day = (p: PreboardPaper) =>
+    new Date(p.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+  if (focus.today && focus.next) return `Preboard today: ${name(focus.today)}. After it, the plan moves to ${name(focus.next)} (${day(focus.next)}).`;
+  if (focus.today) return `Preboard today: ${name(focus.today)}, your last one. After it, the plan goes back to your boards.`;
+  if (focus.next) return `Preboards: focusing on ${name(focus.next)}, your next paper (${day(focus.next)}).`;
+  return "";
+}
 
 export default function PlannerPage() {
   const data = useStore();
@@ -39,7 +52,8 @@ export default function PlannerPage() {
   const hasCustomPlan = !!(data.customPlans || {})[planDate];
 
   // Balance warnings
-  const warnings = useMemo(() => analyzeStudyBalance(blocks, data), [blocks, data]);
+  const warnings = useMemo(() => analyzeStudyBalance(blocks, data, planDate), [blocks, data, planDate]);
+  const preboard = useMemo(() => preboardFocus(planDate, data), [planDate, data]);
 
   // Study time total
   const totalStudyMin = useMemo(() => {
@@ -251,6 +265,14 @@ export default function PlannerPage() {
             {Math.floor(totalStudyMin / 60)}h {totalStudyMin % 60}m
           </span>
         </div>
+        {preboard && !hasCustomPlan && (
+          <p className="mt-2 text-xs font-bold" style={{ color: "var(--text-secondary)" }}>
+            {preboardNote(preboard, data)}{" "}
+            <Link href="/dashboard/settings#preboards" className="underline underline-offset-2" style={{ color: "var(--text)" }}>
+              Change dates
+            </Link>
+          </p>
+        )}
         {hasCustomPlan && (
           <div className="mt-2 flex items-center gap-1.5">
             <span

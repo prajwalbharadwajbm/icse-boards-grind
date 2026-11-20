@@ -60,3 +60,48 @@ describe("generateDayPlan with school hours", () => {
     expect(generateDayPlan(WEDNESDAY, off)).toEqual(generateDayPlan(WEDNESDAY, student()));
   });
 });
+
+// Preboards: Physics on Tue 8 Dec, Maths on Thu 10 Dec, Chemistry on Sat 12 Dec 2026
+const PREBOARDS = { physics: "2026-12-08", math: "2026-12-10", chemistry: "2026-12-12" };
+const studySubjects = (plan: ReturnType<typeof generateDayPlan>) =>
+  plan.filter((b) => b.type === "study").map((b) => b.subjectKey);
+/** Three of every four study blocks go to the next paper, the fourth to the paper after it */
+const focusPattern = (next: string, after: string, n: number) =>
+  Array.from({ length: n }, (_, i) => (i % 4 === 2 ? after : next));
+
+describe("generateDayPlan during preboards", () => {
+  const withPreboards = { ...student(), preboards: PREBOARDS };
+
+  it("in the week before preboards, studies the first paper, with every fourth block on the paper after it", () => {
+    const subjects = studySubjects(generateDayPlan("2026-12-05", withPreboards));
+    expect(subjects.length).toBeGreaterThan(3);
+    expect(subjects).toEqual(focusPattern("physics", "math", subjects.length));
+  });
+
+  it("on a preboard day, reviews that day's paper first, then moves to the next paper", () => {
+    const subjects = studySubjects(generateDayPlan("2026-12-08", withPreboards));
+    expect(subjects[0]).toBe("physics");
+    expect(subjects.slice(1)).toEqual(focusPattern("math", "chemistry", subjects.length - 1));
+  });
+
+  it("after the last paper's review, goes back to the usual board plan", () => {
+    const subjects = studySubjects(generateDayPlan("2026-12-12", withPreboards));
+    const usual = studySubjects(generateDayPlan("2026-12-12", student()));
+    expect(subjects[0]).toBe("chemistry");
+    expect(subjects.slice(1)).toEqual(usual.slice(0, subjects.length - 1));
+  });
+
+  it("still plans no study during school hours on a preboard-season school day", () => {
+    const plan = generateDayPlan("2026-12-09", { ...student({ start: "08:00", end: "14:30", days: MON_TO_FRI }), preboards: PREBOARDS });
+    expect(plan).toContainEqual(expect.objectContaining({ start: "08:00", end: "14:30", label: "School" }));
+    expect(plan.filter((b) => b.type === "study" && toMin(b.start) < toMin("14:30") && toMin(b.end) > toMin("08:00"))).toEqual([]);
+    expect(studySubjects(plan)[0]).toBe("math");
+  });
+
+  it("plans exactly as before more than a week ahead of preboards, after them, and with none set", () => {
+    for (const date of ["2026-11-30", "2026-12-13"]) {
+      expect(generateDayPlan(date, withPreboards)).toEqual(generateDayPlan(date, student()));
+    }
+    expect(generateDayPlan("2026-12-05", { ...student(), preboards: {} })).toEqual(generateDayPlan("2026-12-05", student()));
+  });
+});

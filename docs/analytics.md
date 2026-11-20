@@ -206,7 +206,7 @@ english_page_viewed
 
 ### Settings, leaderboard, what's new
 
-`settings_saved` (`study_hours`, `target_percent`, `has_grok_key`), `language_changed` (`new_language`), `elective_changed` (`new_elective`), `group_two_changed` (`group_two`: sorted, comma-separated Group II keys), `data_exported`, `data_imported` (`mode`), `leaderboard_toggle` (`enabled`), `leaderboard_opted_in`, `whats_new_dismissed` (`updates_shown`).
+`settings_saved` (`study_hours`, `target_percent`, `has_grok_key`), `language_changed` (`new_language`), `elective_changed` (`new_elective`), `group_two_changed` (`group_two`: sorted, comma-separated Group II keys), `preboards_saved` (`papers`: how many papers have a preboard date after the change), `data_exported`, `data_imported` (`mode`), `leaderboard_toggle` (`enabled`), `leaderboard_opted_in`, `whats_new_dismissed` (`updates_shown`).
 
 ### Feedback
 
